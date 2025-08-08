@@ -113,6 +113,8 @@ Use SGLang to serve MiroThinker models at port 61002:
 ```
 NUM_GPUS=4
 PORT=61002
+
+# Downloading model from HF
 MODEL_PATH=miromind-ai/MiroThinker-32B-DPO-v0.1
 
 python3 -m sglang.launch_server \
