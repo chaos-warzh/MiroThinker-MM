@@ -9,7 +9,7 @@
 [![DATA](https://img.shields.io/badge/Data-0040A1?style=for-the-badge&logo=huggingface&logoColor=ffffff&labelColor)](https://huggingface.co/datasets/miromind-ai/MiroVerse-v0.1)
 [![Blog](https://img.shields.io/badge/Blog-4285F4?style=for-the-badge&logo=google-chrome&logoColor=white)](https://miromind.ai/blog/miromind-open-deep-research)
 
-[![GITHUB](https://img.shields.io/badge/Code-24292F?style=for-the-badge&logo=github&logoColor=white)](https://github.com/MiroMindAI/MiroFlow/tree/mirothinker)
+[![GITHUB](https://img.shields.io/badge/Github-24292F?style=for-the-badge&logo=github&logoColor=white)](https://github.com/MiroMindAI)
 [![WEBSITE](https://img.shields.io/badge/Website-4285F4?style=for-the-badge&logo=google-chrome&logoColor=white)](https://miromind.ai/)
 [![DISCORD](https://img.shields.io/badge/Discord-5865F2?style=for-the-badge&logo=discord&logoColor=white)](https://discord.com/invite/GPqEnkzQZd)
 [![WeChat](https://img.shields.io/badge/WeChat-07C160?style=for-the-badge&logo=wechat&logoColor=white)](https://cdn-uploads.huggingface.co/production/uploads/68525b342230a897a65cc1c0/SGK70isvVpeJwk_fny9sb.png)
@@ -19,13 +19,22 @@
 
 ## 📰 News & Updates
 
-- **2025-08-08**: 🎉 **MiroThinker v0.1 Released** - Models, framework, data, and data collection process are now fully open-sourced!
+- **2025-08-08**: 🎉 **MiroThinker v0.1 Released** - Models, framework, data, and trace rollout scripts are now fully open-sourced!
 
 ## Introduction
 
 **MiroThinker** is an open-source agentic model series built on top of Qwen3. Designed for deep research and complex, long-horizon problem solving, it integrates strong capabilities in **task decomposition**, **multi-hop reasoning**, **retrieval-augmented generation**, **code execution**, **web browsing**, and **document/file processing**, making it suitable for a wide range of real-world applications.
 
 We have released the **MiroThinker-v0.1** series, including both SFT and DPO variants at parameter scales of **8B**, **14B**, and **32B**. Notably, MiroThinker v0.1 achieves **state-of-the-art performance** among open-source models on the [GAIA benchmark](https://huggingface.co/datasets/gaia-benchmark/GAIA), a rigorous evaluation suite for advanced agentic capabilities, demonstrating its strength in long-context, decision-intensive, and real-world task scenarios.
+
+| Model Name                | Base Model | HF Link                                                               |
+| :-----------------------: |:----------:| :--------------------------------------------------------------------:|
+| MiroThinker-8B-SFT-v0.1   |  Qwen3-8B  | [🤗 link](https://huggingface.co/miromind-ai/MiroThinker-8B-SFT-v0.1)  |
+| MiroThinker-8B-DPO-v0.1   |  Qwen3-8B  | [🤗 link](https://huggingface.co/miromind-ai/MiroThinker-8B-DPO-v0.1)  |
+| MiroThinker-14B-SFT-v0.1  | Qwen3-14B  | [🤗 link](https://huggingface.co/miromind-ai/MiroThinker-14B-SFT-v0.1) |
+| MiroThinker-14B-DPO-v0.1  | Qwen3-14B  | [🤗 link](https://huggingface.co/miromind-ai/MiroThinker-14B-DPO-v0.1) |
+| MiroThinker-32B-SFT-v0.1  | Qwen3-32B  | [🤗 link](https://huggingface.co/miromind-ai/MiroThinker-32B-SFT-v0.1) |
+| MiroThinker-32B-DPO-v0.1  | Qwen3-32B  | [🤗 link](https://huggingface.co/miromind-ai/MiroThinker-32B-DPO-v0.1) |
 
 **MiroFlow** is a framework for agent development that supports various language models and provides a comprehensive framework for building intelligent agents. The framework includes enhanced conversation management, flexible tool integration, and extensive benchmark evaluations across multiple datasets. A comprehensive framework for building, testing, and deploying intelligent agents powered by MiroThinker models with **multi-turn conversation capabilities** and **advanced tool integration**.
 
@@ -274,4 +283,3 @@ This project is licensed under the Apache License 2.0 - see the [LICENSE](LICENS
 ```
 
 [![Star History Chart](https://api.star-history.com/svg?repos=MiroMindAI/MiroThinker&type=Date)](https://star-history.com/#MiroMindAI/MiroThinker&Date)
-
