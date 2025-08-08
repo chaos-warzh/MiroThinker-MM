@@ -18,7 +18,6 @@ Please also refer to the agent configuration file: apps/miroflow-agent/conf/agen
 
 **Description:** An open-source reasoning service designed for solving complex problems that require deep analytical thinking. This tool uses the DeepSeek-R1 model to tackle challenging mathematical problems, puzzles, riddles, and IQ test questions that demand extensive chain-of-thought reasoning. It's specifically designed for problems that require step-by-step logical analysis rather than simple or obvious questions.
 
-
 ## Audio Transcription Tool (`audio_mcp_server_os.py`)
 
 **Tool Name:** `audio_transcription`
@@ -26,8 +25,10 @@ Please also refer to the agent configuration file: apps/miroflow-agent/conf/agen
 **Description:** An open-source audio transcription service that converts audio files to text using OpenAI's Whisper model. This tool can process both local audio files and audio files from URLs. It supports multiple audio formats including MP3, WAV, M4A, AAC, OGG, FLAC, and WMA. The tool automatically detects file formats, handles temporary file management, and provides robust error handling for network issues and invalid content types. It uses the "whisper-large-v3-turbo" model for high-quality transcription results.
 
 **Tips for Deploy Whisper:**
+
 1. download whisper-large-v3-turbo from Huggingface to /path/model/whisper
-2. run the commands
+1. run the commands
+
 ```
    pip install vllm==0.10.0
    pip install vllm[audio]

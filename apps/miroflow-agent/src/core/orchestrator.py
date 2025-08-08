@@ -479,9 +479,7 @@ class Orchestrator:
         tool_definitions = await self.main_agent_tool_manager.get_all_tool_definitions()
         tool_definitions += expose_sub_agents_as_tools(self.cfg.agent.sub_agents)
         if not tool_definitions:
-            logger.info(
-                "Warning: No tool definitions found. LLM cannot use any tools."
-            )
+            logger.info("Warning: No tool definitions found. LLM cannot use any tools.")
 
         self.task_log.log_step(
             "Main Agent | Get Tool Definitions",

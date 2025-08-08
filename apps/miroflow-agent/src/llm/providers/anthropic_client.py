@@ -93,7 +93,9 @@ class AnthropicLLMClient(LLMProviderClientBase):
             )
 
             self.last_call_tokens = {
-                "input_tokens": getattr(usage_data, "input_tokens", 0) + getattr(usage_data, 'cache_creation_input_tokens') + getattr(usage_data, 'cache_read_input_tokens', 0),
+                "input_tokens": getattr(usage_data, "input_tokens", 0)
+                + getattr(usage_data, "cache_creation_input_tokens")
+                + getattr(usage_data, "cache_read_input_tokens", 0),
                 "output_tokens": getattr(usage_data, "output_tokens", 0),
             }
         else:
@@ -333,15 +335,13 @@ class AnthropicLLMClient(LLMProviderClientBase):
             )
 
             return False, message_history
-        
+
         self.task_log.log_step(
             "LLM | Context Limit Not Reached",
             f"Context limit not reached, proceeding to continue, current context length: {estimated_total}/{self.max_context_length}",
             "info",
         )
         return True, message_history
-    
-
 
     def format_token_usage_summary(self):
         """Format token usage statistics and cost estimation, return summary_lines for format_final_summary and log string - Anthropic implementation"""

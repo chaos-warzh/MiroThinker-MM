@@ -19,7 +19,7 @@ from dotenv import load_dotenv
 from mcp import StdioServerParameters
 from miroflow_tracing import set_tracing_disabled, set_tracing_export_api_key
 from miroflow_tracing.otlp_setup import bootstrap_silent_trace_provider
-from ..logging.task_logger import bootstrap_logger, logger
+from ..logging.task_logger import bootstrap_logger
 from omegaconf import DictConfig
 
 # Load environment variables from .env file
@@ -62,14 +62,14 @@ def create_mcp_server_parameters(cfg: DictConfig, agent_cfg: DictConfig):
     ENABLE_CLAUDE_VISION = cfg.agent.tool_config["tool-vqa"]["enable_claude_vision"]
     ENABLE_OPENAI_VISION = cfg.agent.tool_config["tool-vqa"]["enable_openai_vision"]
 
-
     if (
         agent_cfg.get("tools", None) is not None
         and "tool-google-search" in agent_cfg["tools"]
     ):
-
         if not SERPER_API_KEY:
-            raise ValueError("SERPER_API_KEY not set, tool-google-search will be unavailable.")
+            raise ValueError(
+                "SERPER_API_KEY not set, tool-google-search will be unavailable."
+            )
 
         configs.append(
             {
@@ -86,9 +86,10 @@ def create_mcp_server_parameters(cfg: DictConfig, agent_cfg: DictConfig):
         agent_cfg.get("tools", None) is not None
         and "tool-searching" in agent_cfg["tools"]
     ):
-
         if not SERPER_API_KEY or not JINA_API_KEY or not GEMINI_API_KEY:
-            raise ValueError("SERPER_API_KEY or JINA_API_KEY or GEMINI_API_KEY not set, tool-searching will be unavailable.")
+            raise ValueError(
+                "SERPER_API_KEY or JINA_API_KEY or GEMINI_API_KEY not set, tool-searching will be unavailable."
+            )
 
         configs.append(
             {
@@ -107,7 +108,6 @@ def create_mcp_server_parameters(cfg: DictConfig, agent_cfg: DictConfig):
                 ),
             }
         )
-
 
     if agent_cfg.get("tools", None) is not None and "tool-python" in agent_cfg["tools"]:
         configs.append(
@@ -397,14 +397,12 @@ def get_env_info(cfg: DictConfig) -> dict:
         "llm_max_tokens": cfg.llm.max_tokens,
         "llm_async_client": cfg.llm.async_client,
         "keep_tool_result": cfg.llm.keep_tool_result,
-
         # Agent Configuration
         "main_agent_max_turns": cfg.agent.main_agent.max_turns,
         **{
             f"sub_{sub_agent}_max_turns": cfg.agent.sub_agents[sub_agent].max_turns
             for sub_agent in cfg.agent.sub_agents
         },
-
         # API Keys (masked for security)
         "has_serper_api_key": bool(SERPER_API_KEY),
         "has_jina_api_key": bool(JINA_API_KEY),

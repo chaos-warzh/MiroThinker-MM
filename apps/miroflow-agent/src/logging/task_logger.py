@@ -22,6 +22,7 @@ from typing import Any, Dict, List, Optional
 
 logger = logging.getLogger()
 
+
 def bootstrap_logger() -> logging.Logger:
     """Configure the mirage_agent logger to print filename and line number"""
 

@@ -18,6 +18,7 @@ from typing import Awaitable, Callable, TypeVar
 
 T = TypeVar("T")
 
+
 def with_timeout(
     timeout_s: float = 300.0,
 ) -> Callable[[Callable[..., Awaitable[T]]], Callable[..., Awaitable[T]]]:

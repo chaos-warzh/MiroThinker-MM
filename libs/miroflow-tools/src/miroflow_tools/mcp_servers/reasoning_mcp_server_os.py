@@ -37,28 +37,23 @@ async def reasoning(question: str) -> str:
     """
 
     payload = {
-    "model": "Pro/deepseek-ai/DeepSeek-R1",
-    "messages": [
-        {
-            "role": "user",
-            "content": question
-        }
-    ]
-}
+        "model": "Pro/deepseek-ai/DeepSeek-R1",
+        "messages": [{"role": "user", "content": question}],
+    }
     headers = {
         "Authorization": f"Bearer {SILICONFLOW_API_KEY}",
-        "Content-Type": "application/json"
+        "Content-Type": "application/json",
     }
 
     response = requests.post(SILICONFLOW_BASE_URL, json=payload, headers=headers)
     json_response = response.json()
 
     try:
-        return json_response['choices'][0]['message']['content']
+        return json_response["choices"][0]["message"]["content"]
     except Exception:
         print("Reasoning Error: only thinking content is returned")
-        return json_response['choices'][0]['message']['reasoning_content']
-    
+        return json_response["choices"][0]["message"]["reasoning_content"]
+
 
 if __name__ == "__main__":
     mcp.run(transport="stdio")

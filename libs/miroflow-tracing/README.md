@@ -36,4 +36,4 @@ async def my_span_function():
 
 ## Development
 
-This package is part of the MiroFlow project and is developed alongside the main application. 
+This package is part of the MiroFlow project and is developed alongside the main application.

@@ -17,6 +17,7 @@ import os
 import sys
 import subprocess
 
+
 def check_dependencies():
     """Check if dependencies are installed"""
     try:
@@ -34,6 +35,7 @@ def check_dependencies():
         print("or:")
         print("  uv pip install -r requirements.txt")
         return False
+
 
 def install_dependencies():
     """Install dependencies (recommended to use uv)"""
@@ -56,6 +58,7 @@ def install_dependencies():
         print("Please manually run: uv sync or pip install -r requirements.txt")
         return False
 
+
 def main():
     """Main function"""
     import argparse
@@ -63,7 +66,11 @@ def main():
     # Parse command line arguments
     parser = argparse.ArgumentParser(description="Trace Analysis Web Demo")
     parser.add_argument(
-        "-p", "--port", type=int, default=5000, help="Specify port number (default: 5000)"
+        "-p",
+        "--port",
+        type=int,
+        default=5000,
+        help="Specify port number (default: 5000)",
     )
     args = parser.parse_args()
 
@@ -75,7 +82,9 @@ def main():
     if not check_dependencies():
         print("\nInstalling dependencies...")
         if not install_dependencies():
-            print("Please manually install dependencies: pip install -r requirements.txt")
+            print(
+                "Please manually install dependencies: pip install -r requirements.txt"
+            )
             return
 
     # Check JSON files

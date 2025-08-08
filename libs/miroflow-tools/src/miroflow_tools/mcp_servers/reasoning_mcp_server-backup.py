@@ -64,6 +64,5 @@ async def reasoning(question: str) -> str:
         return response.choices[0].message.reasoning_content
 
 
-
 if __name__ == "__main__":
     mcp.run(transport="stdio")

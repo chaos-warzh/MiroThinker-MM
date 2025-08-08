@@ -171,7 +171,9 @@ class ToolManager(ToolManagerProtocol):
                 all_servers_for_prompt.append(one_server_for_prompt)
 
             except Exception as e:
-                logger.error(f"Error: Unable to connect or get tools from server '{server_name}': {e}")
+                logger.error(
+                    f"Error: Unable to connect or get tools from server '{server_name}': {e}"
+                )
                 # Still add server entry, but mark tool list as empty or include error information
                 one_server_for_prompt["tools"] = [
                     {"error": f"Unable to fetch tools: {e}"}
@@ -283,7 +285,9 @@ class ToolManager(ToolManagerProtocol):
                         f"Unknown server params type for {server_name}: {type(server_params)}"
                     )
 
-                logger.info(f"Tool '{tool_name}' (server: '{server_name}') called successfully.")
+                logger.info(
+                    f"Tool '{tool_name}' (server: '{server_name}') called successfully."
+                )
 
                 return {
                     "server_name": server_name,

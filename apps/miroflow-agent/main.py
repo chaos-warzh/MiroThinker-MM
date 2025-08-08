@@ -26,6 +26,7 @@ from src.core.pipeline import (
 
 logger = logging.getLogger()
 
+
 async def amain(cfg: DictConfig) -> None:
     """Asynchronous main function."""
     logger.info(OmegaConf.to_yaml(cfg))

@@ -32,8 +32,6 @@ evaluation_llm_client = AsyncOpenAI(api_key=OPENAI_API_KEY, base_url=OPENAI_API_
 model_as_a_judge_client = OpenAI(api_key=OPENAI_API_KEY, base_url=OPENAI_API_BASE)
 
 
-
-
 # ================================================
 # verify_answer_llm_simpleqa
 # ================================================
@@ -235,6 +233,7 @@ async def verify_answer_llm_hle(
 # verify_answer_gaia
 # ================================================
 
+
 async def verify_answer_gaia(question: str, target: str, predicted_answer: str) -> str:
     """
     Use GAIA-style judge to verify if the predicted answer is correct.
@@ -364,6 +363,7 @@ Predicted Answer: {response}
 Did the model give an answer **equivalent** to the labeled answer? Please respond with "Correct" if they are equivalent, or "Incorrect" if they are not equivalent. Do not include any other text.
 """
 
+
 async def verify_answer_gaia_validation_text_103(
     question: str, target: str, predicted_answer: str
 ) -> str:
@@ -371,13 +371,12 @@ async def verify_answer_gaia_validation_text_103(
         question=question, correct_answer=target, response=predicted_answer
     )
 
-
     max_tries = 10
     for attempt in range(max_tries):
         try:
             response = await evaluation_llm_client.chat.completions.create(
-                                model='gpt-4.1-2025-04-14',
-                                messages=[{"role": "user", "content": prompt}],
+                model="gpt-4.1-2025-04-14",
+                messages=[{"role": "user", "content": prompt}],
             )
 
             content = response.choices[0].message.content
@@ -388,13 +387,11 @@ async def verify_answer_gaia_validation_text_103(
         except Exception as e:
             if attempt == (max_tries - 1):
                 raise e
-    
+
     if content == "Correct":
         return "CORRECT"
     else:
         return "INCORRECT"
-
-
 
 
 # ================================================
@@ -459,6 +456,7 @@ async def verify_answer_browsecomp(
 # ================================================
 # verify_answer_for_datasets
 # ================================================
+
 
 async def verify_answer_for_datasets(
     benchmark_name: str,

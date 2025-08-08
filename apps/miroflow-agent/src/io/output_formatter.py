@@ -14,6 +14,7 @@
 
 import re
 
+
 class OutputFormatter:
     def _extract_boxed_content(self, text: str) -> str:
         """

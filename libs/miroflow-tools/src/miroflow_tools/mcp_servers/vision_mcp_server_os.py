@@ -55,12 +55,7 @@ async def visual_question_answering(image_path_or_url: str, question: str) -> st
         {
             "role": "user",
             "content": [
-                {
-                    "type": "image_url",
-                    "image_url": {
-                        "url": None
-                    }
-                },
+                {"type": "image_url", "image_url": {"url": None}},
                 {
                     "type": "text",
                     "text": question,
@@ -72,29 +67,31 @@ async def visual_question_answering(image_path_or_url: str, question: str) -> st
 
     headers = {
         "Authorization": f"Bearer {SILICONFLOW_API_KEY}",
-        "Content-Type": "application/json"
+        "Content-Type": "application/json",
     }
 
     try:
         if os.path.exists(image_path_or_url):  # Check if the file exists locally
             with open(image_path_or_url, "rb") as image_file:
                 image_data = base64.b64encode(image_file.read()).decode("utf-8")
-                messages_for_llm[0]["content"][0]["image_url"]["url"] = f"data:{await guess_mime_media_type_from_extension(image_path_or_url)};base64,{image_data}"
+                messages_for_llm[0]["content"][0]["image_url"]["url"] = (
+                    f"data:{await guess_mime_media_type_from_extension(image_path_or_url)};base64,{image_data}"
+                )
         else:
             messages_for_llm[0]["content"][0]["image_url"]["url"] = image_path_or_url
-            
+
         payload = {
-        "model": "Qwen/Qwen2.5-VL-72B-Instruct",
-        "messages": messages_for_llm
+            "model": "Qwen/Qwen2.5-VL-72B-Instruct",
+            "messages": messages_for_llm,
         }
-        
+
         response = requests.post(SILICONFLOW_BASE_URL, json=payload, headers=headers)
         print(response)
     except Exception as e:
         return f"Error: {e}\n payload: {payload}"
 
     try:
-        return response.json()['choices'][0]['message']['content']
+        return response.json()["choices"][0]["message"]["content"]
     except (AttributeError, IndexError):
         return response.json()
 

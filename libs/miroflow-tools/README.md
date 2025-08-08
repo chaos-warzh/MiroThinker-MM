@@ -37,4 +37,4 @@ result = await tool_manager.execute_tool_call(
 
 ## Development
 
-This package is part of the MiroFlow project and is developed alongside the main application. 
+This package is part of the MiroFlow project and is developed alongside the main application.

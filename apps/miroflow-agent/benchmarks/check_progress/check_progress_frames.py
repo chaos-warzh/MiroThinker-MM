@@ -28,9 +28,7 @@ from io import StringIO
 
 # Frames configuration
 FRAMES_TASKS_PER_RUN = 824
-FRAMES_DATA_PATH = (
-    "../../data/frames/standardized_data.jsonl"
-)
+FRAMES_DATA_PATH = "../../data/frames/standardized_data.jsonl"
 TASK_ID_PATTERN = r"task_([a-f0-9]+)"
 
 # Time estimation constants
@@ -301,12 +299,15 @@ class ProgressChecker:
                     # Read the JSON file to get the start_time
                     with open(json_file, "r", encoding="utf-8") as f:
                         data = json.load(f)
-                    
+
                     start_time_str = data.get("start_time", "")
                     if start_time_str:
                         # Parse the ISO format timestamp
                         from datetime import datetime
-                        start_time = datetime.fromisoformat(start_time_str.replace('Z', '+00:00'))
+
+                        start_time = datetime.fromisoformat(
+                            start_time_str.replace("Z", "+00:00")
+                        )
                         start_timestamp = start_time.timestamp()
                     else:
                         # Fallback to file modification time if start_time is not available
@@ -316,7 +317,10 @@ class ProgressChecker:
                         task_id not in task_groups
                         or start_timestamp > task_groups[task_id]["timestamp"]
                     ):
-                        task_groups[task_id] = {"file": json_file, "timestamp": start_timestamp}
+                        task_groups[task_id] = {
+                            "file": json_file,
+                            "timestamp": start_timestamp,
+                        }
                 except (json.JSONDecodeError, ValueError, OSError) as e:
                     # Fallback to file modification time if JSON parsing fails
                     print(f"Warning: Could not parse {json_file}: {e}")
@@ -325,7 +329,10 @@ class ProgressChecker:
                         task_id not in task_groups
                         or file_mtime > task_groups[task_id]["timestamp"]
                     ):
-                        task_groups[task_id] = {"file": json_file, "timestamp": file_mtime}
+                        task_groups[task_id] = {
+                            "file": json_file,
+                            "timestamp": file_mtime,
+                        }
 
         return [info["file"] for info in task_groups.values()]
 

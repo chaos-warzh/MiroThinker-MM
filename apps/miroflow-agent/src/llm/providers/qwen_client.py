@@ -266,7 +266,7 @@ class QwenLLMClient(LLMProviderClientBase):
 
         try:
             return len(self.encoding.encode(text))
-        except Exception:
+        except Exception as e:
             # If encoding fails, use simple estimation: approximately 1 token per 4 characters
             self.task_log.log_step(
                 "Qwen LLM | Token Estimation Error",

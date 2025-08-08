@@ -19,6 +19,7 @@ from pathlib import Path
 
 from .task_logger import logger
 
+
 def _get_summary_template():
     """Returns a template for the summary data structure."""
     return {

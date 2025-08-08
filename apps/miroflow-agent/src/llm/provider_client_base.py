@@ -31,6 +31,7 @@ from ..logging.task_logger import TaskLog, logger
 
 from .util import with_timeout
 
+
 class TokenUsage(TypedDict, total=True):
     """
     we unify openai and anthropic format. there are four usage types:
