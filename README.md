@@ -23,6 +23,17 @@ MiroThinker is an open-source agentic model series built on top of Qwen3. Design
 
 We have released the MiroThinker-v0.1 series, including both SFT and DPO variants at parameter scales of 8B, 14B, and 32B. Notably, MiroThinker v0.1 achieves state-of-the-art performance among open-source models on the [GAIA benchmark](https://huggingface.co/datasets/gaia-benchmark/GAIA), a rigorous evaluation suite for advanced agentic capabilities, demonstrating its strength in long-context, decision-intensive, and real-world task scenarios.
 
+## Model
+
+| Model Name                | Base Model | HF Link                                                               |
+| :-----------------------: | :--------: | :--------------------------------------------------------------------:|
+| MiroThinker-8B-SFT-v0.1   | Qwen3-8B   | [🤗 link](https://huggingface.co/miromind-ai/MiroThinker-8B-SFT-v0.1)  |
+| MiroThinker-8B-DPO-v0.1   | Qwen3-8B   | [🤗 link](https://huggingface.co/miromind-ai/MiroThinker-8B-DPO-v0.1)  |
+| MiroThinker-14B-SFT-v0.1  | Qwen3-8B   | [🤗 link](https://huggingface.co/miromind-ai/MiroThinker-14B-SFT-v0.1) |
+| MiroThinker-14B-DPO-v0.1  | Qwen3-8B   | [🤗 link](https://huggingface.co/miromind-ai/MiroThinker-14B-DPO-v0.1) |
+| MiroThinker-32B-SFT-v0.1  | Qwen3-8B   | [🤗 link](https://huggingface.co/miromind-ai/MiroThinker-32B-SFT-v0.1) |
+| MiroThinker-32B-DPO-v0.1  | Qwen3-8B   | [🤗 link](https://huggingface.co/miromind-ai/MiroThinker-32B-DPO-v0.1) |
+
 ## Performance 
 
 ### GAIA Benchmark
