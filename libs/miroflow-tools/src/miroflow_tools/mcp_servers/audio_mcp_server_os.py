@@ -24,11 +24,12 @@ import wave
 import contextlib
 from mutagen import File as MutagenFile
 
-OPENAI_WHISPER_API_KEY = os.environ.get("OPENAI_WHISPER_API_KEY")
-OPENAI_WHISPER_URL = os.environ.get("OPENAI_WHISPER_URL")
+WHISPER_API_KEY = os.environ.get("WHISPER_API_KEY")
+WHISPER_BASE_URL = os.environ.get("WHISPER_BASE_URL")
+WHISPER_MODEL_NAME = os.environ.get("WHISPER_MODEL_NAME")
 
 # Initialize FastMCP server
-mcp = FastMCP("audio-mcp-server")
+mcp = FastMCP("audio-mcp-server-os")
 
 
 def _get_audio_extension(url: str, content_type: str = None) -> str:
@@ -139,13 +140,13 @@ async def audio_transcription(audio_path_or_url: str) -> str:
         The transcription of the audio file.
     """
 
-    client = OpenAI(base_url=OPENAI_WHISPER_URL, api_key=OPENAI_WHISPER_API_KEY)
+    client = OpenAI(base_url=WHISPER_BASE_URL, api_key=WHISPER_API_KEY)
 
     try:
         if os.path.exists(audio_path_or_url):  # Check if the file exists locally
             with open(audio_path_or_url, "rb") as audio_file:
                 transcription = client.audio.transcriptions.create(
-                    model="whisper-large-v3-turbo", file=audio_file
+                    model=WHISPER_MODEL_NAME, file=audio_file
                 )
         else:
             # download the audio file from the URL

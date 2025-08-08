@@ -19,18 +19,18 @@
 
 ## 📰 News & Updates
 
-- **2025-08-08**: 🎉 **MiroThinker v0.1 Released** - Models, framework, data, and trace rollout scripts are now fully open-sourced!
+- **2025-08-08**: 🎉 **MiroThinker v0.1 Released** - Models, framework, and data are now fully open-sourced!
 
 ## Introduction
 
 <div align="center">
   <img src="assets/gaia_text_103.png" width="98%" alt="MiroFlow Performance on GAIA-Validation" />
-  <p><strong>Performance of Open-sourced models on GAIA-Validation Benchmark.</strong></p>
+  <p><strong>Performance of Open-Source Models on GAIA-Validation Benchmark.</strong></p>
 </div>
 
 **MiroThinker** is an open-source agentic model series built on top of Qwen3. Designed for deep research and complex, long-horizon problem solving, it integrates strong capabilities in **task decomposition**, **multi-hop reasoning**, **retrieval-augmented generation**, **code execution**, **web browsing**, and **document/file processing**, making it suitable for a wide range of real-world applications.
 
-We have released the **MiroThinker-v0.1** series, including both SFT and DPO variants at parameter scales of **8B**, **14B**, and **32B**. Notably, MiroThinker v0.1 achieves **state-of-the-art performance** among open-source models on the [GAIA benchmark](https://huggingface.co/datasets/gaia-benchmark/GAIA), a rigorous evaluation suite for advanced agentic capabilities, demonstrating its strength in long-context, decision-intensive, and real-world task scenarios.
+We have released the **MiroThinker v0.1** series, including both SFT and DPO variants at parameter scales of **8B**, **14B**, and **32B**. Notably, MiroThinker-v0.1 achieves **state-of-the-art performance** among open-source models on the [GAIA benchmark](https://huggingface.co/datasets/gaia-benchmark/GAIA), a rigorous evaluation suite for advanced agentic capabilities, demonstrating its strength in long-context, decision-intensive, and real-world task scenarios.
 
 | Model Name                | Base Model | HF Link                                                               |
 | :-----------------------: |:----------:| :--------------------------------------------------------------------:|
@@ -47,14 +47,14 @@ We have released the **MiroThinker-v0.1** series, including both SFT and DPO var
 
 ### 🤖 **MiroThinker-Optimized Framework**
 
-- **Fully Open-Source Agent Framework**: Complete transparency with open framework, open models, and open data collection.
-- **Tool Integration**: Seamless integration with external tools and APIs
-- **Trace Collection**: Comprehensive logging and analysis of agent interactions with elapsed time and estimated completion time displayed in minutes. Ready for supervised fine-tuning or DPO.
-- **Benchmark Evaluation**: Extensive testing across multiple benchmark datasets
+- **Fully Open-Source Agent Framework**: Complete transparency with open framework and open models.
+- **Tool Integration**: Seamless integration with external tools and APIs.
+- **Trace Collection**: Comprehensive logging and analysis of agent interactions with elapsed time and estimated completion time displayed in minutes. Ready for SFT and DPO.
+- **Benchmark Evaluation**: Extensive testing across multiple benchmark datasets.
 
 ### 📊 **Comprehensive Benchmark Suite**
 
-- **GAIA Validation**: A benchmark for General AI Assistants. ([paper](https://arxiv.org/abs/2311.12983)).
+- **GAIA Validation**: A benchmark for General AI Assistants. ([paper](https://arxiv.org/abs/2311.12983))
 - **GAIA-Text-103**: A subset of GAIA Validation for text-only tasks. ([paper](https://arxiv.org/abs/2505.22648))
 - **HLE**: Humanity's Last Exam. ([paper](https://arxiv.org/abs/2501.14249))
 - **HLE-Text-500**: A subset of HLE for text-only tasks. ([paper](https://arxiv.org/pdf/2504.21776))
@@ -66,24 +66,24 @@ We have released the **MiroThinker-v0.1** series, including both SFT and DPO var
 
 MiroThinker-v0.1 is trained on our large-scale, high-quality trajectory and preference datasets [MiroVerse-v0.1](https://huggingface.co/datasets/miromind-ai/MiroVerse-v0.1), utilizing the efficient training framework [MiroTrain](https://github.com/MiroMindAI/MiroTrain), and enhanced with tool-use capabilities through our agentic framework [MiroFlow](https://github.com/MiroMindAI/MiroFlow).
 
-To promote reproducibility and benefit the community, we decided to open-source the entire suite mentioned above. For more technical details, evaluation results, and usage tutorials, please visit our [technical blog](https://miromind.ai/blog/miromind-open-deep-research).
+In this repository, we mainly introduce how to deploy a MiroThinker model and conduct benchmark performance evaluations using the MiroFlow framework.
 
 ### Prerequisites
 
 - Python 3.10+
 - [uv](https://docs.astral.sh/uv/) package manager
-- Required API keys (see Configuration section)
+- Required API keys
 
 ### Installation
 
-1. **Clone the repository**
+#### 1. **Clone the Repository**
 
 ```bash
 git clone https://github.com/MiroMindAI/MiroThinker
 cd MiroThinker
 ```
 
-2. **Download benchmark data**
+#### 2. **Download Benchmark Data**
 
 ```bash
 wget https://huggingface.co/datasets/miromind-ai/MiroFlow-Benchmarks/resolve/main/data_20250808_password_protected.zip
@@ -92,7 +92,7 @@ unzip data_20250808_password_protected.zip
 rm data_20250808_password_protected.zip
 ```
 
-3. **Set up environment**
+#### 3. **Setup Environment**
 
 ```bash
 # Shift working dir
@@ -104,20 +104,48 @@ cp .env.example .env
 # Edit .env with your actual API keys
 ```
 
-Create a `.env` file in the `apps/miroflow-agent` directory:
+We currently support two tool configurations:
+1. Using the default settings of open-source tools as much as possible. ([config](apps/miroflow-agent/conf/agent/evaluation_os.yaml))
+2. Using advanced settings of commercial tools. ([config](apps/miroflow-agent/conf/agent/evaluation.yaml))
+   
+The tool lists for these two settings are shown in the table below:
+
+|           Tools           |                         Default Setting <br>with Open-Source Tools                          |                        Advanced Setting <br>with Commercial Tools                        |
+|:-------------------------:|:-------------------------------------------------------------------------------------------:|:----------------------------------------------------------------------------------------:|
+|       Google Search       |                                [Serper](https://serper.dev/)                                |                              [Serper](https://serper.dev/)                               |
+|       Linux Sandbox       |                                   [E2B](https://e2b.dev/)                                   |                                 [E2B](https://e2b.dev/)                                  |
+|    Audio Transcription    |       [Whisper-Large-v3-Turbo](https://huggingface.co/openai/whisper-large-v3-turbo)        | [GPT-4o mini Transcribe](https://platform.openai.com/docs/models/gpt-4o-mini-transcribe) |
+| Visual Question Answering |       [Qwen2.5-VL-72B-Instruct](https://huggingface.co/Qwen/Qwen2.5-VL-72B-Instruct)        |   [Claude Sonnet 3.7](https://docs.anthropic.com/en/docs/about-claude/models/overview)   |
+|         Reasoning         | [Qwen3-235B-A22B-Thinking-2507](https://huggingface.co/Qwen/Qwen3-235B-A22B-Thinking-2507)  |   [Claude Sonnet 3.7](https://docs.anthropic.com/en/docs/about-claude/models/overview)   |
+
+Configure the following variables in your `.env` file according to the mode you choose:
 
 ```bash
 # Required APIs
 SERPER_API_KEY=your_serper_key
 E2B_API_KEY=your_e2b_key
+
+# APIs for Commercial Tools
 ANTHROPIC_API_KEY=your_anthropic_key
 OPENAI_API_KEY=your_openai_key
+
+# APIs for Open-Source Tools
+REASONING_MODEL_NAME="Qwen/Qwen3-235B-A22B-Thinking-2507"
+REASONING_API_KEY=your_reasoning_key
+REASONING_BASE_URL="https://your_reasoning_base_url/v1/chat/completions"
+
+VISION_MODEL_NAME="Qwen/Qwen2.5-VL-72B-Instruct"
+VISION_API_KEY=your_vision_key
+VISION_BASE_URL="https://your_vision_base_url/v1/chat/completions"
+
+WHISPER_MODEL_NAME="openai/whisper-large-v3-turbo"
+WHISPER_API_KEY=your_whisper_key
+WHISPER_BASE_URL="https://your_whisper_base_url/v1"
 
 # Future APIs (Please use dummy values for now)
 GEMINI_API_KEY=your_gemini_key
 JINA_API_KEY=your_jina_key
 FIRECRAWL_API_KEY=your_firecrawl_key
-SILICONFLOW_API_KEY=your_siliconflow_key
 ```
 
 ### Serve the MiroThinker Model
@@ -156,7 +184,7 @@ This will start a server at: `http://0.0.0.0:$PORT$`. Use this as your server ba
 
 ```bash
 cd apps/miroflow-agent
-uv run main.py llm=qwen3-32b agent=evaluation llm.openai_base_url=https://your-api.com/v1
+uv run main.py llm=qwen3-32b agent=evaluation llm.openai_base_url=https://your_base_url/v1
 ```
 
 2. **Run comprehensive benchmark evaluation**
@@ -165,7 +193,7 @@ uv run main.py llm=qwen3-32b agent=evaluation llm.openai_base_url=https://your-a
 # GAIA-Validation
 bash scripts/run_evaluate_multiple_runs_gaia-validation.sh
 
-# GAIA-Validation-Text-103
+# GAIA-Text-103
 bash scripts/run_evaluate_multiple_runs_gaia-validation-text-103.sh
 
 # WebWalkerQA
@@ -198,7 +226,10 @@ python benchmarks/evaluators/check_progress_gaia-validation-text-103.py /path/to
 
 ## 🛠️ Using Open-Source Tools
 
-We also provide the option to use open-source tools as alternatives to proprietary models and tools. For detailed setup and configuration instructions, please refer to our documentation: [USE-OS-TOOL.md](assets/USE-OS-TOOL.md).
+We provide the option to use open-source tools as alternatives to commercial tools. 
+One way to access these open-source tools is to purchase them from API providers, such as [SiliconFlow](https://www.siliconflow.com/).
+Of course, these tools can also be deployed on local servers.
+For detailed setup and local deployment instructions, please refer to our documentation: [USE-OS-TOOL.md](assets/USE-OS-TOOL.md).
 
 ## 📈 Benchmark Performance
 
