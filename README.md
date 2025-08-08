@@ -24,12 +24,11 @@
 
 ## Introduction
 
-MiroThinker is an open-source agentic model series built on top of Qwen3. Designed for deep research and complex, long-horizon problem solving, it integrates strong capabilities in task decomposition, multi-hop reasoning, retrieval-augmented generation, code execution, web browsing, and document/file processing, making it suitable for a wide range of real-world applications.
+**MiroThinker** is an open-source agentic model series built on top of Qwen3. Designed for deep research and complex, long-horizon problem solving, it integrates strong capabilities in **task decomposition**, **multi-hop reasoning**, **retrieval-augmented generation**, **code execution**, **web browsing**, and **document/file processing**, making it suitable for a wide range of real-world applications.
 
-We have released the MiroThinker-v0.1 series, including both SFT and DPO variants at parameter scales of 8B, 14B, and 32B. Notably, MiroThinker v0.1 achieves state-of-the-art performance among open-source models on the [GAIA benchmark](https://huggingface.co/datasets/gaia-benchmark/GAIA), a rigorous evaluation suite for advanced agentic capabilities, demonstrating its strength in long-context, decision-intensive, and real-world task scenarios.
+We have released the **MiroThinker-v0.1** series, including both SFT and DPO variants at parameter scales of **8B**, **14B**, and **32B**. Notably, MiroThinker v0.1 achieves **state-of-the-art performance** among open-source models on the [GAIA benchmark](https://huggingface.co/datasets/gaia-benchmark/GAIA), a rigorous evaluation suite for advanced agentic capabilities, demonstrating its strength in long-context, decision-intensive, and real-world task scenarios.
 
-MiroFlow is a framework for agent development that supports various language models and provides a comprehensive framework for building intelligent agents. The framework includes enhanced conversation management, flexible tool integration, and extensive benchmark evaluations across multiple datasets. A comprehensive framework for building, testing, and deploying intelligent agents powered by MiroThinker models with multi-turn conversation capabilities and advanced tool integration.
-
+**MiroFlow** is a framework for agent development that supports various language models and provides a comprehensive framework for building intelligent agents. The framework includes enhanced conversation management, flexible tool integration, and extensive benchmark evaluations across multiple datasets. A comprehensive framework for building, testing, and deploying intelligent agents powered by MiroThinker models with **multi-turn conversation capabilities** and **advanced tool integration**.
 
 
 ## ✨ Key Features
@@ -67,9 +66,8 @@ To promote reproducibility and benefit the community, we decided to open-source 
 
 1. **Clone the repository**
 ```bash
-git clone https://github.com/MiroMindAI/MiroFlow.git
-cd MiroFlow
-git checkout mirothinker
+git clone https://github.com/MiroMindAI/MiroThinker
+cd MiroThinker
 ```
 
 2. **Download benchmark data**
@@ -255,7 +253,7 @@ This project is licensed under the Apache License 2.0 - see the [LICENSE](LICENS
 
 ## 📞 Support
 
-- **Issues**: For questions or bug reports, please use [GitHub Issues](https://github.com/MiroMindAI/MiroFlow/tree/mirothinker) and include the tag `[Question-MiroThinker]` when referring to this branch.
+- **Issues**: For questions or bug reports, please use [GitHub Issues](https://github.com/MiroMindAI/MiroThinker/issues).
 - **QA Documentation**: See [QA.md](assets/QA.md) for additional guidelines
 
 ### References
