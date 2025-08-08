@@ -23,6 +23,11 @@
 
 ## Introduction
 
+<div align="center">
+  <img src="assets/gaia_text_103.png" width="60%" alt="MiroFlow Performance on GAIA-Validation" />
+  <p><strong>Performance of Open-sourced models on GAIA-Validation Benchmark.</strong></p>
+</div>
+
 **MiroThinker** is an open-source agentic model series built on top of Qwen3. Designed for deep research and complex, long-horizon problem solving, it integrates strong capabilities in **task decomposition**, **multi-hop reasoning**, **retrieval-augmented generation**, **code execution**, **web browsing**, and **document/file processing**, making it suitable for a wide range of real-world applications.
 
 We have released the **MiroThinker-v0.1** series, including both SFT and DPO variants at parameter scales of **8B**, **14B**, and **32B**. Notably, MiroThinker v0.1 achieves **state-of-the-art performance** among open-source models on the [GAIA benchmark](https://huggingface.co/datasets/gaia-benchmark/GAIA), a rigorous evaluation suite for advanced agentic capabilities, demonstrating its strength in long-context, decision-intensive, and real-world task scenarios.
@@ -196,11 +201,6 @@ python benchmarks/evaluators/check_progress_gaia-validation-text-103.py /path/to
 We also provide the option to use open-source tools as alternatives to proprietary models and tools. For detailed setup and configuration instructions, please refer to our documentation: [USE-OS-TOOL.md](assets/USE-OS-TOOL.md).
 
 ## 📈 Benchmark Performance
-
-<div align="center">
-  <img src="assets/gaia_text_103.png" width="80%" alt="MiroFlow Performance on GAIA-Validation" />
-  <p><strong>Performance of MiroFlow on GAIA-Validation Benchmark</strong></p>
-</div>
 
 ### GAIA Benchmark
 
