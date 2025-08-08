@@ -24,7 +24,7 @@
 ## Introduction
 
 <div align="center">
-  <img src="assets/gaia_text_103.png" width="85%" alt="MiroFlow Performance on GAIA-Validation" />
+  <img src="assets/gaia_text_103.png" width="98%" alt="MiroFlow Performance on GAIA-Validation" />
   <p><strong>Performance of Open-sourced models on GAIA-Validation Benchmark.</strong></p>
 </div>
 
