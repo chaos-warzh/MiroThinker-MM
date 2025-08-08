@@ -1,21 +1,26 @@
 <div align="center">
-  <img src="https://cdn-uploads.huggingface.co/production/uploads/68525b342230a897a65cc1c0/87mYQ_a-4jpnMkVR4hrgm.png" width="55%" alt="MiroThinker" />
+  <img src="assets/miro_thinker.png" width="55%" alt="MiroFlow" />
 </div>
 <!-- <hr> -->
 <div align="center">
 
-[![Demo](https://img.shields.io/badge/Demo-FFB300?style=for-the-badge&logo=airplayvideo&logoColor=white)](https://dr.miromind.ai/)
-[![Models](https://img.shields.io/badge/Models-5EDDD2?style=for-the-badge&logo=huggingface&logoColor=ffffff&labelColor)](https://huggingface.co/collections/miromind-ai/mirothinker-v01-689301b6d0563321862d44a1)
-[![Data](https://img.shields.io/badge/Data-0040A1?style=for-the-badge&logo=huggingface&logoColor=ffffff&labelColor)](https://huggingface.co/datasets/miromind-ai/MiroVerse-v0.1)
+[![DEMO](https://img.shields.io/badge/Demo-FFB300?style=for-the-badge&logo=airplayvideo&logoColor=white)](https://dr.miromind.ai/)
+[![MODELS](https://img.shields.io/badge/Models-5EDDD2?style=for-the-badge&logo=huggingface&logoColor=ffffff&labelColor)](https://huggingface.co/collections/miromind-ai/mirothinker-v01-689301b6d0563321862d44a1)
+[![DATA](https://img.shields.io/badge/Data-0040A1?style=for-the-badge&logo=huggingface&logoColor=ffffff&labelColor)](https://huggingface.co/datasets/miromind-ai/MiroVerse-v0.1)
 [![Blog](https://img.shields.io/badge/Blog-4285F4?style=for-the-badge&logo=google-chrome&logoColor=white)](https://miromind.ai/blog/miromind-open-deep-research)
 
-[![Github](https://img.shields.io/badge/GitHub-24292F?style=for-the-badge&logo=github&logoColor=white)](https://github.com/MiroMindAI/MiroThinker)
-[![Discord](https://img.shields.io/badge/Discord-5865F2?style=for-the-badge&logo=discord&logoColor=white)](https://discord.com/invite/EprKHYcm)
+[![GITHUB](https://img.shields.io/badge/Code-24292F?style=for-the-badge&logo=github&logoColor=white)](https://github.com/MiroMindAI/MiroFlow/tree/mirothinker)
+[![WEBSITE](https://img.shields.io/badge/Website-4285F4?style=for-the-badge&logo=google-chrome&logoColor=white)](https://miromind.ai/)
+[![DISCORD](https://img.shields.io/badge/Discord-5865F2?style=for-the-badge&logo=discord&logoColor=white)](https://discord.com/invite/GPqEnkzQZd)
 [![WeChat](https://img.shields.io/badge/WeChat-07C160?style=for-the-badge&logo=wechat&logoColor=white)](https://cdn-uploads.huggingface.co/production/uploads/68525b342230a897a65cc1c0/SGK70isvVpeJwk_fny9sb.png)
 [![RedNote](https://img.shields.io/badge/RedNote-FF2442?style=for-the-badge&logo=revoltdotchat&logoColor=white)](https://www.xiaohongshu.com/user/profile/663098830000000003033edc)
-[![Website](https://img.shields.io/badge/Website-4285F4?style=for-the-badge&logo=monster&logoColor=white)](https://miromind.ai/)
 
 </div>
+
+## 📰 News & Updates
+
+- **2025-08-08**: 🎉 **MiroThinker v0.1 Released** - Models, framework, data, and data collection process are now fully open-sourced!
+
 
 ## Introduction
 
@@ -23,18 +28,164 @@ MiroThinker is an open-source agentic model series built on top of Qwen3. Design
 
 We have released the MiroThinker-v0.1 series, including both SFT and DPO variants at parameter scales of 8B, 14B, and 32B. Notably, MiroThinker v0.1 achieves state-of-the-art performance among open-source models on the [GAIA benchmark](https://huggingface.co/datasets/gaia-benchmark/GAIA), a rigorous evaluation suite for advanced agentic capabilities, demonstrating its strength in long-context, decision-intensive, and real-world task scenarios.
 
-## Model
+MiroFlow is a framework for agent development that supports various language models and provides a comprehensive framework for building intelligent agents. The framework includes enhanced conversation management, flexible tool integration, and extensive benchmark evaluations across multiple datasets. A comprehensive framework for building, testing, and deploying intelligent agents powered by MiroThinker models with multi-turn conversation capabilities and advanced tool integration.
 
-| Model Name                | Base Model | HF Link                                                               |
-| :-----------------------: | :--------: | :--------------------------------------------------------------------:|
-| MiroThinker-8B-SFT-v0.1   | Qwen3-8B   | [🤗 link](https://huggingface.co/miromind-ai/MiroThinker-8B-SFT-v0.1)  |
-| MiroThinker-8B-DPO-v0.1   | Qwen3-8B   | [🤗 link](https://huggingface.co/miromind-ai/MiroThinker-8B-DPO-v0.1)  |
-| MiroThinker-14B-SFT-v0.1  | Qwen3-8B   | [🤗 link](https://huggingface.co/miromind-ai/MiroThinker-14B-SFT-v0.1) |
-| MiroThinker-14B-DPO-v0.1  | Qwen3-8B   | [🤗 link](https://huggingface.co/miromind-ai/MiroThinker-14B-DPO-v0.1) |
-| MiroThinker-32B-SFT-v0.1  | Qwen3-8B   | [🤗 link](https://huggingface.co/miromind-ai/MiroThinker-32B-SFT-v0.1) |
-| MiroThinker-32B-DPO-v0.1  | Qwen3-8B   | [🤗 link](https://huggingface.co/miromind-ai/MiroThinker-32B-DPO-v0.1) |
 
-## Performance 
+
+## ✨ Key Features
+
+### 🤖 **MiroThinker-Optimized Framework**
+- **Fully Open-Source Agent Framework**: Complete transparency with open framework, open models, and open data collection.
+- **Tool Integration**: Seamless integration with external tools and APIs
+- **Trace Collection**: Comprehensive logging and analysis of agent interactions with elapsed time and estimated completion time displayed in minutes. Ready for supervised fine-tuning or DPO.
+- **Benchmark Evaluation**: Extensive testing across multiple benchmark datasets
+
+### 📊 **Comprehensive Benchmark Suite**
+- **GAIA Validation**: A benchmark for General AI Assistants. ([paper](https://arxiv.org/abs/2311.12983)).
+- **GAIA-Text-103**: A subset of GAIA Validation for text-only tasks. ([paper](https://arxiv.org/abs/2505.22648))
+- **HLE**: Humanity's Last Exam. ([paper](https://arxiv.org/abs/2501.14249))
+- **HLE-Text-500**: A subset of HLE for text-only tasks. ([paper](https://arxiv.org/pdf/2504.21776))
+- **BrowseComp**: Web browsing and comprehension tasks. ([paper](https://arxiv.org/abs/2504.12516))
+- **WebWalkerQA**: Web navigation and question answering. ([paper](https://arxiv.org/abs/2501.07572))
+- **Frames**: Factuality, Retrieval, And reasoning MEasurement Set. ([paper](https://arxiv.org/abs/2409.12941))
+
+
+## 🚀 Quick Start
+
+MiroThinker-v0.1 is trained on our large-scale, high-quality trajectory and preference datasets [MiroVerse-v0.1](https://huggingface.co/datasets/miromind-ai/MiroVerse-v0.1), utilizing the efficient training framework [MiroTrain](https://github.com/MiroMindAI/MiroTrain), and enhanced with tool-use capabilities through our agentic framework [MiroFlow](https://github.com/MiroMindAI/MiroFlow). 
+
+To promote reproducibility and benefit the community, we decided to open-source the entire suite mentioned above. For more technical details, evaluation results, and usage tutorials, please visit our [technical blog](https://miromind.ai/blog/miromind-open-deep-research).
+
+
+### Prerequisites
+
+- Python 3.10+
+- [uv](https://docs.astral.sh/uv/) package manager
+- Required API keys (see Configuration section)
+
+### Installation
+
+1. **Clone the repository**
+```bash
+git clone https://github.com/MiroMindAI/MiroFlow.git
+cd MiroFlow
+git checkout mirothinker
+```
+
+2. **Download benchmark data**
+```bash
+wget https://huggingface.co/datasets/miromind-ai/MiroFlow-Benchmarks/resolve/main/data_20250808_password_protected.zip
+unzip data_20250808_password_protected.zip
+# The unzip passcode is: `pf4*`.
+rm data_20250808_password_protected.zip
+```
+
+3. **Set up environment**
+```bash
+# Shift working dir
+cd apps/miroflow-agent
+# Install environment
+uv sync
+# Create .env file with your API keys
+cp .env.example .env
+# Edit .env with your actual API keys
+```
+
+Create a `.env` file in the `apps/miroflow-agent` directory:
+
+```bash
+# Required APIs
+SERPER_API_KEY=your_serper_key
+E2B_API_KEY=your_e2b_key
+ANTHROPIC_API_KEY=your_anthropic_key
+OPENAI_API_KEY=your_openai_key
+
+# Future APIs (Please use dummy values for now)
+GEMINI_API_KEY=your_gemini_key
+JINA_API_KEY=your_jina_key
+FIRECRAWL_API_KEY=your_firecrawl_key
+SILICONFLOW_API_KEY=your_siliconflow_key
+```
+
+### Serve the MiroThinker Model
+
+Use SGLang to serve MiroThinker models at port 61002:
+```
+NUM_GPUS=4
+PORT=61002
+MODEL_PATH=miromind-ai/MiroThinker-32B-DPO-v0.1
+
+python3 -m sglang.launch_server \
+    --model-path $MODEL_PATH \
+    --tp $NUM_GPUS \
+    --dp 1 \
+    --host 0.0.0.0 \
+    --port $PORT \
+    --trust-remote-code \
+    --log-level debug \
+    --log-level-http debug \
+    --log-requests \
+    --log-requests-level 2 \
+    --attention-backend flashinfer \
+    --enable-metrics \
+    --show-time-cost \
+    --chat-template assets/qwen3_nonthinking.jinja
+```
+This will start a server at: `http://0.0.0.0:$PORT$`. Use this as your server base URL.
+
+### Basic Usage
+
+1. **Run a single evaluation**
+
+```bash
+cd apps/miroflow-agent
+uv run main.py llm=qwen3-32b agent=evaluation llm.openai_base_url=https://your-api.com/v1
+```
+
+2. **Run comprehensive benchmark evaluation**
+```bash
+# GAIA-Validation
+bash scripts/run_evaluate_multiple_runs_gaia-validation.sh
+
+# GAIA-Validation-Text-103
+bash scripts/run_evaluate_multiple_runs_gaia-validation-text-103.sh
+
+# WebWalkerQA
+bash scripts/run_evaluate_multiple_runs_webwalkerqa.sh
+
+# HLE
+bash scripts/run_evaluate_multiple_runs_hle.sh
+
+# HLE-Text-500
+bash scripts/run_evaluate_multiple_runs_hle-text-500.sh
+
+# FRAMES
+bash scripts/run_evaluate_multiple_runs_frames.sh
+
+# BrowseComp
+bash scripts/run_evaluate_multiple_runs_browsecomp.sh
+```
+
+3. **Monitor evaluation progress**
+```bash
+# For GAIA validation
+python benchmarks/evaluators/check_progress_gaia-validation.py /path/to/evaluation/logs
+
+# For GAIA-Text-103
+python benchmarks/evaluators/check_progress_gaia-validation-text-103.py /path/to/evaluation/logs
+
+# Others follow the same pattern
+```
+
+## 🛠️ (Optional) Using Open-Source Tools
+
+We also provide the option to use open-source tools as alternatives to proprietary models and tools. For detailed setup and configuration instructions, please refer to our documentation: [USE-OS-TOOL.md](assets/USE-OS-TOOL.md).
+
+## 📈 Benchmark Performance
+<div align="center">
+  <img src="assets/gaia_text_103.png" width="80%" alt="MiroFlow Performance on GAIA-Validation" />
+  <p><strong>Performance of MiroFlow on GAIA-Validation Benchmark</strong></p>
+</div>
 
 ### GAIA Benchmark
 
@@ -77,22 +228,40 @@ We have released the MiroThinker-v0.1 series, including both SFT and DPO variant
 
 Coming soon
 
-## Quick Start
+## 📊 Trace Collection
 
-MiroThinker-v0.1 is trained on our large-scale, high-quality trajectory and preference datasets [MiroVerse-v0.1](https://huggingface.co/datasets/miromind-ai/MiroVerse-v0.1), utilizing the efficient training framework [MiroTrain](https://github.com/MiroMindAI/MiroTrain), and enhanced with tool-use capabilities through our agentic framework [MiroFlow](https://github.com/MiroMindAI/MiroFlow). 
+The trace collection scripts automatically save logs in the `logs/` directory in `chatml` format.
 
-To promote reproducibility and benefit the community, we decided to open-source the entire suite mentioned above. For more technical details, evaluation results, and usage tutorials, please visit our [technical blog](https://miromind.ai/blog/miromind-open-deep-research).
+```bash
+cd apps/collect-trace
 
-## License
+# Collect Claude Traces for Imitation Learning - SFT
+bash scripts/run_benchmark_claude.sh
 
-MiroThinker-v0.1 is licensed under Apache 2.0.
+# Collect MitoThinker Traces for DPO purposes
+bash scripts/run_benchmark_qwen.sh
+```
 
-## Contact Us
+## 📄 License
 
-MiroThinker is developed by the MiroMind Foundation Model Team.
-If you would like to leave us a message, feel free to get in touch. 
-In addition to [GitHub](https://github.com/MiroMindAI/), 
-[Discord](https://discord.com/invite/EprKHYcm), 
-[WeChat](https://cdn-uploads.huggingface.co/production/uploads/68525b342230a897a65cc1c0/SGK70isvVpeJwk_fny9sb.png), 
-and [RedNote](https://www.xiaohongshu.com/user/profile/663098830000000003033edc), 
-you can also reach us via email at talent@miromind.ai.
+This project is licensed under the Apache License 2.0 - see the [LICENSE](LICENSE) file for details.
+
+## 🙏 Acknowledgments
+
+- **Benchmark Contributors** for the comprehensive evaluation datasets
+- **Open Source Community** for the tools and libraries that make this possible
+
+## 📞 Support
+
+- **Issues**: For questions or bug reports, please use [GitHub Issues](https://github.com/MiroMindAI/MiroFlow/tree/mirothinker) and include the tag `[Question-MiroThinker]` when referring to this branch.
+- **QA Documentation**: See [QA.md](assets/QA.md) for additional guidelines
+
+### References
+```
+@misc{2025mirothinker,
+    title={MiroThinker: An open-source agentic model series trained for deep research and complex, long-horizon problem solving},
+    author={MiroMind AI Team},
+    howpublished = {\url{https://github.com/MiroMindAI/MiroThinker}},
+    year={2025}
+}
+```
