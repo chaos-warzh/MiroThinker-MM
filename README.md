@@ -196,7 +196,7 @@ python benchmarks/evaluators/check_progress_gaia-validation-text-103.py /path/to
 # Others follow the same pattern
 ```
 
-## 🛠️ (Optional) Using Open-Source Tools
+## 🛠️ Using Open-Source Tools
 
 We also provide the option to use open-source tools as alternatives to proprietary models and tools. For detailed setup and configuration instructions, please refer to our documentation: [USE-OS-TOOL.md](assets/USE-OS-TOOL.md).
 
