@@ -189,27 +189,29 @@ uv run main.py llm=qwen3-32b agent=evaluation llm.openai_base_url=https://your_b
 
 2. **Run comprehensive benchmark evaluation**
 
+> If you want to use commercial tools, set `AGENT_SET="evaluation"`. If you want to use open-source tools, set `AGENT_SET="evaluation_os"`.
+
 ```bash
 # GAIA-Validation
-bash scripts/run_evaluate_multiple_runs_gaia-validation.sh
+LLM_MODEL="xxx" BASE_URL="xxx" AGENT_SET="evaluation" bash scripts/run_evaluate_multiple_runs_gaia-validation.sh
 
 # GAIA-Text-103
-bash scripts/run_evaluate_multiple_runs_gaia-validation-text-103.sh
+LLM_MODEL="xxx" BASE_URL="xxx" AGENT_SET="evaluation" bash scripts/run_evaluate_multiple_runs_gaia-validation-text-103.sh
 
 # WebWalkerQA
-bash scripts/run_evaluate_multiple_runs_webwalkerqa.sh
+LLM_MODEL="xxx" BASE_URL="xxx" AGENT_SET="evaluation" bash scripts/run_evaluate_multiple_runs_webwalkerqa.sh
 
 # HLE
-bash scripts/run_evaluate_multiple_runs_hle.sh
+LLM_MODEL="xxx" BASE_URL="xxx" AGENT_SET="evaluation" bash scripts/run_evaluate_multiple_runs_hle.sh
 
 # HLE-Text-500
-bash scripts/run_evaluate_multiple_runs_hle-text-500.sh
+LLM_MODEL="xxx" BASE_URL="xxx" AGENT_SET="evaluation" bash scripts/run_evaluate_multiple_runs_hle-text-500.sh
 
 # FRAMES
-bash scripts/run_evaluate_multiple_runs_frames.sh
+LLM_MODEL="xxx" BASE_URL="xxx" AGENT_SET="evaluation" bash scripts/run_evaluate_multiple_runs_frames.sh
 
 # BrowseComp
-bash scripts/run_evaluate_multiple_runs_browsecomp.sh
+LLM_MODEL="xxx" BASE_URL="xxx" AGENT_SET="evaluation" bash scripts/run_evaluate_multiple_runs_browsecomp.sh
 ```
 
 3. **Monitor evaluation progress**

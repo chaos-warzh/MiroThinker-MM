@@ -2,10 +2,9 @@
 
 BENCHMARK_NAME="gaia-validation"
 LLM_PROVIDER="qwen"
-AGENT_SET="evaluation"
+AGENT_SET=${AGENT_SET:-"evaluation"}
 BASE_URL=${BASE_URL:-"https://your-api.com/v1"}
 LLM_MODEL=${LLM_MODEL:-"MiroThinker-Models"}
-
 
 RESULTS_DIR="../../debug"
 mkdir -p "$RESULTS_DIR"

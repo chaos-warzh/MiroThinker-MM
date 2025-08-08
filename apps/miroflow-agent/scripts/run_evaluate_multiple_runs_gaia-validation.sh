@@ -8,10 +8,10 @@ BASE_URL=${BASE_URL:-"https://your-api.com/v1"}
 NUM_RUNS=8
 BENCHMARK_NAME="gaia-validation"
 LLM_PROVIDER="qwen"
-AGENT_SET="evaluation"
+AGENT_SET=${AGENT_SET:-"evaluation"}
 
 # Set results directory
-RESULTS_DIR="../../logs/${BENCHMARK_NAME}/$(date +%m%d)/${LLM_PROVIDER}_${LLM_MODEL}_${AGENT_SET}_run2"
+RESULTS_DIR="../../logs/${BENCHMARK_NAME}/$(date +%m%d)/${LLM_PROVIDER}_${LLM_MODEL}_${AGENT_SET}"
 
 echo "Starting $NUM_RUNS runs of the evaluation..."
 echo "Results will be saved in: $RESULTS_DIR"

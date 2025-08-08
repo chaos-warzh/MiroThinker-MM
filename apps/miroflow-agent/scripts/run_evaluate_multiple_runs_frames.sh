@@ -8,7 +8,7 @@ BASE_URL=${BASE_URL:-"https://your-api.com/v1"}
 NUM_RUNS=2
 BENCHMARK_NAME="frames"
 LLM_PROVIDER="qwen"
-AGENT_SET="evaluation"
+AGENT_SET=${AGENT_SET:-"evaluation"}
 
 # Set results directory
 RESULTS_DIR="../../logs/${BENCHMARK_NAME}/$(date +%m%d)/${LLM_PROVIDER}_${LLM_MODEL}_${AGENT_SET}"
