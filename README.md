@@ -265,3 +265,6 @@ This project is licensed under the Apache License 2.0 - see the [LICENSE](LICENS
     year={2025}
 }
 ```
+
+[![Star History Chart](https://api.star-history.com/svg?repos=MiroMindAI/MiroThinker&type=Date)](https://star-history.com/#MiroMindAI/MiroThinker&Date)
+
