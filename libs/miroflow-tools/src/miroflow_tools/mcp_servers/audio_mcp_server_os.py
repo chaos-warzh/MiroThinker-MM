@@ -178,7 +178,7 @@ async def audio_transcription(audio_path_or_url: str) -> str:
             try:
                 with open(temp_audio_path, "rb") as audio_file:
                     transcription = client.audio.transcriptions.create(
-                        model="whisper-large-v3-turbo", file=audio_file
+                        model=WHISPER_MODEL_NAME, file=audio_file
                     )
             finally:
                 # Clean up the temp file
