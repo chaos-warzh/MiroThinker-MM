@@ -222,7 +222,7 @@ LLM_MODEL="xxx" BASE_URL="xxx" AGENT_SET="evaluation" bash scripts/run_evaluate_
 #### 3. **Monitor evaluation progress**
 
 ```bash
-# For GAIA validation
+# For GAIA-Validation
 python benchmarks/evaluators/check_progress_gaia-validation.py /path/to/evaluation/logs
 
 # For GAIA-Text-103
@@ -235,6 +235,7 @@ python benchmarks/evaluators/check_progress_gaia-validation-text-103.py /path/to
 
 We provide the option to use open-source tools as alternatives to commercial tools. 
 One way to access these open-source tools is to purchase them from API providers, such as [SiliconFlow](https://www.siliconflow.com/).
+
 Of course, these tools can also be deployed on local servers.
 For detailed setup and local deployment instructions, please refer to our documentation: [USE-OS-TOOL.md](assets/USE-OS-TOOL.md).
 
@@ -244,7 +245,7 @@ For detailed setup and local deployment instructions, please refer to our docume
 
 | **Method** | Text-103<br>Best Pass@1 | Text-103<br>Pass@1 (Avg@8) | Val-165<br>Best Pass@1 | Val-165<br>Pass@1 (Avg@8) |
 | ----------------------------------------------------------------- | :--: | :--: | :--: | :--: |
-| **🔹--7B/8B Models--** | | | | |
+| **🔹—— 7B/8B Models ——** | | | | |
 | Search-o1-7B                                                      | 17.5 | -    | -    | -    |
 | R1-Searcher-7B                                                    | 20.4 | -    | -    | -    |
 | WebDancer-7B                                                      | 31.0 | -    | -    | -    |
@@ -254,12 +255,12 @@ For detailed setup and local deployment instructions, please refer to our docume
 |     + Commercial Tools                        | 46.6 | 42.1 | 37.6 | 33.9 |
 | **MiroThinker-8B-DPO-v0.1**                                           | 46.6 | 44.8 | 37.0 | 35.4 |
 |     + Commercial Tools                        | **50.5** | **46.7** | **38.2** | **35.9** |
-| **🔹--14B Models--** | | | | |
+| **🔹—— 14B Models ——** | | | | |
 | **MiroThinker-14B-SFT-v0.1**                                          | 47.6 | 44.4 | 37.0 | 34.4 |
 |     + Commercial Tools                        | 49.5 | 47.5 | 41.8 | 39.8 |
 | **MiroThinker-14B-DPO-v0.1**                                          | 48.5 | 46.6 | 42.4 | 39.2 |
 |     + Commercial Tools                        | **52.4** | **48.5** | **45.5** | **42.0** |
-| **🔹--32B Models--** | | | | |
+| **🔹—— 32B Models ——** | | | | |
 | Search-o1-32B                                                     | 28.2 | -    | -    | -    |
 | WebThinker-32B-RL                                                 | 48.5 | -    | -    | -    |
 | WebDancer-QwQ-32B                                                 | 51.5 | -    | -    | -    |
