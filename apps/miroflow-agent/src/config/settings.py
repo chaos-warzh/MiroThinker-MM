@@ -32,27 +32,28 @@ set_tracing_export_api_key("fake-key")
 # Suppress trace provider warnings
 bootstrap_silent_trace_provider()
 
+HTTPS_PROXY = os.environ.get("HTTPS_PROXY", None)
+
 # Get API Keys from environment variables
 SERPER_API_KEY = os.environ.get("SERPER_API_KEY")
 JINA_API_KEY = os.environ.get("JINA_API_KEY")
+
+# API Keys for Commercial Tools
 ANTHROPIC_API_KEY = os.environ.get("ANTHROPIC_API_KEY")
 OPENAI_API_KEY = os.environ.get("OPENAI_API_KEY")
 E2B_API_KEY = os.environ.get("E2B_API_KEY")
 GEMINI_API_KEY = os.environ.get("GEMINI_API_KEY")
 
+# APIs for Open-Source Tools
 VISION_API_KEY = os.environ.get("VISION_API_KEY")
 VISION_BASE_URL = os.environ.get("VISION_BASE_URL")
 VISION_MODEL_NAME = os.environ.get("VISION_MODEL_NAME")
-
 REASONING_API_KEY = os.environ.get("REASONING_API_KEY")
 REASONING_BASE_URL = os.environ.get("REASONING_BASE_URL")
 REASONING_MODEL_NAME = os.environ.get("REASONING_MODEL_NAME")
-
 WHISPER_BASE_URL = os.environ.get("WHISPER_BASE_URL")
 WHISPER_API_KEY = os.environ.get("WHISPER_API_KEY")
 WHISPER_MODEL_NAME = os.environ.get("WHISPER_MODEL_NAME")
-
-HTTPS_PROXY = os.environ.get("HTTPS_PROXY", None)
 
 
 # MCP server configuration generation function

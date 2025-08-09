@@ -21,7 +21,7 @@
 
 - **2025-08-08**: 🎉 **MiroThinker v0.1 Released** - Models, framework, and data are now fully open-sourced!
 
-## Introduction
+## 📝 Introduction
 
 <div align="center">
   <img src="assets/gaia_text_103.png" width="98%" alt="MiroFlow Performance on GAIA-Validation" />
@@ -61,6 +61,10 @@ We have released the **MiroThinker v0.1** series, including both SFT and DPO var
 - **BrowseComp**: Web browsing and comprehension tasks. ([paper](https://arxiv.org/abs/2504.12516))
 - **WebWalkerQA**: Web navigation and question answering. ([paper](https://arxiv.org/abs/2501.07572))
 - **Frames**: Factuality, Retrieval, And reasoning MEasurement Set. ([paper](https://arxiv.org/abs/2409.12941))
+
+## 🌐 Online Demo
+
+Welcome to try out our online demo [here](https://dr.miromind.ai/). In this demo, we have deployed our [MiroThinker-32B-DPO-v0.1](https://huggingface.co/miromind-ai/MiroThinker-32B-DPO-v0.1) along with commercial tools, hoping to deliver a better experience.
 
 ## 🚀 Quick Start
 
@@ -180,14 +184,14 @@ This will start a server at: `http://0.0.0.0:$PORT$`. Use this as your server ba
 
 ### Basic Usage
 
-1. **Run a single evaluation**
+#### 1. **Run a single evaluation**
 
 ```bash
 cd apps/miroflow-agent
 uv run main.py llm=qwen3-32b agent=evaluation llm.openai_base_url=https://your_base_url/v1
 ```
 
-2. **Run comprehensive benchmark evaluation**
+#### 2. **Run comprehensive benchmark evaluation**
 
 - If you want to use commercial tools, set <code>AGENT_SET="evaluation"</code>.<br>
 - If you want to use open-source tools, set <code>AGENT_SET="evaluation_os"</code>.
@@ -215,7 +219,7 @@ LLM_MODEL="xxx" BASE_URL="xxx" AGENT_SET="evaluation" bash scripts/run_evaluate_
 LLM_MODEL="xxx" BASE_URL="xxx" AGENT_SET="evaluation" bash scripts/run_evaluate_multiple_runs_browsecomp.sh
 ```
 
-3. **Monitor evaluation progress**
+#### 3. **Monitor evaluation progress**
 
 ```bash
 # For GAIA validation
@@ -312,7 +316,7 @@ This project is licensed under the Apache License 2.0 - see the [LICENSE](LICENS
 @misc{2025mirothinker,
     title={MiroThinker: An open-source agentic model series trained for deep research and complex, long-horizon problem solving},
     author={MiroMind AI Team},
-    howpublished = {\url{https://github.com/MiroMindAI/MiroThinker}},
+    howpublished={\url{https://github.com/MiroMindAI/MiroThinker}},
     year={2025}
 }
 ```
