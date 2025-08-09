@@ -261,15 +261,16 @@ For detailed setup and local deployment instructions, please refer to our docume
 | **MiroThinker-14B-DPO-v0.1**                                          | 48.5 | 46.6 | 42.4 | 39.2 |
 |     + Commercial Tools                        | **52.4** | **48.5** | **45.5** | **42.0** |
 | **🔹—— 32B Models ——** | | | | |
+| Qwen3-32B                                                         | 31.1 | 26.7 | 29.7 | 26.4 |
 | Search-o1-32B                                                     | 28.2 | -    | -    | -    |
 | WebThinker-32B-RL                                                 | 48.5 | -    | -    | -    |
 | WebDancer-QwQ-32B                                                 | 51.5 | -    | -    | -    |
 | WebSailor-32B                                                     | 53.2 | -    | -    | -    |
 | WebShaper-QwQ-32B                                                 | 53.3 | -    | -    | -    |
-| **MiroThinker-32B-SFT-v0.1**                                          | 55.3 | 51.3 | 44.9 | 42.7 |
-|     + Commercial Tools                        | 58.3 | 54.2 | 48.5 | 45.8 |
-| **MiroThinker-32B-DPO-v0.1** | 57.3 | 54.1 | 48.5 | 45.9 |
-|     + Commercial Tools                        | **60.2** | **57.9** | **50.9** | **48.9** |
+| **MiroThinker-32B-SFT-v0.1**                                      | 55.3 | 51.3 | 44.9 | 42.7 |
+|     + Commercial Tools                                            | 58.3 | 54.2 | 48.5 | 45.8 |
+| **MiroThinker-32B-DPO-v0.1**                                      | 57.3 | 54.1 | 48.5 | 45.9 |
+|     + Commercial Tools                                            | **60.2** | **57.9** | **50.9** | **48.9** |
 
 1. Following the practices of WebThinker, WebAgents, and CognitiveKernel, we report the Best Pass@1, the highest score across three runs, which often reflects stronger performance, though it may exhibit some variability. To provide a more stable measure, we additionally report Pass@1 (Avg@8), which offers greater consistency at the cost of slightly lower scores.
 
