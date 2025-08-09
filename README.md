@@ -240,23 +240,22 @@ For detailed setup and local deployment instructions, please refer to our docume
 
 | **Method** | Text-103<br>Best Pass@1 | Text-103<br>Pass@1 (Avg@8) | Val-165<br>Best Pass@1 | Val-165<br>Pass@1 (Avg@8) |
 | ----------------------------------------------------------------- | :--: | :--: | :--: | :--: |
-| **🔹7B Models** | | | | |
+| **🔹--7B/8B Models--** | | | | |
 | Search-o1-7B                                                      | 17.5 | -    | -    | -    |
 | R1-Searcher-7B                                                    | 20.4 | -    | -    | -    |
 | WebDancer-7B                                                      | 31.0 | -    | -    | -    |
 | WebSailor-7B                                                      | 37.9 | -    | -    | -    |
-| **🔹8B Models** | | | | |
 | CK-Pro-8B                                                         | 40.3 | -    | 32.7 | -    |
 | **MiroThinker-8B-SFT-v0.1**                                           | 44.7 | 40.1 | 34.6 | 31.8 |
 |     + Commercial Tools                        | 46.6 | 42.1 | 37.6 | 33.9 |
 | **MiroThinker-8B-DPO-v0.1**                                           | 46.6 | 44.8 | 37.0 | 35.4 |
 |     + Commercial Tools                        | **50.5** | **46.7** | **38.2** | **35.9** |
-| **🔹14B Models** | | | | |
+| **🔹--14B Models--** | | | | |
 | **MiroThinker-14B-SFT-v0.1**                                          | 47.6 | 44.4 | 37.0 | 34.4 |
 |     + Commercial Tools                        | 49.5 | 47.5 | 41.8 | 39.8 |
 | **MiroThinker-14B-DPO-v0.1**                                          | 48.5 | 46.6 | 42.4 | 39.2 |
 |     + Commercial Tools                        | **52.4** | **48.5** | **45.5** | **42.0** |
-| **🔹32B Models** | | | | |
+| **🔹--32B Models--** | | | | |
 | Search-o1-32B                                                     | 28.2 | -    | -    | -    |
 | WebThinker-32B-RL                                                 | 48.5 | -    | -    | -    |
 | WebDancer-QwQ-32B                                                 | 51.5 | -    | -    | -    |
