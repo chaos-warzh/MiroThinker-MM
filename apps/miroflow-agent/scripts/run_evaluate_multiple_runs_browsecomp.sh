@@ -42,7 +42,7 @@ for i in $(seq 1 $NUM_RUNS); do
             llm.max_context_length=40960 \
             benchmark.execution.max_tasks=null \
             benchmark.execution.max_concurrent=20 \
-            benchmark.execution.pass_at_k=3 \
+            benchmark.execution.pass_at_k=1 \
             benchmark.data.data_dir=../../data/browsecomp \
             agent=$AGENT_SET \
             hydra.run.dir=${RESULTS_DIR}/$RUN_ID \
