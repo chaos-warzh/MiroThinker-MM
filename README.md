@@ -223,10 +223,10 @@ LLM_MODEL="xxx" BASE_URL="xxx" AGENT_SET="evaluation" bash scripts/run_evaluate_
 
 ```bash
 # For GAIA-Validation
-python benchmarks/evaluators/check_progress_gaia-validation.py /path/to/evaluation/logs
+python benchmarks/check_progress/check_progress_gaia-validation.py /path/to/evaluation/logs
 
 # For GAIA-Text-103
-python benchmarks/evaluators/check_progress_gaia-validation-text-103.py /path/to/evaluation/logs
+python benchmarks/check_progress/check_progress_gaia-validation-text-103.py /path/to/evaluation/logs
 
 # Others follow the same pattern
 ```
