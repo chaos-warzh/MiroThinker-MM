@@ -198,25 +198,28 @@ uv run main.py llm=qwen3-32b agent=evaluation llm.openai_base_url=https://your_b
 
 ```bash
 # GAIA-Validation
-LLM_MODEL="xxx" BASE_URL="xxx" AGENT_SET="evaluation" bash scripts/run_evaluate_multiple_runs_gaia-validation.sh
+LLM_MODEL="xxx" BASE_URL="xxx" AGENT_SET="evaluation_os" bash scripts/run_evaluate_multiple_runs_gaia-validation.sh
 
 # GAIA-Text-103
-LLM_MODEL="xxx" BASE_URL="xxx" AGENT_SET="evaluation" bash scripts/run_evaluate_multiple_runs_gaia-validation-text-103.sh
+LLM_MODEL="xxx" BASE_URL="xxx" AGENT_SET="evaluation_os" bash scripts/run_evaluate_multiple_runs_gaia-validation-text-103.sh
 
 # WebWalkerQA
-LLM_MODEL="xxx" BASE_URL="xxx" AGENT_SET="evaluation" bash scripts/run_evaluate_multiple_runs_webwalkerqa.sh
+LLM_MODEL="xxx" BASE_URL="xxx" AGENT_SET="evaluation_os" bash scripts/run_evaluate_multiple_runs_webwalkerqa.sh
 
 # HLE
-LLM_MODEL="xxx" BASE_URL="xxx" AGENT_SET="evaluation" bash scripts/run_evaluate_multiple_runs_hle.sh
+LLM_MODEL="xxx" BASE_URL="xxx" AGENT_SET="evaluation_os" bash scripts/run_evaluate_multiple_runs_hle.sh
 
 # HLE-Text-500
-LLM_MODEL="xxx" BASE_URL="xxx" AGENT_SET="evaluation" bash scripts/run_evaluate_multiple_runs_hle-text-500.sh
+LLM_MODEL="xxx" BASE_URL="xxx" AGENT_SET="evaluation_os" bash scripts/run_evaluate_multiple_runs_hle-text-500.sh
 
 # FRAMES
-LLM_MODEL="xxx" BASE_URL="xxx" AGENT_SET="evaluation" bash scripts/run_evaluate_multiple_runs_frames.sh
+LLM_MODEL="xxx" BASE_URL="xxx" AGENT_SET="evaluation_os" bash scripts/run_evaluate_multiple_runs_frames.sh
 
-# BrowseComp
-LLM_MODEL="xxx" BASE_URL="xxx" AGENT_SET="evaluation" bash scripts/run_evaluate_multiple_runs_browsecomp.sh
+# BrowseComp-EN
+LLM_MODEL="xxx" BASE_URL="xxx" AGENT_SET="evaluation_os" bash scripts/run_evaluate_multiple_runs_browsecomp.sh
+
+# BrowseComp-ZH
+LLM_MODEL="xxx" BASE_URL="xxx" AGENT_SET="evaluation_os" bash scripts/run_evaluate_multiple_runs_browsecomp_zh.sh
 ```
 
 #### 3. **Monitor evaluation progress**
@@ -282,7 +285,27 @@ For detailed setup and local deployment instructions, please refer to our docume
 
 ### More Benchmarks
 
-Coming soon
+| Method                       | HLE<br>Pass@1 | Frames<br>Pass@1 | BrowseComp<br>Pass@1 | BrowseComp-ZH<br>Pass@1 | WebWalkerQA<br>Pass@1 |
+|------------------------------|:-------------:|:----------------:|:--------------------:|:-----------------------:|:---------------------:|
+| OpenAI Deep Research         |     26.6      |        -         |         51.5         |          42.9           |           -           |
+| Gemini Deep Research         |     26.9      |        -         |          -           |            -            |           -           |
+| Kimi-Researcher              |     26.9      |       78.8       |          -           |            -            |           -           |
+|                              |               |                  |                      |                         |                       |
+| WebDancer-7B                 |       -       |        -         |          -           |            -            |         36.0          |
+| WebSailor-7B                 |       -       |        -         |         6.7          |          14.2           |           -           |
+| **MiroThinker-8B-SFT-v0.1**  |       -       |       58.0       |         5.5          |           9.3           |         41.3          |
+| **MiroThinker-8B-DPO-v0.1**  |       -       |       64.4       |         8.7          |          13.6           |         45.7          |
+|                              |               |                  |                      |                         |                       |
+| WebThinker-32B-RL            |       -       |        -         |          -           |            -            |         46.5          |
+| WebDancer-QwQ-32B            |       -       |        -         |         3.8          |          18.0           |         47.9          |
+| WebSailor-32B                |       -       |        -         |         10.5         |          25.5           |           -           |
+| WebShaper-32B                |       -       |        -         |          -           |            -            |         51.4          |
+| **MiroThinker-32B-SFT-v0.1** |     10.2      |       70.4       |         10.6         |          13.8           |         45.7          |
+| **MiroThinker-32B-DPO-v0.1** |     11.8      |       71.7       |         13.0         |          17.0           |         49.3          |
+
+1. MiroThinker’s performance was tested with this repository and open-source tools; other models’ results are from their papers and official sites.
+
+2. As [MiroVerse-v0.1](https://huggingface.co/datasets/miromind-ai/MiroVerse-v0.1) mainly contains English data, the model’s Chinese capability is limited. We plan to add more Chinese data to improve performance in the next version.
 
 ## 📊 Trace Collection
 
@@ -291,10 +314,10 @@ The trace collection scripts automatically save logs in the `logs/` directory in
 ```bash
 cd apps/collect-trace
 
-# Collect Claude Traces for Imitation Learning - SFT
+# Collect Traces for SFT
 bash scripts/run_benchmark_claude.sh
 
-# Collect MitoThinker Traces for DPO purposes
+# Collect Traces for DPO
 bash scripts/run_benchmark_qwen.sh
 ```
 
