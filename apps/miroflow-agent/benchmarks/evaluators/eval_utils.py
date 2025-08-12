@@ -492,7 +492,7 @@ async def verify_answer_for_datasets(
         )
         return result, "gaia_validation_text_103_scorer"
 
-    elif benchmark_name == "browsecomp":
+    elif benchmark_name == "browsecomp" or benchmark_name == "browsecomp_zh":
         result = await verify_answer_browsecomp(question, target, predicted_answer)
         return result, "browsecomp_judge"
 

@@ -33,29 +33,6 @@
 
 **Answer:** Yes, there is a measurable difference in evaluation outcomes between the two judgment models.
 
-A comparison between GPT-4.1-2025-04-14 and Qwen2.5-72B-Instruct as judgment LLMs.
-
-### Experimental Setup
-
-We conducted a comparative evaluation using the GAIA-Validation-text-103 dataset:
-
-- **Dataset size:** 103 questions
-- **Evaluation runs:** 8 iterations per model
-- **Total evaluations:** 824 questions (103 × 8)
-
-### Results
-
-| Judge Model | Accuracy Results |
-|-------------|------------------|
-| GPT-4.1-2025-04-14 | 55.0% / 55.8% / 55.2% |
-| Qwen2.5-72B-Instruct | 53.2% / 52.9% / 53.5% |
-
-### Analysis and Implications
-
-The results demonstrate that the choice of judgment LLM can meaningfully impact benchmark outcomes. When comparing model performance, it's important to account for the specific evaluator used, as this introduces a systematic variance of approximately 1-2 percentage points in our testing.
-
-### Our Choice: GPT-4.1
-
 We have standardized on GPT-4.1-2025-04-14 as our primary judgment model for several practical reasons:
 
 - **Ease of deployment:** No need to host additional GPU-intensive models
