@@ -18,51 +18,98 @@ import os
 from dataclasses import asdict, dataclass, field
 from datetime import datetime, timedelta, timezone
 from pathlib import Path
-from typing import Any, Dict, List, Optional
+from typing import Any, Dict, List, Optional, Literal
 
-logger = logging.getLogger()
+# Import colorama for cross-platform colored output
+import os
+from colorama import init, Fore, Back, Style
+
+
+
+# Initialize colorama
+init(autoreset=True, strip=False)
+
+# This will be set to the configured logger instance
+logger = None
+
+def get_color_for_level(level: str) -> str:
+    """Get color code based on log level for better visual distinction"""
+    if level == 'ERROR':
+        return f"{Fore.RED}{Style.BRIGHT}"
+    elif level == 'WARNING':
+        return f"{Fore.YELLOW}{Style.BRIGHT}"
+    elif level == 'INFO':
+        return f"{Fore.GREEN}{Style.BRIGHT}"
+    elif level == 'DEBUG':
+        return f"{Fore.CYAN}{Style.BRIGHT}"
+    else:
+        return f"{Fore.WHITE}{Style.BRIGHT}"
+
+
+class ColoredFormatter(logging.Formatter):
+    """Custom formatter that adds colors for better developer visualization"""
+    
+    def format(self, record):
+        # Get timestamp and format it
+        timestamp = self.formatTime(record, self.datefmt)
+        
+        # Color the level name based on severity
+        level_color = get_color_for_level(record.levelname)
+        level_reset = Style.RESET_ALL
+        
+        # Color the logger name (miroflow_agent)
+        name_color = f"{Fore.BLUE}{Style.BRIGHT}"
+        name_reset = Style.RESET_ALL
+        
+        # Get the message as is (icons are already added in log_step)
+        message = record.getMessage()
+        
+        # Format with selective coloring
+        formatted = (
+            f"[{timestamp}][{name_color}{record.name}{name_reset}][{level_color}{record.levelname}{level_reset}] - {message}"
+        )
+        
+        return formatted
 
 
 def bootstrap_logger() -> logging.Logger:
-    """Configure the miroflow_agent logger to print filename and line number"""
+    """Configure the miroflow_agent logger with consistent formatting"""
 
-    # Configure only miroflow_agent logger, not the root logger
-    miroflow_logger = logging.getLogger()
+    global logger
+    
+    # Configure miroflow_agent logger
+    miroflow_agent_logger = logging.getLogger("miroflow_agent")
+    
+    # Check if logger already has handlers to prevent duplicate configuration
+    if miroflow_agent_logger.handlers:
+        logger = miroflow_agent_logger
+        return miroflow_agent_logger
 
-    # Create our desired formatter
-    formatter = logging.Formatter(
-        "%(asctime)s - %(levelname)s - %(filename)s:%(lineno)d - %(message)s",
+    # Create formatter with consistent format
+    formatter = ColoredFormatter(
+        "%(asctime)s,%(msecs)03d",
         datefmt="%Y-%m-%d %H:%M:%S",
     )
-
-    # Remove any existing handlers to ensure consistent configuration
-    for handler in miroflow_logger.handlers[:]:
-        miroflow_logger.removeHandler(handler)
 
     # Add our handler with the specified formatter
     handler = logging.StreamHandler()
     handler.setFormatter(formatter)
+    miroflow_agent_logger.addHandler(handler)
+    miroflow_agent_logger.setLevel(logging.DEBUG)
+    
+    # Disable propagation to prevent duplicate logging from root logger
+    miroflow_agent_logger.propagate = False
 
-    # Configure only miroflow_agent logger, not the root logger
-    miroflow_logger = logging.getLogger()
-    miroflow_logger.setLevel(logging.INFO)
-    # miroflow_logger.setLevel(logging.DEBUG)
-    miroflow_logger.addHandler(handler)
-    miroflow_logger.setLevel(logging.DEBUG)
+    # Set the global logger variable
+    logger = miroflow_agent_logger
 
-    return miroflow_logger
+    return miroflow_agent_logger
 
 
 def get_utc_plus_8_time() -> str:
     """Get UTC+8 timezone current time string"""
     utc_plus_8 = timezone(timedelta(hours=8))
     return datetime.now(utc_plus_8).strftime("%Y-%m-%d %H:%M:%S")
-
-
-def get_utc_plus_8_time_z_format() -> str:
-    """Get UTC+8 time in Z format string for backward compatibility"""
-    utc_plus_8_tz = timezone(timedelta(hours=8))
-    return datetime.now(utc_plus_8_tz).strftime("%Y-%m-%dT%H:%M:%S.%fZ")
 
 
 @dataclass
@@ -97,8 +144,14 @@ class StepLog:
     step_name: str
     message: str
     timestamp: str
-    status: str = "info"  # "info", "warning", "error", "success", "debug"
+    info_level: Literal["info", "warning", "error", "debug"] = "info"
     metadata: Dict[str, Any] = field(default_factory=dict)
+    
+    def __post_init__(self):
+        """Validate info_level after initialization"""
+        valid_levels = {"info", "warning", "error", "debug"}
+        if self.info_level not in valid_levels:
+            raise ValueError(f"info_level must be one of {valid_levels}, got '{self.info_level}'")
 
 
 @dataclass
@@ -107,7 +160,6 @@ class TaskLog:
     start_time: str = ""
     end_time: str = ""
 
-    task_original_name: str = ""
     task_id: str = ""
     input: Any = None
     ground_truth: str = ""
@@ -143,9 +195,9 @@ class TaskLog:
 
         # Record sub-agent session start
         self.log_step(
-            f"sub_{sub_agent_name}_session_start",
-            f"Starting {session_id} for subtask: {subtask_description[:100]}{'...' if len(subtask_description) > 100 else ''}",
             "info",
+            f"{sub_agent_name} | Session Start",
+            f"Starting {session_id} for subtask: {subtask_description[:100]}{'...' if len(subtask_description) > 100 else ''}",
             metadata={"session_id": session_id, "subtask": subtask_description},
         )
 
@@ -154,9 +206,9 @@ class TaskLog:
     def end_sub_agent_session(self, sub_agent_name: str) -> Optional[str]:
         """End the current sub-agent session"""
         self.log_step(
-            f"sub_{sub_agent_name}_session_end",
+            "info",
+            f"{sub_agent_name} | Session End",
             f"Ending {self.current_sub_agent_session_id}",
-            "success",
             metadata={"session_id": self.current_sub_agent_session_id},
         )
         self.current_sub_agent_session_id = None
@@ -164,24 +216,64 @@ class TaskLog:
 
     def log_step(
         self,
+        info_level: Literal["info", "warning", "error", "debug"],
         step_name: str,
         message: str,
-        status: str = "info",
         metadata: Optional[Dict[str, Any]] = None,
     ):
         """Record execution step"""
+        # Add icons to step_name based on content
+        icon = ""
+        if "Tool Call Start" in step_name:
+            icon = "▶️ "
+        elif "Tool Call Success" in step_name:
+            icon = "✅ "
+        elif "Tool Call Error" in step_name or ("error" in info_level and "tool" in step_name.lower()):
+            icon = "❌ "
+        elif "agent-" in step_name:
+            icon = "🤖 "
+        elif "Main Agent" in step_name:
+            icon = "👑 "
+        elif "LLM" in step_name:
+            icon = "🧠 "
+        elif "ToolManager" in step_name or "Tool Call" in step_name:
+            icon = "🔧 "
+        elif "tool-python" in step_name.lower():
+            icon = "🐍 "
+        elif "tool-google-search" in step_name.lower():
+            icon = "🔍 "
+        elif "tool-browser" in step_name.lower() or "playwright" in step_name.lower():
+            icon = "🌐 "
+        
+        # Add icon to step_name
+        step_name_with_icon = f"{icon}{step_name}"
+        
         step_log = StepLog(
-            step_name=step_name,
+            step_name=step_name_with_icon,
             message=message,
             timestamp=get_utc_plus_8_time(),
-            status=status,
+            info_level=info_level,
             metadata=metadata or {},
         )
 
         self.step_logs.append(step_log)
 
-        # Also print to console
-        logger.info(f"[{status.upper()}] {step_name}: {message}")
+        # Print the structured log to console using the configured logger
+        log_message = f"{step_name_with_icon}: {message}"
+        
+        # Ensure logger is configured
+        global logger
+        if logger is None:
+            logger = bootstrap_logger()
+            
+        if info_level == 'error':
+            logger.error(log_message)
+        elif info_level == 'warning':
+            logger.warning(log_message)
+        elif info_level == 'debug':
+            logger.debug(log_message)
+        else:  # info
+            logger.info(log_message)
 
     def serialize_for_json(self, obj):
         """Convert objects to JSON-serializable format"""
@@ -201,15 +293,27 @@ class TaskLog:
         data_dict = asdict(self)
         # Serialize any non-JSON-serializable objects
         serialized_dict = self.serialize_for_json(data_dict)
-        return json.dumps(serialized_dict, ensure_ascii=False, indent=2)
+        try:
+            return json.dumps(serialized_dict, ensure_ascii=False, indent=2)
+        except UnicodeEncodeError as e:
+            # Fallback: try with ASCII encoding if Unicode fails
+            print(f"Warning: Unicode encoding failed, falling back to ASCII: {e}")
+            return json.dumps(serialized_dict, ensure_ascii=True, indent=2)
 
     def save(self):
         """Save as a single JSON file"""
         os.makedirs(self.log_dir, exist_ok=True)
-        timestamp = self.start_time.replace(":", "-").replace(".", "-")
+        timestamp = self.start_time.replace(":", "-").replace(".", "-").replace(" ", "-")
+
         filename = f"{self.log_dir}/task_{self.task_id}_{timestamp}.json"
-        with open(filename, "w", encoding="utf-8") as f:
-            f.write(self.to_json())
+        try:
+            with open(filename, "w", encoding="utf-8") as f:
+                f.write(self.to_json())
+        except UnicodeEncodeError as e:
+            # Fallback: try with different encoding if UTF-8 fails
+            print(f"Warning: UTF-8 encoding failed, trying with system default: {e}")
+            with open(filename, "w") as f:
+                f.write(self.to_json())
         return filename
 
     @classmethod

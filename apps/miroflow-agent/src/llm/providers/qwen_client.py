@@ -26,7 +26,7 @@ from tenacity import retry, stop_after_attempt, wait_fixed
 from ..provider_client_base import LLMProviderClientBase
 from ...utils.prompt_utils import generate_mcp_system_prompt
 
-logger = logging.getLogger()
+logger = logging.getLogger("miroflow_agent")
 
 
 @dataclasses.dataclass
@@ -37,9 +37,6 @@ class QwenLLMClient(LLMProviderClientBase):
         QWEN_API_KEY = os.environ.get("QWEN_API_KEY", None)
 
         http_client_args = {}
-        if os.environ.get("HTTPS_PROXY"):
-            http_client_args["proxy"] = os.environ.get("HTTPS_PROXY")
-            logger.info(f"Info: Using proxy {http_client_args['proxy']}")
 
         if self.async_client:
             return AsyncOpenAI(
@@ -75,9 +72,10 @@ class QwenLLMClient(LLMProviderClientBase):
             self.token_usage["total_output_tokens"] += output_tokens
             self.token_usage["total_cache_read_input_tokens"] += cached_tokens
 
-            logger.info(
-                f"Current round token usage - Input: {self.token_usage['total_input_tokens']}, "
-                f"Output: {self.token_usage['total_output_tokens']}"
+            self.task_log.log_step(
+                "info",
+                "LLM | Token Usage",
+                f"Input: {self.token_usage['total_input_tokens']}, Output: {self.token_usage['total_output_tokens']}"
             )
 
     @retry(wait=wait_fixed(30), stop=stop_after_attempt(10))
@@ -138,40 +136,40 @@ class QwenLLMClient(LLMProviderClientBase):
             # Update token count
             self._update_token_usage(getattr(response, "usage", None))
             self.task_log.log_step(
-                "Qwen LLM | Response Status",
-                f"LLM call status: {getattr(response.choices[0], 'finish_reason', 'N/A')}",
                 "info",
+                "LLM | Response Status",
+                f"{getattr(response.choices[0], 'finish_reason', 'N/A')}",
             )
 
             return response, messages_history
 
         except asyncio.TimeoutError as e:
             self.task_log.log_step(
-                "Qwen LLM | Timeout Error",
-                f"Timeout error: {str(e)}",
                 "error",
+                "LLM | Timeout Error",
+                f"Timeout error: {str(e)}",
             )
             raise e
         except asyncio.CancelledError as e:
             self.task_log.log_step(
-                "Qwen LLM | Request Cancelled",
-                f"Request was cancelled: {str(e)}",
                 "error",
+                "LLM | Request Cancelled",
+                f"Request was cancelled: {str(e)}",
             )
             raise e
         except Exception as e:
             if "Error code: 400" in str(e) and "longer than the model" in str(e):
                 self.task_log.log_step(
-                    "Qwen LLM | Context Length Error",
+                    "error",
+                    "LLM | Context Length Error",
                     f"Error: {str(e)}",
-                    "fatal error, exceed max context length, this should not happen as the context length is checked before the call",
                 )
                 raise e
             else:
                 self.task_log.log_step(
-                    "Qwen LLM | API Error",
-                    f"Error: {str(e)}",
                     "error",
+                    "LLM | API Error",
+                    f"Error: {str(e)}",
                 )
                 raise e
 
@@ -182,7 +180,11 @@ class QwenLLMClient(LLMProviderClientBase):
 
         if not llm_response or not llm_response.choices:
             error_msg = "LLM did not return a valid response."
-            logger.info(f"Error: {error_msg}")
+            self.task_log.log_step(
+                "error",
+                "LLM | Response Error",
+                f"Error: {error_msg}"
+            )
             return "", True, message_history  # Exit loop, return message_history
 
         # Extract LLM response text
@@ -199,7 +201,9 @@ class QwenLLMClient(LLMProviderClientBase):
                 assistant_response_text = "LLM response is empty."
             elif "Context length exceeded" in assistant_response_text:
                 # This is the case where context length is exceeded, needs special handling
-                logger.warning(
+                self.task_log.log_step(
+                    "warning",
+                    "LLM | Context Length",
                     "Detected context length exceeded, returning error status"
                 )
                 message_history.append(
@@ -269,7 +273,7 @@ class QwenLLMClient(LLMProviderClientBase):
         except Exception as e:
             # If encoding fails, use simple estimation: approximately 1 token per 4 characters
             self.task_log.log_step(
-                "Qwen LLM | Token Estimation Error",
+                "LLM | Token Estimation Error",
                 f"Error: {str(e)}",
                 "error",
             )
@@ -277,7 +281,7 @@ class QwenLLMClient(LLMProviderClientBase):
 
     def ensure_summary_context(
         self, message_history: list, summary_prompt: str
-    ) -> bool:
+    ) -> tuple[bool, list]:
         """
         Check if current message_history + summary_prompt will exceed context
         If it will exceed, remove the last assistant-user pair and return False
@@ -309,9 +313,9 @@ class QwenLLMClient(LLMProviderClientBase):
 
         if estimated_total >= self.max_context_length:
             self.task_log.log_step(
-                "Qwen LLM | Context Limit Reached",
-                "Context limit reached, proceeding to step back and summarize the conversation",
                 "info",
+                "LLM | Context Limit Reached",
+                "Context limit reached, proceeding to step back and summarize the conversation",
             )
 
             # Remove the last user message (tool call results)
@@ -323,17 +327,17 @@ class QwenLLMClient(LLMProviderClientBase):
                 message_history.pop()
 
             self.task_log.log_step(
-                "Qwen LLM | Context Limit Reached",
-                f"Removed the last assistant-user pair, current message_history length: {len(message_history)}",
                 "info",
+                "LLM | Context Limit Reached",
+                f"Removed the last assistant-user pair, current message_history length: {len(message_history)}",
             )
 
             return False, message_history
 
         self.task_log.log_step(
-            "Qwen LLM | Context Limit Not Reached",
-            f"Context limit not reached, proceeding to continue, current context length: {estimated_total}/{self.max_context_length}",
             "info",
+            "LLM | Context Limit Not Reached",
+            f"{estimated_total}/{self.max_context_length}",
         )
         return True, message_history
 
@@ -352,37 +356,24 @@ class QwenLLMClient(LLMProviderClientBase):
             return summary_prompt
 
     def format_token_usage_summary(self):
-        """Format token usage statistics and cost estimation, return summary_lines for format_final_summary and log string - Qwen implementation"""
+        """Format token usage statistics, return summary_lines for format_final_summary and log string - Qwen implementation"""
         token_usage = self.get_token_usage()
 
         total_input = token_usage.get("total_input_tokens", 0)
         total_output = token_usage.get("total_output_tokens", 0)
         cache_input = token_usage.get("total_cache_input_tokens", 0)
 
-        # Actual cost (considering cache)
-        cost = (
-            ((total_input - cache_input) / 1_000_000 * self.input_token_price)
-            + (cache_input / 1_000_000 * self.cache_input_token_price)
-            + (total_output / 1_000_000 * self.output_token_price)
-        )
-
         summary_lines = []
-        summary_lines.append("\n" + "-" * 20 + " Token Usage & Cost " + "-" * 20)
+        summary_lines.append("\n" + "-" * 20 + " Token Usage " + "-" * 20)
         summary_lines.append(f"Total Input Tokens: {total_input}")
         summary_lines.append(f"Total Cache Input Tokens: {cache_input}")
         summary_lines.append(f"Total Output Tokens: {total_output}")
-        summary_lines.append("-" * (40 + len(" Token Usage & Cost ")))
-        summary_lines.append(f"Input Token Price: ${self.input_token_price:.4f} USD")
-        summary_lines.append(f"Output Token Price: ${self.output_token_price:.4f} USD")
-        summary_lines.append(
-            f"Cache Input Token Price: ${self.cache_input_token_price:.4f} USD"
-        )
-        summary_lines.append("-" * (40 + len(" Token Usage & Cost ")))
-        summary_lines.append(f"Estimated Cost (with cache): ${cost:.4f} USD")
-        summary_lines.append("-" * (40 + len(" Token Usage & Cost ")))
+        summary_lines.append("-" * (40 + len(" Token Usage ")))
+        summary_lines.append("Pricing is disabled - no cost information available")
+        summary_lines.append("-" * (40 + len(" Token Usage ")))
 
         # Generate log string
-        log_string = f"[Qwen/{self.model_name}] Total Input: {total_input}, Cache Input: {cache_input}, Output: {total_output}, Input Price: ${self.input_token_price:.4f} USD, Cache Input Price: ${self.cache_input_token_price:.4f} USD, Output Price: ${self.output_token_price:.4f} USD, Cost: ${cost:.4f} USD"
+        log_string = f"[Qwen/{self.model_name}] Total Input: {total_input}, Cache Input: {cache_input}, Output: {total_output}"
 
         return summary_lines, log_string
 

@@ -1333,7 +1333,9 @@ name = "miroflow-agent"
 version = "0.1.0"
 source = { editable = "." }
 dependencies = [
+    { name = "aiohttp" },
     { name = "anthropic" },
+    { name = "colorama" },
     { name = "datasets" },
     { name = "duckduckgo-search" },
     { name = "e2b-code-interpreter" },
@@ -1350,7 +1352,6 @@ dependencies = [
     { name = "markitdown-mcp" },
     { name = "mcp" },
     { name = "miroflow-tools" },
-    { name = "miroflow-tracing" },
     { name = "mutagen" },
     { name = "numpy" },
     { name = "omegaconf" },
@@ -1387,7 +1388,9 @@ dev = [
 
 [package.metadata]
 requires-dist = [
+    { name = "aiohttp" },
     { name = "anthropic" },
+    { name = "colorama", specifier = ">=0.4.6" },
     { name = "datasets", specifier = ">=3.5.0" },
     { name = "duckduckgo-search", specifier = ">=6.3.7" },
     { name = "e2b-code-interpreter", specifier = ">=1.2.1" },
@@ -1404,7 +1407,6 @@ requires-dist = [
     { name = "markitdown-mcp", specifier = ">=0.0.1a3" },
     { name = "mcp" },
     { name = "miroflow-tools", editable = "../../libs/miroflow-tools" },
-    { name = "miroflow-tracing", editable = "../../libs/miroflow-tracing" },
     { name = "mutagen" },
     { name = "numpy", specifier = ">=2.2.5" },
     { name = "omegaconf", specifier = ">=2.3.0" },
@@ -1444,6 +1446,7 @@ name = "miroflow-tools"
 version = "0.1.0"
 source = { editable = "../../libs/miroflow-tools" }
 dependencies = [
+    { name = "aiohttp" },
     { name = "e2b-code-interpreter" },
     { name = "fastmcp" },
     { name = "google-genai" },
@@ -1457,6 +1460,7 @@ dependencies = [
 
 [package.metadata]
 requires-dist = [
+    { name = "aiohttp" },
     { name = "e2b-code-interpreter", specifier = ">=1.2.1" },
     { name = "fastmcp", specifier = ">=0.1.0" },
     { name = "google-genai" },
@@ -1466,33 +1470,6 @@ requires-dist = [
     { name = "playwright", specifier = ">=1.40.0" },
     { name = "requests", specifier = ">=2.32.0" },
     { name = "wikipedia" },
-]
-
-[package.metadata.requires-dev]
-dev = [
-    { name = "inline-snapshot", specifier = ">=0.23.2" },
-    { name = "pytest", specifier = ">=8.4.1" },
-    { name = "pytest-asyncio", specifier = ">=1.0.0" },
-    { name = "pytest-cov", specifier = ">=6.2.1" },
-    { name = "pytest-html", specifier = ">=4.1.1" },
-    { name = "pytest-mock", specifier = ">=3.10.0" },
-    { name = "pytest-timeout", specifier = ">=2.1.0" },
-    { name = "pytest-xdist", specifier = ">=3.7.0" },
-]
-
-[[package]]
-name = "miroflow-tracing"
-version = "0.1.0"
-source = { editable = "../../libs/miroflow-tracing" }
-dependencies = [
-    { name = "httpx" },
-    { name = "requests" },
-]
-
-[package.metadata]
-requires-dist = [
-    { name = "httpx", specifier = ">=0.24.0" },
-    { name = "requests", specifier = ">=2.32.0" },
 ]
 
 [package.metadata.requires-dev]

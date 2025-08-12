@@ -170,13 +170,6 @@ python3 -m sglang.launch_server \
     --host 0.0.0.0 \
     --port $PORT \
     --trust-remote-code \
-    --log-level debug \
-    --log-level-http debug \
-    --log-requests \
-    --log-requests-level 2 \
-    --attention-backend flashinfer \
-    --enable-metrics \
-    --show-time-cost \
     --chat-template assets/qwen3_nonthinking.jinja
 ```
 

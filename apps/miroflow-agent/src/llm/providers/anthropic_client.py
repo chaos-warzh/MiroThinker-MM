@@ -28,10 +28,10 @@ from tenacity import retry, stop_after_attempt, wait_fixed
 import tiktoken
 
 from ..provider_client_base import LLMProviderClientBase
-from .util import get_trace_id
+
 from ...utils.prompt_utils import generate_mcp_system_prompt
 
-logger = logging.getLogger()
+logger = logging.getLogger("miroflow_agent")
 
 
 @dataclasses.dataclass
@@ -49,12 +49,6 @@ class AnthropicLLMClient(LLMProviderClientBase):
         """Create Anthropic client"""
         api_key = os.environ.get("ANTHROPIC_API_KEY")
         http_client_args = {}
-        trace_id = get_trace_id()
-        if trace_id is not None:
-            http_client_args["headers"] = {"trace-id": trace_id}
-        if os.environ.get("HTTPS_PROXY"):
-            http_client_args["proxy"] = os.environ.get("HTTPS_PROXY")
-            logger.info(f"Info: Using proxy {http_client_args['proxy']}")
 
         if self.async_client:
             return AsyncAnthropic(
@@ -85,10 +79,11 @@ class AnthropicLLMClient(LLMProviderClientBase):
             self.token_usage["total_output_tokens"] += (
                 getattr(usage_data, "output_tokens", 0) or 0
             )
-            logger.info(
-                f"Current round token usage - Input: {getattr(usage_data, 'input_tokens', 0)}, "
-                f"Cache creation input: {getattr(usage_data, 'cache_creation_input_tokens', 0)}, "
-                f"Cache read input: {getattr(usage_data, 'cache_read_input_tokens', 0)}, "
+            self.task_log.log_step(
+                "info",
+                "LLM | Token Usage",
+                f"Input: {getattr(usage_data, 'input_tokens', 0)}, "
+                f"Cache: {getattr(usage_data, 'cache_creation_input_tokens', 0)}+{getattr(usage_data, 'cache_read_input_tokens', 0)}, "
                 f"Output: {getattr(usage_data, 'output_tokens', 0)}"
             )
 
@@ -99,7 +94,11 @@ class AnthropicLLMClient(LLMProviderClientBase):
                 "output_tokens": getattr(usage_data, "output_tokens", 0),
             }
         else:
-            logger.info("Warning: No valid usage_data received.")
+            self.task_log.log_step(
+                "warning",
+                "LLM | Token Usage",
+                "Warning: No valid usage_data received."
+            )
 
     @retry(wait=wait_fixed(10), stop=stop_after_attempt(5))
     async def _create_message(
@@ -115,11 +114,10 @@ class AnthropicLLMClient(LLMProviderClientBase):
         :param messages: Message history list.
         :return: Anthropic API response object or None (if error).
         """
-        logger.info(
-            "\n"
-            + "-" * 20
-            + f" Calling LLM ({'async' if self.async_client else 'sync'})"
-            + "-" * 20
+        self.task_log.log_step(
+            "info",
+            "LLM | Call Start",
+            f"Calling LLM ({'async' if self.async_client else 'sync'})"
         )
 
         messages_copy = self._remove_tool_result_from_messages(
@@ -167,13 +165,25 @@ class AnthropicLLMClient(LLMProviderClientBase):
             # Update token count
 
             self._update_token_usage(getattr(response, "usage", None))
-            logger.info(f"LLM call status: {getattr(response, 'stop_reason', 'N/A')}")
+            self.task_log.log_step(
+                "info",
+                "LLM | Call Status",
+                f"LLM call status: {getattr(response, 'stop_reason', 'N/A')}"
+            )
             return response, messages_copy
         except asyncio.CancelledError:
-            logger.info("⚠️ LLM API call was cancelled during execution")
+            self.task_log.log_step(
+                "warning",
+                "LLM | Call Cancelled",
+                "⚠️ LLM API call was cancelled during execution"
+            )
             raise  # Re-raise to allow decorator to log it
         except Exception as e:
-            logger.info(f"Anthropic LLM call failed: {str(e)}")
+            self.task_log.log_step(
+                "error",
+                "LLM | Call Failed",
+                f"Anthropic LLM call failed: {str(e)}"
+            )
             raise e
 
     def process_llm_response(
@@ -181,11 +191,19 @@ class AnthropicLLMClient(LLMProviderClientBase):
     ) -> tuple[str, bool, list]:
         """Process Anthropic LLM response"""
         if not llm_response:
-            logger.info("❌ LLM call failed, skipping this response.")
+            self.task_log.log_step(
+                "error",
+                "LLM | Response Processing",
+                "❌ LLM call failed, skipping this response."
+            )
             return "", True, message_history
 
         if not hasattr(llm_response, "content") or not llm_response.content:
-            logger.info("❌ LLM response is empty or contains no content.")
+            self.task_log.log_step(
+                "error",
+                "LLM | Response Processing",
+                "❌ LLM response is empty or contains no content."
+            )
             return "", True, message_history
 
         # Extract response content
@@ -212,7 +230,11 @@ class AnthropicLLMClient(LLMProviderClientBase):
             {"role": "assistant", "content": assistant_response_content}
         )
 
-        logger.info(f"LLM Response: {assistant_response_text}")
+        self.task_log.log_step(
+            "info",
+            "LLM | Response",
+            f"LLM Response: {assistant_response_text}"
+        )
 
         return assistant_response_text, False, message_history
 
@@ -275,9 +297,9 @@ class AnthropicLLMClient(LLMProviderClientBase):
         except Exception as e:
             # If encoding fails, use simple estimation: approximately 1 token per 4 characters
             self.task_log.log_step(
+                "error",
                 "LLM | Token Estimation Error",
                 f"Error: {str(e)} text: {text} type: {type(text)}",
-                "error",
             )
             return len(text) // 4
 
@@ -315,9 +337,9 @@ class AnthropicLLMClient(LLMProviderClientBase):
 
         if estimated_total >= self.max_context_length:
             self.task_log.log_step(
+                "info",
                 "LLM | Context Limit Reached",
                 "Context limit reached, proceeding to step back and summarize the conversation",
-                "info",
             )
 
             # Remove the last user message (tool call results)
@@ -329,22 +351,22 @@ class AnthropicLLMClient(LLMProviderClientBase):
                 message_history.pop()
 
             self.task_log.log_step(
+                "info",
                 "LLM | Context Limit Reached",
                 f"Removed the last assistant-user pair, current message_history length: {len(message_history)}",
-                "info",
             )
 
             return False, message_history
 
         self.task_log.log_step(
-            "LLM | Context Limit Not Reached",
-            f"Context limit not reached, proceeding to continue, current context length: {estimated_total}/{self.max_context_length}",
             "info",
+            "LLM | Context Limit Not Reached",
+            f"{estimated_total}/{self.max_context_length}",
         )
         return True, message_history
 
     def format_token_usage_summary(self):
-        """Format token usage statistics and cost estimation, return summary_lines for format_final_summary and log string - Anthropic implementation"""
+        """Format token usage statistics, return summary_lines for format_final_summary and log string - Anthropic implementation"""
         token_usage = self.get_token_usage()
 
         total_input = token_usage.get("total_input_tokens", 0)
@@ -352,37 +374,20 @@ class AnthropicLLMClient(LLMProviderClientBase):
         total_cache_creation = token_usage.get("total_cache_creation_input_tokens", 0)
         total_cache_read = token_usage.get("total_cache_read_input_tokens", 0)
 
-        # Actual cost (considering cache)
-        cost = (
-            (total_input / 1_000_000 * self.input_token_price)
-            + (total_cache_creation / 1_000_000 * self.cache_creation_token_price)
-            + (total_cache_read / 1_000_000 * self.cache_read_token_price)
-            + (total_output / 1_000_000 * self.output_token_price)
-        )
-
         summary_lines = []
-        summary_lines.append("\n" + "-" * 20 + " Token Usage & Cost " + "-" * 20)
+        summary_lines.append("\n" + "-" * 20 + " Token Usage " + "-" * 20)
         summary_lines.append(f"Total Input Tokens (non-cache): {total_input}")
         summary_lines.append(
             f"Total Cache Creation Input Tokens: {total_cache_creation}"
         )
         summary_lines.append(f"Total Cache Read Input Tokens: {total_cache_read}")
         summary_lines.append(f"Total Output Tokens: {total_output}")
-        summary_lines.append("-" * (40 + len(" Token Usage & Cost ")))
-        summary_lines.append(f"Input Token Price: ${self.input_token_price:.4f} USD")
-        summary_lines.append(
-            f"Cache Creation Token Price: ${self.cache_creation_token_price:.4f} USD"
-        )
-        summary_lines.append(
-            f"Cache Read Token Price: ${self.cache_read_token_price:.4f} USD"
-        )
-        summary_lines.append(f"Output Token Price: ${self.output_token_price:.4f} USD")
-        summary_lines.append("-" * (40 + len(" Token Usage & Cost ")))
-        summary_lines.append(f"Estimated Cost (with cache): ${cost:.4f} USD")
-        summary_lines.append("-" * (40 + len(" Token Usage & Cost ")))
+        summary_lines.append("-" * (40 + len(" Token Usage ")))
+        summary_lines.append("Pricing is disabled - no cost information available")
+        summary_lines.append("-" * (40 + len(" Token Usage ")))
 
         # Generate log string
-        log_string = f"[Anthropic/{self.model_name}] Total Input: {total_input}, Cache Creation: {total_cache_creation}, Cache Read: {total_cache_read}, Output: {total_output}, Input Price: ${self.input_token_price:.4f} USD, Cache Creation Price: ${self.cache_creation_token_price:.4f} USD, Cache Read Price: ${self.cache_read_token_price:.4f} USD, Output Price: ${self.output_token_price:.4f} USD, Cost: ${cost:.4f} USD"
+        log_string = f"[Anthropic/{self.model_name}] Total Input: {total_input}, Cache Creation: {total_cache_creation}, Cache Read: {total_cache_read}, Output: {total_output}"
 
         return summary_lines, log_string
 
@@ -421,7 +426,9 @@ class AnthropicLLMClient(LLMProviderClientBase):
                 else:
                     # If content is not a list (e.g., plain text), add as is without cache control
                     # Or adjust logic as needed
-                    logger.info(
+                    self.task_log.log_step(
+                        "warning",
+                        "LLM | Cache Control",
                         "Warning: User message content is not in expected list format, cache control not applied."
                     )
                     cached_messages.append(turn)

@@ -147,25 +147,3 @@ def generate_summary(log_dir: Path):
     with open(summary_file, "w", encoding="utf-8") as f:
         json.dump(summary_data, f, indent=4, ensure_ascii=False)
 
-    logger.info(f"Summary generated and saved to {summary_file}")
-
-
-if __name__ == "__main__":
-    parser = argparse.ArgumentParser(
-        description="Generate a summary of benchmark results from a log directory."
-    )
-    parser.add_argument(
-        "--log_dir",
-        type=str,
-        help="The directory containing the benchmark log files.",
-    )
-    args = parser.parse_args()
-
-    log_dir_path = Path(args.log_dir)
-    if not log_dir_path.is_dir():
-        logger.info(
-            "Error: The specified log directory does not exist or is not a directory: "
-            f"{log_dir_path}"
-        )
-    else:
-        generate_summary(log_dir_path)

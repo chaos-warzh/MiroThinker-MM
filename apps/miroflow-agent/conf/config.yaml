@@ -3,12 +3,11 @@ defaults:
   - llm: default
   - agent: default
   - benchmark: default
-  - pricing: default
   - _self_  # 允许在此文件顶部定义变量
 
 hydra:
   run:
-    dir: ../../logs/${benchmark.name}/${llm.provider}_${llm.model_name}
+    dir: ../../logs/debug
 
 # 可在此处定义一些顶层或默认参数
 project_name: "miroflow-agent" 

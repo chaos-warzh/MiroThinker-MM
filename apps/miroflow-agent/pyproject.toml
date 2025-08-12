@@ -6,7 +6,6 @@ readme = "README.md"
 requires-python = ">=3.12"
 dependencies = [
     "miroflow-tools>=0.1.0",
-    "miroflow-tracing>=0.1.0",
     "huggingface-hub>=0.28.0",
     "requests>=2.32.3",
     "rich>=13.9.4",
@@ -43,7 +42,8 @@ dependencies = [
     "hydra-core",
     "google-genai",
     "tiktoken>=0.9.0",
-    "aiohttp"
+    "aiohttp",
+    "colorama>=0.4.6",
 ]
 
 [build-system]
@@ -56,7 +56,6 @@ packages = ["src"]
 
 [tool.uv.sources]
 miroflow-tools = { path = "../../libs/miroflow-tools", editable = true }
-miroflow-tracing = { path = "../../libs/miroflow-tracing", editable = true }
 
 [dependency-groups]
 dev = [

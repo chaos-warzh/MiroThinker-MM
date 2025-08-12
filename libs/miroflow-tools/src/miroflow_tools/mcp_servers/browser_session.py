@@ -22,7 +22,6 @@ from mcp.client.stdio import stdio_client
 
 import logging
 
-logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger("miroflow")
 
 
@@ -54,7 +53,7 @@ class PlaywrightSession:
         if self.session is None:
             await self.connect()
 
-        logger.info(f"Calling tool '{tool_name}' with arguments: {arguments}")
+        logger.info(f"Calling tool '{tool_name}'")
         tool_result = await self.session.call_tool(tool_name, arguments=arguments)
         result_content = tool_result.content[0].text if tool_result.content else ""
         return result_content

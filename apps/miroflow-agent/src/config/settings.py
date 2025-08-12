@@ -17,22 +17,10 @@ import sys
 
 from dotenv import load_dotenv
 from mcp import StdioServerParameters
-from miroflow_tracing import set_tracing_disabled, set_tracing_export_api_key
-from miroflow_tracing.otlp_setup import bootstrap_silent_trace_provider
-from ..logging.task_logger import bootstrap_logger
 from omegaconf import DictConfig
 
 # Load environment variables from .env file
 load_dotenv()
-# initialize logger
-bootstrap_logger()
-# Disable tracing by default, and don't set key
-set_tracing_disabled(True)
-set_tracing_export_api_key("fake-key")
-# Suppress trace provider warnings
-bootstrap_silent_trace_provider()
-
-HTTPS_PROXY = os.environ.get("HTTPS_PROXY", None)
 
 # Get API Keys from environment variables
 SERPER_API_KEY = os.environ.get("SERPER_API_KEY")
@@ -425,7 +413,6 @@ def get_env_info(cfg: DictConfig) -> dict:
         "has_openai_api_key": bool(OPENAI_API_KEY),
         "has_gemini_api_key": bool(GEMINI_API_KEY),
         "has_e2b_api_key": bool(E2B_API_KEY),
-        "https_proxy": HTTPS_PROXY,
         # Base URLs
         "openai_base_url": os.environ.get("OPENAI_BASE_URL"),
         "anthropic_base_url": os.environ.get("ANTHROPIC_BASE_URL"),
