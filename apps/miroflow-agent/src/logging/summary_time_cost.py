@@ -145,7 +145,7 @@ def generate_summary(log_dir: Path):
 
     summary_file = log_dir / "summary_time_cost.json"
     with open(summary_file, "w", encoding="utf-8") as f:
-        json.dump(summary_data, f, indent=4)
+        json.dump(summary_data, f, indent=4, ensure_ascii=False)
 
     logger.info(f"Summary generated and saved to {summary_file}")
 

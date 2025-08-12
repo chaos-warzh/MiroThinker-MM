@@ -95,7 +95,7 @@ async def test_persistent_session():
         logger.info(f"Page title: {snapshot_json.get('title')}")
 
         with open("snapshot.json", "w") as f:
-            json.dump(snapshot_json, f, indent=2)
+            json.dump(snapshot_json, f, indent=2, ensure_ascii=False)
 
         logger.info("Snapshot saved to snapshot.json")
 

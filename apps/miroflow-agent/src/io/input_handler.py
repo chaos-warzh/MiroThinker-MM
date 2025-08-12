@@ -63,7 +63,7 @@ def process_input(task_description, task_file_name):
                 print(f"Info: Loaded text file {task_file_name}")
             elif file_extension in ["jsonld", "json"]:
                 with open(task_file_name, "r") as f:
-                    initial_user_content += json.dumps(json.load(f))
+                    initial_user_content += json.dumps(json.load(f), ensure_ascii=False)
                 updated_task_description += f"\nNote: An Json file '{task_file_name}' is associated with this task. You may use available tools to read its content if necessary.\n\n"
                 print(f"Info: Loaded text file {task_file_name}")
             elif file_extension in ["xlsx", "xls"]:

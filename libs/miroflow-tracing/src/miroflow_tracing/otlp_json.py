@@ -251,4 +251,4 @@ def encode_spans(spans: list[Trace | Span]) -> bytes:
         ]
     }
 
-    return json.dumps(final, separators=(",", ":")).encode("utf-8")
+    return json.dumps(final, separators=(",", ":"), ensure_ascii=False).encode("utf-8")

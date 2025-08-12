@@ -505,7 +505,7 @@ class BenchmarkEvaluator(ABC):
 
         with open(output_path, "w", encoding="utf-8") as f:
             for result in self.results:
-                f.write(json.dumps(asdict(result)) + "\n")
+                f.write(json.dumps(asdict(result), ensure_ascii=False) + "\n")
 
         print(f"Results saved to {output_path}")
         return str(output_path)
@@ -642,7 +642,7 @@ class BenchmarkEvaluator(ABC):
             # Write to a temporary file and then atomically replace
             temp_log_file = log_file.with_suffix(f"{log_file.suffix}.tmp")
             with open(temp_log_file, "w", encoding="utf-8") as f:
-                json.dump(log_data, f, indent=2)
+                json.dump(log_data, f, indent=2, ensure_ascii=False)
 
             os.replace(temp_log_file, log_file)
             print(f"    Updated log file {log_file.name} with evaluation result.")
