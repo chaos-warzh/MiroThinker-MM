@@ -91,7 +91,7 @@ class LLMProviderClientBase(ABC):
         self.task_log.log_step(
             "info",
             "LLM | Initialization",
-            f"LLMClient {self.provider} {self.model_name} initialization completed."
+            f"LLMClient {self.provider} {self.model_name} initialization completed.",
         )
 
     def _reset_token_usage(self) -> TokenUsage:
@@ -102,8 +102,6 @@ class LLMProviderClientBase(ABC):
             total_cache_write_input_tokens=0,
             total_cache_read_input_tokens=0,
         )
-
-
 
     def _remove_tool_result_from_messages(self, messages, keep_tool_result):
         messages_copy = [m.copy() for m in messages]
@@ -140,7 +138,7 @@ class LLMProviderClientBase(ABC):
                 self.task_log.log_step(
                     "info",
                     "LLM | Message Retention",
-                    f"Message retention summary: Total user messages: {len(user_indices)}, Keeping first message at index: {first_user_idx}, Keeping last {num_to_keep} messages at indices: {last_indices_to_keep}, Total messages to keep: {len(indices_to_keep)}"
+                    f"Message retention summary: Total user messages: {len(user_indices)}, Keeping first message at index: {first_user_idx}, Keeping last {num_to_keep} messages at indices: {last_indices_to_keep}, Total messages to keep: {len(indices_to_keep)}",
                 )
 
                 for i, msg in enumerate(messages_copy):
@@ -150,26 +148,26 @@ class LLMProviderClientBase(ABC):
                         self.task_log.log_step(
                             "info",
                             "LLM | Message Retention",
-                            f"Omitting content for user message at index {i}"
+                            f"Omitting content for user message at index {i}",
                         )
                         msg["content"] = "Tool result is omitted to save tokens."
             elif user_indices:  # This means only 1 user message exists
                 self.task_log.log_step(
                     "info",
                     "LLM | Message Retention",
-                    "Only 1 user message found. Keeping it as is."
+                    "Only 1 user message found. Keeping it as is.",
                 )
             else:  # No user messages at all
                 self.task_log.log_step(
                     "info",
                     "LLM | Message Retention",
-                    "No user messages found in the history."
+                    "No user messages found in the history.",
                 )
 
             self.task_log.log_step(
                 "info",
                 "LLM | Message Retention",
-                f"Messages after potential content omission: {json.dumps(messages_copy, indent=4, ensure_ascii=False)}"
+                f"Messages after potential content omission: {json.dumps(messages_copy, indent=4, ensure_ascii=False)}",
             )
         elif keep_tool_result == -1:
             # No processing needed

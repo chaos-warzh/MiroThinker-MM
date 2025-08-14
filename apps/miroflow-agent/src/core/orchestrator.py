@@ -27,7 +27,6 @@ from ..llm.client import LLMClient
 from ..logging.task_logger import (
     TaskLog,
     get_utc_plus_8_time,
-    logger,
 )
 from ..utils.prompt_utils import (
     generate_agent_specific_system_prompt,
@@ -151,13 +150,13 @@ class Orchestrator:
         Run sub agent
         """
         self.task_log.log_step(
-            "info",
-            f"{sub_agent_name} | Start Task", f"Starting {sub_agent_name}"
+            "info", f"{sub_agent_name} | Start Task", f"Starting {sub_agent_name}"
         )
         task_description += "\n\nPlease provide the answer and detailed supporting information of the subtask given to you."
         self.task_log.log_step(
             "info",
-            f"{sub_agent_name} | Task Description", f"Subtask: {task_description}"
+            f"{sub_agent_name} | Task Description",
+            f"Subtask: {task_description}",
         )
 
         # Start new sub-agent session
@@ -180,7 +179,7 @@ class Orchestrator:
             self.task_log.log_step(
                 "warning",
                 f"{sub_agent_name} | No Tools",
-                f"No tool definitions available.",
+                "No tool definitions available.",
             )
 
         # Generate sub-agent system prompt
@@ -198,7 +197,8 @@ class Orchestrator:
             turn_count += 1
             self.task_log.log_step(
                 "info",
-                f"{sub_agent_name} | Turn: {turn_count}", f"Starting turn {turn_count}."
+                f"{sub_agent_name} | Turn: {turn_count}",
+                f"Starting turn {turn_count}.",
             )
             self.task_log.save()
 
@@ -422,7 +422,7 @@ class Orchestrator:
             self.task_log.log_step(
                 "info",
                 f"{sub_agent_name} | Final Answer",
-                f"Final answer generated successfully",
+                "Final answer generated successfully",
             )
 
         else:
@@ -432,7 +432,7 @@ class Orchestrator:
             self.task_log.log_step(
                 "error",
                 f"{sub_agent_name} | Final Answer",
-                f"Unable to generate final answer",
+                "Unable to generate final answer",
             )
 
         # self.task_log.log_step(
@@ -465,7 +465,9 @@ class Orchestrator:
             "info", "Main Agent", f"Task description: {task_description}"
         )
         if task_file_name:
-            self.task_log.log_step("info", "Main Agent", f"Associated file: {task_file_name}")
+            self.task_log.log_step(
+                "info", "Main Agent", f"Associated file: {task_file_name}"
+            )
 
         # 1. Process input
         initial_user_content, processed_task_desc = process_input(
@@ -485,7 +487,7 @@ class Orchestrator:
             self.task_log.log_step(
                 "warning",
                 "Main Agent | Tool Definitions",
-                "Warning: No tool definitions found. LLM cannot use any tools."
+                "Warning: No tool definitions found. LLM cannot use any tools.",
             )
 
         self.task_log.log_step(
@@ -508,7 +510,7 @@ class Orchestrator:
             self.task_log.log_step(
                 "info",
                 f"Main Agent | Turn: {turn_count}",
-                f"Starting turn {turn_count}"
+                f"Starting turn {turn_count}",
             )
             self.task_log.save()
 
@@ -693,7 +695,9 @@ class Orchestrator:
             )
 
         # Final summary
-        self.task_log.log_step("info", "Main Agent | Final Summary", "Generating final summary")
+        self.task_log.log_step(
+            "info", "Main Agent | Final Summary", "Generating final summary"
+        )
 
         # Generate summary prompt (generate only once)
         summary_prompt = generate_agent_summarize_prompt(
@@ -736,7 +740,8 @@ class Orchestrator:
         if final_answer_text:
             self.task_log.log_step(
                 "info",
-                "Main Agent | Final Answer", "Final answer generated successfully"
+                "Main Agent | Final Answer",
+                "Final answer generated successfully",
             )
 
             # Log the final answer
@@ -761,8 +766,7 @@ class Orchestrator:
         )
 
         self.task_log.log_step(
-            "info",
-            "Main Agent | Usage Calculation", f"Usage log: {usage_log}"
+            "info", "Main Agent | Usage Calculation", f"Usage log: {usage_log}"
         )
 
         self.task_log.log_step(

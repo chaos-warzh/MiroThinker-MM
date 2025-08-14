@@ -14,7 +14,6 @@
 
 import asyncio
 import functools
-import logging
 from typing import Any, Awaitable, Callable, Protocol, TypeVar
 
 from mcp import ClientSession, StdioServerParameters  # (already imported in config.py)
@@ -78,14 +77,13 @@ class ToolManager(ToolManagerProtocol):
         self._log(
             "info",
             "ToolManager | Initialization",
-            f"ToolManager initialized, loaded servers: {list(self.server_dict.keys())}"
+            f"ToolManager initialized, loaded servers: {list(self.server_dict.keys())}",
         )
 
     def _log(self, level, step_name, message, metadata=None):
         """Helper method to log using task_log if available, otherwise skip logging."""
         if self.task_log:
             self.task_log.log_step(level, step_name, message, metadata)
-
 
     def _is_huggingface_dataset_or_space_url(self, url):
         """
@@ -125,7 +123,11 @@ class ToolManager(ToolManagerProtocol):
             server_name = config["name"]
             server_params = config["params"]
             one_server_for_prompt = {"name": server_name, "tools": []}
-            self._log("info", "ToolManager | Get Tool Definitions", f"Getting tool definitions for server '{server_name}'...")
+            self._log(
+                "info",
+                "ToolManager | Get Tool Definitions",
+                f"Getting tool definitions for server '{server_name}'...",
+            )
 
             try:
                 if isinstance(server_params, StdioServerParameters):
@@ -141,7 +143,7 @@ class ToolManager(ToolManagerProtocol):
                                     self._log(
                                         "info",
                                         "ToolManager | Tool Blacklisted",
-                                        f"Tool '{tool.name}' in server '{server_name}' is blacklisted, skipping."
+                                        f"Tool '{tool.name}' in server '{server_name}' is blacklisted, skipping.",
                                     )
                                     continue
                                 one_server_for_prompt["tools"].append(
@@ -176,7 +178,7 @@ class ToolManager(ToolManagerProtocol):
                     self._log(
                         "error",
                         "ToolManager | Unknown Parameter Type",
-                        f"Error: Unknown parameter type for server '{server_name}': {type(server_params)}"
+                        f"Error: Unknown parameter type for server '{server_name}': {type(server_params)}",
                     )
                     raise TypeError(
                         f"Unknown server params type for {server_name}: {type(server_params)}"
@@ -185,7 +187,7 @@ class ToolManager(ToolManagerProtocol):
                 self._log(
                     "info",
                     "ToolManager | Tool Definitions Success",
-                    f"Successfully obtained {len(one_server_for_prompt['tools'])} tool definitions from server '{server_name}'."
+                    f"Successfully obtained {len(one_server_for_prompt['tools'])} tool definitions from server '{server_name}'.",
                 )
                 all_servers_for_prompt.append(one_server_for_prompt)
 
@@ -193,7 +195,7 @@ class ToolManager(ToolManagerProtocol):
                 self._log(
                     "error",
                     "ToolManager | Connection Error",
-                    f"Error: Unable to connect or get tools from server '{server_name}': {e}"
+                    f"Error: Unable to connect or get tools from server '{server_name}': {e}",
                 )
                 # Still add server entry, but mark tool list as empty or include error information
                 one_server_for_prompt["tools"] = [
@@ -219,7 +221,7 @@ class ToolManager(ToolManagerProtocol):
             self._log(
                 "error",
                 "ToolManager | Server Not Found",
-                f"Error: Attempting to call server '{server_name}' not found"
+                f"Error: Attempting to call server '{server_name}' not found",
             )
             return {
                 "server_name": server_name,
@@ -231,7 +233,7 @@ class ToolManager(ToolManagerProtocol):
             "info",
             "ToolManager | Tool Call Start",
             f"Connecting to server '{server_name}' to call tool '{tool_name}'",
-            metadata={"arguments": arguments}
+            metadata={"arguments": arguments},
         )
 
         if server_name == "playwright":
@@ -278,7 +280,7 @@ class ToolManager(ToolManagerProtocol):
                                 self._log(
                                     "error",
                                     "ToolManager | Tool Execution Error",
-                                    f"Tool execution error: {tool_error}"
+                                    f"Tool execution error: {tool_error}",
                                 )
                                 return {
                                     "server_name": server_name,
@@ -309,7 +311,7 @@ class ToolManager(ToolManagerProtocol):
                                 self._log(
                                     "error",
                                     "ToolManager | Tool Execution Error",
-                                    f"Tool execution error: {tool_error}"
+                                    f"Tool execution error: {tool_error}",
                                 )
                                 return {
                                     "server_name": server_name,
@@ -324,7 +326,7 @@ class ToolManager(ToolManagerProtocol):
                 self._log(
                     "info",
                     "ToolManager | Tool Call Success",
-                    f"Tool '{tool_name}' (server: '{server_name}') called successfully."
+                    f"Tool '{tool_name}' (server: '{server_name}') called successfully.",
                 )
 
                 return {
@@ -337,7 +339,7 @@ class ToolManager(ToolManagerProtocol):
                 self._log(
                     "error",
                     "ToolManager | Tool Call Failed",
-                    f"Error: Failed to call tool '{tool_name}' (server: '{server_name}'): {outer_e}"
+                    f"Error: Failed to call tool '{tool_name}' (server: '{server_name}'): {outer_e}",
                 )
 
                 # Store the original error message for later use
@@ -353,7 +355,7 @@ class ToolManager(ToolManagerProtocol):
                         self._log(
                             "info",
                             "ToolManager | Fallback Attempt",
-                            "Attempting fallback using MarkItDown..."
+                            "Attempting fallback using MarkItDown...",
                         )
                         from markitdown import MarkItDown
 
@@ -364,7 +366,7 @@ class ToolManager(ToolManagerProtocol):
                         self._log(
                             "info",
                             "ToolManager | Fallback Success",
-                            "MarkItDown fallback successful"
+                            "MarkItDown fallback successful",
                         )
                         return {
                             "server_name": server_name,
@@ -378,7 +380,7 @@ class ToolManager(ToolManagerProtocol):
                         self._log(
                             "error",
                             "ToolManager | Fallback Failed",
-                            f"Fallback also failed: {inner_e}"
+                            f"Fallback also failed: {inner_e}",
                         )
                         # No need for pass here as we'll continue to the return statement
 

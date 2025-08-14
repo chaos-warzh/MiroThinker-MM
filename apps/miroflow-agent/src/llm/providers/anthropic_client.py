@@ -84,7 +84,7 @@ class AnthropicLLMClient(LLMProviderClientBase):
                 "LLM | Token Usage",
                 f"Input: {getattr(usage_data, 'input_tokens', 0)}, "
                 f"Cache: {getattr(usage_data, 'cache_creation_input_tokens', 0)}+{getattr(usage_data, 'cache_read_input_tokens', 0)}, "
-                f"Output: {getattr(usage_data, 'output_tokens', 0)}"
+                f"Output: {getattr(usage_data, 'output_tokens', 0)}",
             )
 
             self.last_call_tokens = {
@@ -95,9 +95,7 @@ class AnthropicLLMClient(LLMProviderClientBase):
             }
         else:
             self.task_log.log_step(
-                "warning",
-                "LLM | Token Usage",
-                "Warning: No valid usage_data received."
+                "warning", "LLM | Token Usage", "Warning: No valid usage_data received."
             )
 
     @retry(wait=wait_fixed(10), stop=stop_after_attempt(5))
@@ -117,7 +115,7 @@ class AnthropicLLMClient(LLMProviderClientBase):
         self.task_log.log_step(
             "info",
             "LLM | Call Start",
-            f"Calling LLM ({'async' if self.async_client else 'sync'})"
+            f"Calling LLM ({'async' if self.async_client else 'sync'})",
         )
 
         messages_copy = self._remove_tool_result_from_messages(
@@ -168,21 +166,19 @@ class AnthropicLLMClient(LLMProviderClientBase):
             self.task_log.log_step(
                 "info",
                 "LLM | Call Status",
-                f"LLM call status: {getattr(response, 'stop_reason', 'N/A')}"
+                f"LLM call status: {getattr(response, 'stop_reason', 'N/A')}",
             )
             return response, messages_copy
         except asyncio.CancelledError:
             self.task_log.log_step(
                 "warning",
                 "LLM | Call Cancelled",
-                "⚠️ LLM API call was cancelled during execution"
+                "⚠️ LLM API call was cancelled during execution",
             )
             raise  # Re-raise to allow decorator to log it
         except Exception as e:
             self.task_log.log_step(
-                "error",
-                "LLM | Call Failed",
-                f"Anthropic LLM call failed: {str(e)}"
+                "error", "LLM | Call Failed", f"Anthropic LLM call failed: {str(e)}"
             )
             raise e
 
@@ -194,7 +190,7 @@ class AnthropicLLMClient(LLMProviderClientBase):
             self.task_log.log_step(
                 "error",
                 "LLM | Response Processing",
-                "❌ LLM call failed, skipping this response."
+                "❌ LLM call failed, skipping this response.",
             )
             return "", True, message_history
 
@@ -202,7 +198,7 @@ class AnthropicLLMClient(LLMProviderClientBase):
             self.task_log.log_step(
                 "error",
                 "LLM | Response Processing",
-                "❌ LLM response is empty or contains no content."
+                "❌ LLM response is empty or contains no content.",
             )
             return "", True, message_history
 
@@ -231,9 +227,7 @@ class AnthropicLLMClient(LLMProviderClientBase):
         )
 
         self.task_log.log_step(
-            "info",
-            "LLM | Response",
-            f"LLM Response: {assistant_response_text}"
+            "info", "LLM | Response", f"LLM Response: {assistant_response_text}"
         )
 
         return assistant_response_text, False, message_history
@@ -429,7 +423,7 @@ class AnthropicLLMClient(LLMProviderClientBase):
                     self.task_log.log_step(
                         "warning",
                         "LLM | Cache Control",
-                        "Warning: User message content is not in expected list format, cache control not applied."
+                        "Warning: User message content is not in expected list format, cache control not applied.",
                     )
                     cached_messages.append(turn)
 

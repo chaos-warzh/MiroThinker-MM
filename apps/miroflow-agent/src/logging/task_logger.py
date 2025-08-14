@@ -21,9 +21,7 @@ from pathlib import Path
 from typing import Any, Dict, List, Optional, Literal
 
 # Import colorama for cross-platform colored output
-import os
-from colorama import init, Fore, Back, Style
-
+from colorama import init, Fore, Style
 
 
 # Initialize colorama
@@ -32,15 +30,16 @@ init(autoreset=True, strip=False)
 # This will be set to the configured logger instance
 logger = None
 
+
 def get_color_for_level(level: str) -> str:
     """Get color code based on log level for better visual distinction"""
-    if level == 'ERROR':
+    if level == "ERROR":
         return f"{Fore.RED}{Style.BRIGHT}"
-    elif level == 'WARNING':
+    elif level == "WARNING":
         return f"{Fore.YELLOW}{Style.BRIGHT}"
-    elif level == 'INFO':
+    elif level == "INFO":
         return f"{Fore.GREEN}{Style.BRIGHT}"
-    elif level == 'DEBUG':
+    elif level == "DEBUG":
         return f"{Fore.CYAN}{Style.BRIGHT}"
     else:
         return f"{Fore.WHITE}{Style.BRIGHT}"
@@ -48,27 +47,25 @@ def get_color_for_level(level: str) -> str:
 
 class ColoredFormatter(logging.Formatter):
     """Custom formatter that adds colors for better developer visualization"""
-    
+
     def format(self, record):
         # Get timestamp and format it
         timestamp = self.formatTime(record, self.datefmt)
-        
+
         # Color the level name based on severity
         level_color = get_color_for_level(record.levelname)
         level_reset = Style.RESET_ALL
-        
+
         # Color the logger name (miroflow_agent)
         name_color = f"{Fore.BLUE}{Style.BRIGHT}"
         name_reset = Style.RESET_ALL
-        
+
         # Get the message as is (icons are already added in log_step)
         message = record.getMessage()
-        
+
         # Format with selective coloring
-        formatted = (
-            f"[{timestamp}][{name_color}{record.name}{name_reset}][{level_color}{record.levelname}{level_reset}] - {message}"
-        )
-        
+        formatted = f"[{timestamp}][{name_color}{record.name}{name_reset}][{level_color}{record.levelname}{level_reset}] - {message}"
+
         return formatted
 
 
@@ -76,10 +73,10 @@ def bootstrap_logger() -> logging.Logger:
     """Configure the miroflow_agent logger with consistent formatting"""
 
     global logger
-    
+
     # Configure miroflow_agent logger
     miroflow_agent_logger = logging.getLogger("miroflow_agent")
-    
+
     # Check if logger already has handlers to prevent duplicate configuration
     if miroflow_agent_logger.handlers:
         logger = miroflow_agent_logger
@@ -96,7 +93,7 @@ def bootstrap_logger() -> logging.Logger:
     handler.setFormatter(formatter)
     miroflow_agent_logger.addHandler(handler)
     miroflow_agent_logger.setLevel(logging.DEBUG)
-    
+
     # Disable propagation to prevent duplicate logging from root logger
     miroflow_agent_logger.propagate = False
 
@@ -146,12 +143,14 @@ class StepLog:
     timestamp: str
     info_level: Literal["info", "warning", "error", "debug"] = "info"
     metadata: Dict[str, Any] = field(default_factory=dict)
-    
+
     def __post_init__(self):
         """Validate info_level after initialization"""
         valid_levels = {"info", "warning", "error", "debug"}
         if self.info_level not in valid_levels:
-            raise ValueError(f"info_level must be one of {valid_levels}, got '{self.info_level}'")
+            raise ValueError(
+                f"info_level must be one of {valid_levels}, got '{self.info_level}'"
+            )
 
 
 @dataclass
@@ -228,7 +227,9 @@ class TaskLog:
             icon = "▶️ "
         elif "Tool Call Success" in step_name:
             icon = "✅ "
-        elif "Tool Call Error" in step_name or ("error" in info_level and "tool" in step_name.lower()):
+        elif "Tool Call Error" in step_name or (
+            "error" in info_level and "tool" in step_name.lower()
+        ):
             icon = "❌ "
         elif "agent-" in step_name:
             icon = "🤖 "
@@ -244,10 +245,10 @@ class TaskLog:
             icon = "🔍 "
         elif "tool-browser" in step_name.lower() or "playwright" in step_name.lower():
             icon = "🌐 "
-        
+
         # Add icon to step_name
         step_name_with_icon = f"{icon}{step_name}"
-        
+
         step_log = StepLog(
             step_name=step_name_with_icon,
             message=message,
@@ -260,17 +261,17 @@ class TaskLog:
 
         # Print the structured log to console using the configured logger
         log_message = f"{step_name_with_icon}: {message}"
-        
+
         # Ensure logger is configured
         global logger
         if logger is None:
             logger = bootstrap_logger()
-            
-        if info_level == 'error':
+
+        if info_level == "error":
             logger.error(log_message)
-        elif info_level == 'warning':
+        elif info_level == "warning":
             logger.warning(log_message)
-        elif info_level == 'debug':
+        elif info_level == "debug":
             logger.debug(log_message)
         else:  # info
             logger.info(log_message)
@@ -303,7 +304,9 @@ class TaskLog:
     def save(self):
         """Save as a single JSON file"""
         os.makedirs(self.log_dir, exist_ok=True)
-        timestamp = self.start_time.replace(":", "-").replace(".", "-").replace(" ", "-")
+        timestamp = (
+            self.start_time.replace(":", "-").replace(".", "-").replace(" ", "-")
+        )
 
         filename = f"{self.log_dir}/task_{self.task_id}_{timestamp}.json"
         try:

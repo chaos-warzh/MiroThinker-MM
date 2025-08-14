@@ -38,7 +38,6 @@ from youtube_transcript_api._api import YouTubeTranscriptApi
 from youtube_transcript_api.formatters import SRTFormatter
 
 
-
 def process_input_new(task_description, task_file_name):
     """
     Process user input, especially files.
@@ -128,39 +127,31 @@ def process_input(task_description, task_file_name):
                 )
                 updated_task_description += f"\nNote: A PDF file '{task_file_name}' is associated with this task. You may use available tools to read its content if necessary.\n\n"
 
-
             elif file_extension in ["docx", "doc"]:
                 parsing_result = DocxConverter(local_path=task_file_name)
                 updated_task_description += f"\nNote: A Document file '{task_file_name}' is associated with this task. You may use available tools to read its content if necessary.\n\n"
-
 
             elif file_extension in ["html", "htm"]:
                 parsing_result = HtmlConverter(local_path=task_file_name)
                 updated_task_description += f"\nNote: An HTML file '{task_file_name}' is associated with this task. You may use available tools to read its content if necessary.\n\n"
 
-
             elif file_extension in ["pptx", "ppt"]:
                 parsing_result = PptxConverter(local_path=task_file_name)
                 updated_task_description += f"\nNote: A PPT file '{task_file_name}' is associated with this task. You may use available tools to read its content if necessary.\n\n"
 
-
             elif file_extension in ["wav"]:
                 updated_task_description += f"\nNote: An audio file '{task_file_name}' is associated with this task. You may use available tools to read its content if necessary.\n\n"
 
-
             elif file_extension in ["mp3", "m4a"]:
                 updated_task_description += f"\nNote: An audio file '{task_file_name}' is associated with this task. You may use available tools to read its content if necessary.\n\n"
-
 
             elif file_extension in ["zip"]:
                 parsing_result = ZipConverter(local_path=task_file_name)
                 updated_task_description += f"\nNote: Several files zipped in '{task_file_name}' are associated with this task. You may use available tools to read its content if necessary.\n\n"
 
-
             else:
                 # For other file types, consider adding general prompts or specific processing
                 updated_task_description += f"\nNote: A file '{task_file_name}' is associated with this task. You may use available tools to read its content if necessary.\n\n"
-
 
             #### markitdown process ####
             try:

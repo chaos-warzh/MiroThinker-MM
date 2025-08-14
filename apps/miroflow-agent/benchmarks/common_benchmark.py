@@ -16,9 +16,8 @@ import asyncio
 import json
 import random
 import threading
-from abc import ABC, abstractmethod
+from abc import ABC
 from dataclasses import asdict, dataclass, field
-from datetime import datetime
 from pathlib import Path
 from typing import Any, Dict, List, Optional, Tuple
 import os
@@ -38,9 +37,7 @@ from src.core.pipeline import (
 from src.logging.summary_time_cost import generate_summary
 
 # Constants for format error detection
-FORMAT_ERROR_MESSAGE = (
-    "No \\boxed{} content found in the final answer."
-)
+FORMAT_ERROR_MESSAGE = "No \\boxed{} content found in the final answer."
 
 
 @dataclass
@@ -97,7 +94,9 @@ class BenchmarkEvaluator(ABC):
         self.results: List[BenchmarkResult] = []
 
         # Format error tracking and retry configuration
-        self.format_error_retry_limit = cfg.benchmark.execution.get("format_error_retry_limit", 3) 
+        self.format_error_retry_limit = cfg.benchmark.execution.get(
+            "format_error_retry_limit", 3
+        )
 
         # Get LLM provider and model from the config object
         self.llm_provider = cfg.llm.provider
@@ -171,13 +170,18 @@ class BenchmarkEvaluator(ABC):
                         filename = file_path.name
                         # Extract timestamp from filename like: task_xxx_attempt-1_format-retry-0_2025-08-13-10-13-20.json
                         # The timestamp is the last part before .json
-                        if '_' in filename and filename.endswith('.json'):
-                            timestamp_part = filename.split('_')[-1].replace('.json', '')
+                        if "_" in filename and filename.endswith(".json"):
+                            timestamp_part = filename.split("_")[-1].replace(
+                                ".json", ""
+                            )
                             # Convert timestamp to datetime for proper sorting
                             from datetime import datetime
-                            return datetime.strptime(timestamp_part, '%Y-%m-%d-%H-%M-%S')
+
+                            return datetime.strptime(
+                                timestamp_part, "%Y-%m-%d-%H-%M-%S"
+                            )
                         return filename
-                    
+
                     matching_logs = sorted(matching_logs, key=extract_timestamp)
 
                 attempt_result = {
@@ -225,10 +229,11 @@ class BenchmarkEvaluator(ABC):
 
                 # Run inference if no existing result or if we have a format error
                 if (
-                    not attempt_result["model_boxed_answer"] 
+                    not attempt_result["model_boxed_answer"]
                     or attempt_result["model_boxed_answer"] == FORMAT_ERROR_MESSAGE
-                    ):
+                ):
                     # Try to get a valid response with format retry
+                    print(f"TASK ID: {task.task_id}, ATTEMPT: {attempt}")
                     format_retry_count = 0
                     max_format_retries = self.format_error_retry_limit
 
@@ -256,14 +261,19 @@ class BenchmarkEvaluator(ABC):
                             attempt_result["log_file_path"] = log_file_path
 
                             # Check for format error
-                            if attempt_result["model_boxed_answer"] == FORMAT_ERROR_MESSAGE:
+                            if (
+                                attempt_result["model_boxed_answer"]
+                                == FORMAT_ERROR_MESSAGE
+                            ):
                                 format_retry_count += 1
                                 if format_retry_count <= max_format_retries:
                                     continue
                                 else:
                                     # Exceeded format retry limit
                                     attempt_result["status"] = "success"
-                                    attempt_result["model_boxed_answer"] = "No \\boxed{} content found after format error retry limit exceeded."
+                                    attempt_result["model_boxed_answer"] = (
+                                        "No \\boxed{} content found after format error retry limit exceeded."
+                                    )
                                     attempt_result["error_message"] = (
                                         f"Exceeded format error retry limit ({max_format_retries})"
                                     )
@@ -516,11 +526,14 @@ class BenchmarkEvaluator(ABC):
         print(f"Tasks passed: {correct_count}/{total_count}")
         print(f"Pass@{self.pass_at_k} Accuracy: {pass_at_k_accuracy:.2%}")
 
-
         return pass_at_k_accuracy
 
     def _update_log_file_with_evaluation(
-        self, model_boxed_answer: str, log_file_path: str, evaluation_result: str, judge_type: str
+        self,
+        model_boxed_answer: str,
+        log_file_path: str,
+        evaluation_result: str,
+        judge_type: str,
     ):
         """Helper method to update log file with evaluation result"""
         try:
@@ -720,7 +733,7 @@ class CommonBenchmark:
             f"\nStarting parallel inference with {self.cfg.benchmark.execution.max_concurrent} concurrent tasks..."
         )
         print(f"Using pass@{self.evaluator.pass_at_k} evaluation...")
-        
+
         self.evaluator.run_parallel_inference(
             self.evaluator.tasks,
             max_concurrent=self.cfg.benchmark.execution.max_concurrent,

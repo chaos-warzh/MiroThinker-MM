@@ -72,12 +72,10 @@ async def execute_task_pipeline(
         env_info=get_env_info(cfg),
         ground_truth=ground_truth,
     )
-    
+
     # Log task start
     task_log.log_step(
-        "info",
-        "Main | Task Start",
-        f"--- Starting Task Execution: {task_id} ---"
+        "info", "Main | Task Start", f"--- Starting Task Execution: {task_id} ---"
     )
 
     # Set task_log for all ToolManager instances
@@ -85,7 +83,6 @@ async def execute_task_pipeline(
     for sub_agent_tool_manager in sub_agent_tool_managers.values():
         sub_agent_tool_manager.set_task_log(task_log)
 
-    traces = []
     try:
         # Initialize LLM client
         llm_client = LLMClient(task_id=task_id, cfg=cfg, task_log=task_log)
@@ -119,13 +116,9 @@ async def execute_task_pipeline(
         task_log.log_step(
             "warning",
             "task_error_notification",
-            f"An error occurred during task {task_id}"
+            f"An error occurred during task {task_id}",
         )
-        task_log.log_step(
-            "error",
-            "task_error_details",
-            error_details
-        )
+        task_log.log_step("error", "task_error_details", error_details)
 
         error_message = (
             f"Error executing task {task_id}:\n"
@@ -152,7 +145,6 @@ async def execute_task_pipeline(
             f"Task {task_id} execution completed with status: {task_log.status}",
         )
         task_log.save()
-
 
 
 def create_pipeline_components(cfg: DictConfig):

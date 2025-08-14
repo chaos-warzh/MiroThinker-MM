@@ -75,7 +75,7 @@ class QwenLLMClient(LLMProviderClientBase):
             self.task_log.log_step(
                 "info",
                 "LLM | Token Usage",
-                f"Input: {self.token_usage['total_input_tokens']}, Output: {self.token_usage['total_output_tokens']}"
+                f"Input: {self.token_usage['total_input_tokens']}, Output: {self.token_usage['total_output_tokens']}",
             )
 
     @retry(wait=wait_fixed(30), stop=stop_after_attempt(10))
@@ -181,9 +181,7 @@ class QwenLLMClient(LLMProviderClientBase):
         if not llm_response or not llm_response.choices:
             error_msg = "LLM did not return a valid response."
             self.task_log.log_step(
-                "error",
-                "LLM | Response Error",
-                f"Error: {error_msg}"
+                "error", "LLM | Response Error", f"Error: {error_msg}"
             )
             return "", True, message_history  # Exit loop, return message_history
 
@@ -204,7 +202,7 @@ class QwenLLMClient(LLMProviderClientBase):
                 self.task_log.log_step(
                     "warning",
                     "LLM | Context Length",
-                    "Detected context length exceeded, returning error status"
+                    "Detected context length exceeded, returning error status",
                 )
                 message_history.append(
                     {"role": "assistant", "content": assistant_response_text}

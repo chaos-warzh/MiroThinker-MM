@@ -13,7 +13,6 @@
 # limitations under the License.
 
 import asyncio
-import logging
 
 import hydra
 from omegaconf import DictConfig, OmegaConf
