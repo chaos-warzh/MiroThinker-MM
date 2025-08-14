@@ -16,7 +16,7 @@ import json
 import logging
 import re
 
-logger = logging.getLogger()
+logger = logging.getLogger("miroflow_agent")
 
 
 def parse_llm_response_for_tool_calls(llm_response_content_text):

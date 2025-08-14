@@ -17,7 +17,7 @@ from datetime import date
 from typing import Dict, Optional, Tuple
 
 from miroflow_tools.manager import ToolManager
-from miroflow_tracing import function_span
+
 from omegaconf import DictConfig
 
 from ..config.settings import expose_sub_agents_as_tools
@@ -27,7 +27,6 @@ from ..llm.client import LLMClient
 from ..logging.task_logger import (
     TaskLog,
     get_utc_plus_8_time,
-    logger,
 )
 from ..utils.prompt_utils import (
     generate_agent_specific_system_prompt,
@@ -105,9 +104,9 @@ class Orchestrator:
             # Check if response is None (indicating an error occurred)
             if response is None:
                 self.task_log.log_step(
+                    "error",
                     f"{purpose} | LLM Call Failed",
                     f"{purpose} failed - no response received",
-                    "Error",
                 )
                 return "", True, None, message_history
 
@@ -124,8 +123,9 @@ class Orchestrator:
             )
 
             self.task_log.log_step(
+                "info",
                 f"{purpose} | LLM Call",
-                f"{purpose} completed successfully",
+                "completed successfully",
             )
             return (
                 assistant_response_text,
@@ -136,9 +136,9 @@ class Orchestrator:
 
         except Exception as e:
             self.task_log.log_step(
+                "error",
                 f"{purpose} | LLM Call ERROR",
                 f"{purpose} error: {str(e)}",
-                "Error",
             )
             # Return empty response with should_break=True to indicate error
             return "", True, None, message_history
@@ -150,11 +150,13 @@ class Orchestrator:
         Run sub agent
         """
         self.task_log.log_step(
-            "Sub Agent | Start Task", f"Starting sub agent {sub_agent_name}"
+            "info", f"{sub_agent_name} | Start Task", f"Starting {sub_agent_name}"
         )
         task_description += "\n\nPlease provide the answer and detailed supporting information of the subtask given to you."
         self.task_log.log_step(
-            "Sub Agent | Task Description", f"Subtask: {task_description}"
+            "info",
+            f"{sub_agent_name} | Task Description",
+            f"Subtask: {task_description}",
         )
 
         # Start new sub-agent session
@@ -168,14 +170,16 @@ class Orchestrator:
         tool_definitions = await self._list_sub_agent_tools()
         tool_definitions = tool_definitions.get(sub_agent_name, {})
         self.task_log.log_step(
-            "Sub Agent | Get Tool Definitions",
+            "info",
+            f"{sub_agent_name} | Get Tool Definitions",
             f"Number of tools: {len(tool_definitions)}",
         )
 
         if not tool_definitions:
             self.task_log.log_step(
-                "Sub Agent | No Tools",
-                f"No tool definitions available for {sub_agent_name}",
+                "warning",
+                f"{sub_agent_name} | No Tools",
+                "No tool definitions available.",
             )
 
         # Generate sub-agent system prompt
@@ -192,7 +196,9 @@ class Orchestrator:
         while turn_count < max_turns:
             turn_count += 1
             self.task_log.log_step(
-                f"Sub Agent | Turn: {turn_count}", f"Starting turn {turn_count}"
+                "info",
+                f"{sub_agent_name} | Turn: {turn_count}",
+                f"Starting turn {turn_count}.",
             )
             self.task_log.save()
 
@@ -213,42 +219,42 @@ class Orchestrator:
                 message_history,
                 tool_definitions,
                 turn_count,
-                f"Sub Agent: {sub_agent_name} | Turn: {turn_count}",
+                f"{sub_agent_name} | Turn: {turn_count}",
                 keep_tool_result=keep_tool_result,
                 agent_type=sub_agent_name,
             )
 
             if should_break:
                 self.task_log.log_step(
-                    f"Sub Agent | Turn: {turn_count} | LLM Call",
-                    "should break is True, breaking the loop",
                     "info",
+                    f"{sub_agent_name} | Turn: {turn_count} | LLM Call",
+                    "should break is True, breaking the loop",
                 )
                 break
 
             # Process LLM response
             elif assistant_response_text:
                 self.task_log.log_step(
-                    f"Sub Agent | Turn: {turn_count} | LLM Call",
-                    "LLM call completed successfully",
                     "info",
+                    f"{sub_agent_name} | Turn: {turn_count} | LLM Call",
+                    "completed successfully",
                 )
 
             else:
                 # LLM call failed, end current turn
                 self.task_log.log_step(
-                    f"Sub Agent | Turn: {turn_count} | LLM Call",
-                    "LLM call failed",
                     "info",
+                    f"{sub_agent_name} | Turn: {turn_count} | LLM Call",
+                    "LLM call failed",
                 )
                 break
 
             # Use tool calls parsed from LLM response
             if not tool_calls:
                 self.task_log.log_step(
-                    f"Sub Agent | Turn: {turn_count} | LLM Call",
-                    f"No tool calls found in sub agent {sub_agent_name}, ending on turn {turn_count}",
                     "info",
+                    f"{sub_agent_name} | Turn: {turn_count} | LLM Call",
+                    f"No tool calls found in {sub_agent_name}, ending on turn {turn_count}",
                 )
                 break
 
@@ -263,28 +269,24 @@ class Orchestrator:
                 call_id = call["id"]
 
                 self.task_log.log_step(
-                    f"Sub Agent | Turn: {turn_count} | Tool Call",
-                    f"Executing {tool_name} on {server_name}",
                     "info",
+                    f"{sub_agent_name} | Turn: {turn_count} | Tool Call",
+                    f"Executing {tool_name} on {server_name}",
                 )
 
                 call_start_time = time.time()
                 try:
-                    with function_span(
-                        name=f"{server_name}.{tool_name}", input=arguments
-                    ) as span:
-                        tool_result = await self.sub_agent_tool_managers[
-                            sub_agent_name
-                        ].execute_tool_call(server_name, tool_name, arguments)
-                        span.span_data.output = str(tool_result)
+                    tool_result = await self.sub_agent_tool_managers[
+                        sub_agent_name
+                    ].execute_tool_call(server_name, tool_name, arguments)
 
                     call_end_time = time.time()
                     call_duration_ms = int((call_end_time - call_start_time) * 1000)
 
                     self.task_log.log_step(
-                        f"Sub Agent | Turn: {turn_count} | Tool Call",
-                        f"Tool {tool_name} executed successfully in {call_duration_ms}ms",
                         "info",
+                        f"{sub_agent_name} | Turn: {turn_count} | Tool Call",
+                        f"Tool {tool_name} completed in {call_duration_ms}ms",
                     )
 
                     tool_calls_data.append(
@@ -318,9 +320,9 @@ class Orchestrator:
                         "tool_name": tool_name,
                     }
                     self.task_log.log_step(
-                        f"Sub Agent | Turn: {turn_count} | Tool Call",
+                        "error",
+                        f"{sub_agent_name} | Turn: {turn_count} | Tool Call",
                         f"Tool {tool_name} failed to execute: {str(e)}",
-                        "info",
                     )
 
                 tool_result_for_llm = self.output_formatter.format_tool_result_for_user(
@@ -350,35 +352,39 @@ class Orchestrator:
                 # Context exceeded limits, set turn_count to trigger summary
                 turn_count = max_turns
                 self.task_log.log_step(
-                    f"Sub Agent | Turn: {turn_count} | Context Limit Reached",
-                    "Context limit reached, triggering summary",
                     "info",
+                    f"{sub_agent_name} | Turn: {turn_count} | Context Limit Reached",
+                    "Context limit reached, triggering summary",
                 )
                 break
 
         # Continue processing
         self.task_log.log_step(
-            "Sub Agent | Main Loop Completed",
+            "info",
+            f"{sub_agent_name} | Main Loop Completed",
             f"Main loop completed after {turn_count} turns",
         )
 
         # Record browsing agent loop end
         if turn_count >= max_turns:
             self.task_log.log_step(
-                "Sub Agent | Max Turns Reached / Context Limit Reached",
+                "info",
+                f"{sub_agent_name} | Max Turns Reached / Context Limit Reached",
                 f"Reached maximum turns ({max_turns}) or context limit reached",
             )
 
         else:
             self.task_log.log_step(
-                "Sub Agent | Main Loop Completed",
+                "info",
+                f"{sub_agent_name} | Main Loop Completed",
                 f"Main loop completed after {turn_count} turns",
             )
 
         # Final summary
         self.task_log.log_step(
-            "Sub Agent | Final Summary",
-            f"Generating sub agent {sub_agent_name} final summary",
+            "info",
+            f"{sub_agent_name} | Final Summary",
+            f"Generating {sub_agent_name} final summary",
         )
 
         # Generate sub agent summary prompt
@@ -407,15 +413,16 @@ class Orchestrator:
             message_history,
             tool_definitions,
             turn_count + 1,
-            f"Sub agent: {sub_agent_name} | Final summary",
+            f"{sub_agent_name} | Final summary",
             keep_tool_result=keep_tool_result,
             agent_type=sub_agent_name,
         )
 
         if final_answer_text:
             self.task_log.log_step(
-                "Sub Agent | Final Answer",
-                f"Sub agent {sub_agent_name} final answer generated successfully",
+                "info",
+                f"{sub_agent_name} | Final Answer",
+                "Final answer generated successfully",
             )
 
         else:
@@ -423,15 +430,16 @@ class Orchestrator:
                 f"No final answer generated by sub agent {sub_agent_name}."
             )
             self.task_log.log_step(
-                "Sub Agent | Final Answer",
-                f"Unable to generate sub agent {sub_agent_name} final answer",
-                "Error",
+                "error",
+                f"{sub_agent_name} | Final Answer",
+                "Unable to generate final answer",
             )
 
-        self.task_log.log_step(
-            "Sub Agent | Final Answer",
-            f"Sub agent {sub_agent_name} final answer: {final_answer_text}",
-        )
+        # self.task_log.log_step(
+        #     "info",
+        #     "Sub Agent | Final Answer",
+        #     f"Sub agent {sub_agent_name} final answer: {final_answer_text}",
+        # )
 
         self.task_log.sub_agent_message_history_sessions[
             self.task_log.current_sub_agent_session_id
@@ -440,9 +448,6 @@ class Orchestrator:
         self.task_log.save()
 
         self.task_log.end_sub_agent_session(sub_agent_name)
-        self.task_log.log_step(
-            "Sub Agent | Completed", f"Sub agent {sub_agent_name} completed"
-        )
 
         # Return final answer instead of conversation log, so main agent can use it directly
         return final_answer_text
@@ -455,13 +460,13 @@ class Orchestrator:
         """
         keep_tool_result = int(self.cfg.agent.keep_tool_result)
 
-        self.task_log.log_step("Main Agent | Start Task", f"Task ID: {task_id}")
+        self.task_log.log_step("info", "Main Agent", f"Start task with id: {task_id}")
         self.task_log.log_step(
-            "Main Agent | Task Description", f"Task Description: {task_description}"
+            "info", "Main Agent", f"Task description: {task_description}"
         )
         if task_file_name:
             self.task_log.log_step(
-                "Main Agent | Associated File", f"Associated File: {task_file_name}"
+                "info", "Main Agent", f"Associated file: {task_file_name}"
             )
 
         # 1. Process input
@@ -479,11 +484,14 @@ class Orchestrator:
         tool_definitions = await self.main_agent_tool_manager.get_all_tool_definitions()
         tool_definitions += expose_sub_agents_as_tools(self.cfg.agent.sub_agents)
         if not tool_definitions:
-            logger.info("Warning: No tool definitions found. LLM cannot use any tools.")
+            self.task_log.log_step(
+                "warning",
+                "Main Agent | Tool Definitions",
+                "Warning: No tool definitions found. LLM cannot use any tools.",
+            )
 
         self.task_log.log_step(
-            "Main Agent | Get Tool Definitions",
-            f"Number of tools: {len(tool_definitions)}",
+            "info", "Main Agent", f"Number of tools: {len(tool_definitions)}"
         )
 
         # 3. Generate system prompt
@@ -499,7 +507,11 @@ class Orchestrator:
         tool_calls = []
         while turn_count < max_turns:
             turn_count += 1
-            logger.info(f"\n--- Main Agent Turn {turn_count} ---")
+            self.task_log.log_step(
+                "info",
+                f"Main Agent | Turn: {turn_count}",
+                f"Starting turn {turn_count}",
+            )
             self.task_log.save()
 
             # Use unified LLM call processing
@@ -522,25 +534,25 @@ class Orchestrator:
             if assistant_response_text:
                 if should_break:
                     self.task_log.log_step(
+                        "info",
                         f"Main Agent | Turn: {turn_count} | LLM Call",
                         "should break is True, breaking the loop",
-                        "info",
                     )
                     break
 
             else:
                 self.task_log.log_step(
+                    "info",
                     f"Main Agent | Turn: {turn_count} | LLM Call",
                     "No valid response from LLM, breaking the loop",
-                    "info",
                 )
                 break
 
             if not tool_calls:
                 self.task_log.log_step(
+                    "info",
                     f"Main Agent | Turn: {turn_count} | LLM Call",
                     "LLM did not request tool usage, ending process.",
-                    "info",
                 )
                 break
 
@@ -549,9 +561,9 @@ class Orchestrator:
             all_tool_results_content_with_id = []
 
             self.task_log.log_step(
+                "info",
                 f"Main Agent | Turn: {turn_count} | Tool Calls",
                 f"Number of tool calls detected: {len(tool_calls)}",
-                "info",
             )
 
             main_agent_last_call_tokens = self.llm_client.last_call_tokens
@@ -565,30 +577,22 @@ class Orchestrator:
                 call_start_time = time.time()
                 try:
                     if server_name.startswith("agent-"):
-                        with function_span(
-                            name=f"{server_name}.{tool_name}", input=arguments
-                        ) as span:
-                            sub_agent_result = await self.run_sub_agent(
-                                server_name, arguments["subtask"], keep_tool_result
-                            )
-                            tool_result = {
-                                "server_name": server_name,
-                                "tool_name": tool_name,
-                                "result": sub_agent_result,
-                            }
-                            span.span_data.output = str(tool_result)
+                        sub_agent_result = await self.run_sub_agent(
+                            server_name, arguments["subtask"], keep_tool_result
+                        )
+                        tool_result = {
+                            "server_name": server_name,
+                            "tool_name": tool_name,
+                            "result": sub_agent_result,
+                        }
                     else:
-                        with function_span(
-                            name=f"{server_name}.{tool_name}", input=arguments
-                        ) as span:
-                            tool_result = (
-                                await self.main_agent_tool_manager.execute_tool_call(
-                                    server_name=server_name,
-                                    tool_name=tool_name,
-                                    arguments=arguments,
-                                )
+                        tool_result = (
+                            await self.main_agent_tool_manager.execute_tool_call(
+                                server_name=server_name,
+                                tool_name=tool_name,
+                                arguments=arguments,
                             )
-                            span.span_data.output = str(tool_result)
+                        )
 
                     call_end_time = time.time()
                     call_duration_ms = int((call_end_time - call_start_time) * 1000)
@@ -604,9 +608,9 @@ class Orchestrator:
                         }
                     )
                     self.task_log.log_step(
-                        f"Main Agent | Turn: {turn_count} | Tool Call",
-                        f"Tool {tool_name} executed successfully in {call_duration_ms}ms",
                         "info",
+                        f"Main Agent | Turn: {turn_count} | Tool Call",
+                        f"Tool {tool_name} completed in {call_duration_ms}ms",
                     )
 
                 except Exception as e:
@@ -629,9 +633,9 @@ class Orchestrator:
                         "error": str(e),
                     }
                     self.task_log.log_step(
+                        "error",
                         f"Main Agent | Turn: {turn_count} | Tool Call",
                         f"Tool {tool_name} failed to execute: {str(e)}",
-                        "info",
                     )
 
                 # Format results to feedback to LLM (more concise)
@@ -669,28 +673,31 @@ class Orchestrator:
             if not pass_length_check:
                 turn_count = max_turns
                 self.task_log.log_step(
+                    "warning",
                     f"Main Agent | Turn: {turn_count} | Context Limit Reached",
                     "Context limit reached, triggering summary",
-                    "warning",
                 )
                 break
 
         # Record main loop end
         if turn_count >= max_turns:
             self.task_log.log_step(
+                "warning",
                 "Main Agent | Max Turns Reached / Context Limit Reached",
                 f"Reached maximum turns ({max_turns}) or context limit reached",
-                "warning",
             )
 
         else:
             self.task_log.log_step(
+                "info",
                 "Main Agent | Main Loop Completed",
                 f"Main loop completed after {turn_count} turns",
             )
 
         # Final summary
-        self.task_log.log_step("Main Agent | Final Summary", "Generating final summary")
+        self.task_log.log_step(
+            "info", "Main Agent | Final Summary", "Generating final summary"
+        )
 
         # Generate summary prompt (generate only once)
         summary_prompt = generate_agent_summarize_prompt(
@@ -732,21 +739,24 @@ class Orchestrator:
         # Process response results
         if final_answer_text:
             self.task_log.log_step(
-                "Main Agent | Final Answer", "Final answer extracted successfully"
+                "info",
+                "Main Agent | Final Answer",
+                "Final answer generated successfully",
             )
 
             # Log the final answer
             self.task_log.log_step(
+                "info",
                 "Main Agent | Final Answer",
-                f"Final answer content: {final_answer_text}",
+                f"Final answer content:\n\n{final_answer_text}",
             )
 
         else:
             final_answer_text = "No final answer generated."
             self.task_log.log_step(
+                "error",
                 "Main Agent | Final Answer",
-                "Unable to extract final answer",
-                "Error",
+                "Unable to generate final answer",
             )
 
         final_summary, final_boxed_answer, usage_log = (
@@ -756,15 +766,17 @@ class Orchestrator:
         )
 
         self.task_log.log_step(
+            "info", "Main Agent | Usage Calculation", f"Usage log: {usage_log}"
+        )
+
+        self.task_log.log_step(
+            "info",
             "Main Agent | Final boxed answer",
-            f"Final boxed answer: {final_boxed_answer}",
+            f"Final boxed answer:\n\n{final_boxed_answer}",
         )
 
         self.task_log.log_step(
-            "Main Agent | Usage Calculation", f"Usage log: {usage_log}"
-        )
-
-        self.task_log.log_step(
+            "info",
             "Main Agent | Task Completed",
             f"Main agent task {task_id} completed successfully",
         )

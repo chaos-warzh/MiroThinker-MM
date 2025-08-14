@@ -27,7 +27,7 @@ from typing import (
 
 from omegaconf import DictConfig
 
-from ..logging.task_logger import TaskLog, logger
+from ..logging.task_logger import TaskLog
 
 from .util import with_timeout
 
@@ -88,11 +88,10 @@ class LLMProviderClientBase(ABC):
         self.token_usage = self._reset_token_usage()
         self.client = self._create_client()
 
-        # Load pricing configuration
-        self._load_pricing_from_config()
-
-        logger.info(
-            f"LLMClient {self.provider} {self.model_name} initialization completed."
+        self.task_log.log_step(
+            "info",
+            "LLM | Initialization",
+            f"LLMClient {self.provider} {self.model_name} initialization completed.",
         )
 
     def _reset_token_usage(self) -> TokenUsage:
@@ -103,87 +102,6 @@ class LLMProviderClientBase(ABC):
             total_cache_write_input_tokens=0,
             total_cache_read_input_tokens=0,
         )
-
-    def _load_pricing_from_config(self):
-        """Load pricing information from Hydra configuration"""
-        # Initialize all possible price attributes to 0.0
-        self.input_token_price = 0.0
-        self.output_token_price = 0.0
-        self.cache_input_token_price = 0.0
-        self.cache_creation_token_price = 0.0
-        self.cache_read_token_price = 0.0
-
-        try:
-            pricing_data = self.cfg.get("pricing", {})
-            if not pricing_data:
-                logger.warning("'pricing' section not found in Hydra configuration")
-                return
-
-            provider_pricing = pricing_data.get(self.provider)
-            if not provider_pricing:
-                logger.warning(
-                    f"Provider pricing configuration not found in pricing config: {self.provider}"
-                )
-                return
-
-            model_pricing = None
-            # 1. Exact match
-            if self.model_name in provider_pricing:
-                model_pricing = provider_pricing[self.model_name]
-                logger.info(
-                    f"Found exact price match for {self.provider}/{self.model_name}"
-                )
-            # 2. Prefix match
-            else:
-                best_match_key = None
-                for model_key in provider_pricing:
-                    if self.model_name.startswith(model_key):
-                        if best_match_key is None or len(model_key) > len(
-                            best_match_key
-                        ):
-                            best_match_key = model_key
-                if best_match_key:
-                    model_pricing = provider_pricing[best_match_key]
-                    logger.info(
-                        f"Found prefix-based price match for {self.provider}/{self.model_name} using key {best_match_key}"
-                    )
-
-            if model_pricing:
-                self.input_token_price = model_pricing.get("input_token_price", 0.0)
-                self.output_token_price = model_pricing.get("output_token_price", 0.0)
-                self.cache_input_token_price = model_pricing.get(
-                    "cache_input_token_price", 0.0
-                )
-                self.cache_creation_token_price = model_pricing.get(
-                    "cache_creation_token_price", 0.0
-                )
-                self.cache_read_token_price = model_pricing.get(
-                    "cache_read_token_price", 0.0
-                )
-                logger.info(
-                    f"Loaded pricing configuration: {self.provider}/{self.model_name}"
-                )
-                logger.info(f"  Input token price: ${self.input_token_price}/1M")
-                logger.info(f"  Output token price: ${self.output_token_price}/1M")
-                if self.cache_input_token_price > 0:
-                    logger.info(
-                        f"  Cache input token price: ${self.cache_input_token_price}/1M"
-                    )
-                if self.cache_creation_token_price > 0:
-                    logger.info(
-                        f"  Cache creation token price: ${self.cache_creation_token_price}/1M"
-                    )
-                if self.cache_read_token_price > 0:
-                    logger.info(
-                        f"  Cache read token price: ${self.cache_read_token_price}/1M"
-                    )
-            else:
-                logger.warning(
-                    f"Model pricing configuration not found in pricing config: {self.provider}/{self.model_name}"
-                )
-
-        except Exception as e:
-            logger.error(f"Failed to load pricing from Hydra configuration: {e}")
 
     def _remove_tool_result_from_messages(self, messages, keep_tool_result):
         messages_copy = [m.copy() for m in messages]
@@ -217,29 +135,39 @@ class LLMProviderClientBase(ABC):
                 # Combine first message and last k messages
                 indices_to_keep = [first_user_idx] + last_indices_to_keep
 
-                logger.info("\n=======>>>>>> Message retention summary:")
-                logger.info(f"Total user messages: {len(user_indices)}")
-                logger.info(f"Keeping first message at index: {first_user_idx}")
-                logger.info(
-                    f"Keeping last {num_to_keep} messages at indices: {last_indices_to_keep}"
+                self.task_log.log_step(
+                    "info",
+                    "LLM | Message Retention",
+                    f"Message retention summary: Total user messages: {len(user_indices)}, Keeping first message at index: {first_user_idx}, Keeping last {num_to_keep} messages at indices: {last_indices_to_keep}, Total messages to keep: {len(indices_to_keep)}",
                 )
-                logger.info(f"Total messages to keep: {len(indices_to_keep)}")
 
                 for i, msg in enumerate(messages_copy):
                     if (
                         msg.get("role") == "user" or msg.get("role") == "tool"
                     ) and i not in indices_to_keep:
-                        logger.info(f"Omitting content for user message at index {i}")
+                        self.task_log.log_step(
+                            "info",
+                            "LLM | Message Retention",
+                            f"Omitting content for user message at index {i}",
+                        )
                         msg["content"] = "Tool result is omitted to save tokens."
             elif user_indices:  # This means only 1 user message exists
-                logger.info(
-                    "\n=======>>>>>> Only 1 user message found. Keeping it as is."
+                self.task_log.log_step(
+                    "info",
+                    "LLM | Message Retention",
+                    "Only 1 user message found. Keeping it as is.",
                 )
             else:  # No user messages at all
-                logger.info("\n=======>>>>>> No user messages found in the history.")
+                self.task_log.log_step(
+                    "info",
+                    "LLM | Message Retention",
+                    "No user messages found in the history.",
+                )
 
-            logger.info(
-                f"\n\n=======>>>>>> Messages after potential content omission: {json.dumps(messages_copy, indent=4, ensure_ascii=False)}\n\n"
+            self.task_log.log_step(
+                "info",
+                "LLM | Message Retention",
+                f"Messages after potential content omission: {json.dumps(messages_copy, indent=4, ensure_ascii=False)}",
             )
         elif keep_tool_result == -1:
             # No processing needed
@@ -277,9 +205,9 @@ class LLMProviderClientBase(ABC):
 
         except Exception as e:
             self.task_log.log_step(
+                "error",
                 f"FATAL ERROR | {agent_type} | LLM Call ERROR",
                 f"{agent_type} failed: {str(e)}",
-                "failed",
             )
             response = None
 

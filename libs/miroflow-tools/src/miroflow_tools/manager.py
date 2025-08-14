@@ -14,7 +14,6 @@
 
 import asyncio
 import functools
-import logging
 from typing import Any, Awaitable, Callable, Protocol, TypeVar
 
 from mcp import ClientSession, StdioServerParameters  # (already imported in config.py)
@@ -23,7 +22,7 @@ from mcp.client.stdio import stdio_client
 
 from .mcp_servers.browser_session import PlaywrightSession
 
-logger = logging.getLogger("miroflow")
+# logger = logging.getLogger("miroflow_agent")
 
 R = TypeVar("R")
 
@@ -69,10 +68,22 @@ class ToolManager(ToolManagerProtocol):
         }
         self.browser_session = None
         self.tool_blacklist = tool_blacklist if tool_blacklist else set()
+        self.task_log = None
 
-        logger.info(
-            f"ToolManager initialized, loaded servers: {list(self.server_dict.keys())}"
+    def set_task_log(self, task_log):
+        """Set the task logger for structured logging."""
+        self.task_log = task_log
+
+        self._log(
+            "info",
+            "ToolManager | Initialization",
+            f"ToolManager initialized, loaded servers: {list(self.server_dict.keys())}",
         )
+
+    def _log(self, level, step_name, message, metadata=None):
+        """Helper method to log using task_log if available, otherwise skip logging."""
+        if self.task_log:
+            self.task_log.log_step(level, step_name, message, metadata)
 
     def _is_huggingface_dataset_or_space_url(self, url):
         """
@@ -112,7 +123,11 @@ class ToolManager(ToolManagerProtocol):
             server_name = config["name"]
             server_params = config["params"]
             one_server_for_prompt = {"name": server_name, "tools": []}
-            logger.info(f"Getting tool definitions for server '{server_name}'...")
+            self._log(
+                "info",
+                "ToolManager | Get Tool Definitions",
+                f"Getting tool definitions for server '{server_name}'...",
+            )
 
             try:
                 if isinstance(server_params, StdioServerParameters):
@@ -125,8 +140,10 @@ class ToolManager(ToolManagerProtocol):
                             # black list some tools
                             for tool in tools_response.tools:
                                 if (server_name, tool.name) in self.tool_blacklist:
-                                    logger.info(
-                                        f"Tool '{tool.name}' in server '{server_name}' is blacklisted, skipping."
+                                    self._log(
+                                        "info",
+                                        "ToolManager | Tool Blacklisted",
+                                        f"Tool '{tool.name}' in server '{server_name}' is blacklisted, skipping.",
                                     )
                                     continue
                                 one_server_for_prompt["tools"].append(
@@ -158,21 +175,27 @@ class ToolManager(ToolManagerProtocol):
                                     }
                                 )
                 else:
-                    logger.error(
-                        f"Error: Unknown parameter type for server '{server_name}': {type(server_params)}"
+                    self._log(
+                        "error",
+                        "ToolManager | Unknown Parameter Type",
+                        f"Error: Unknown parameter type for server '{server_name}': {type(server_params)}",
                     )
                     raise TypeError(
                         f"Unknown server params type for {server_name}: {type(server_params)}"
                     )
 
-                logger.info(
-                    f"Successfully obtained {len(one_server_for_prompt['tools'])} tool definitions from server '{server_name}'."
+                self._log(
+                    "info",
+                    "ToolManager | Tool Definitions Success",
+                    f"Successfully obtained {len(one_server_for_prompt['tools'])} tool definitions from server '{server_name}'.",
                 )
                 all_servers_for_prompt.append(one_server_for_prompt)
 
             except Exception as e:
-                logger.error(
-                    f"Error: Unable to connect or get tools from server '{server_name}': {e}"
+                self._log(
+                    "error",
+                    "ToolManager | Connection Error",
+                    f"Error: Unable to connect or get tools from server '{server_name}': {e}",
                 )
                 # Still add server entry, but mark tool list as empty or include error information
                 one_server_for_prompt["tools"] = [
@@ -195,15 +218,22 @@ class ToolManager(ToolManagerProtocol):
         # Original remote server call logic
         server_params = self.get_server_params(server_name)
         if not server_params:
-            logger.error(f"Error: Attempting to call server '{server_name}' not found")
+            self._log(
+                "error",
+                "ToolManager | Server Not Found",
+                f"Error: Attempting to call server '{server_name}' not found",
+            )
             return {
                 "server_name": server_name,
                 "tool_name": tool_name,
                 "error": f"Server '{server_name}' not found.",
             }
 
-        logger.info(
-            f"Connecting to server '{server_name}' to call tool '{tool_name}'... Call parameters: '{arguments}'..."
+        self._log(
+            "info",
+            "ToolManager | Tool Call Start",
+            f"Connecting to server '{server_name}' to call tool '{tool_name}'",
+            metadata={"arguments": arguments},
         )
 
         if server_name == "playwright":
@@ -247,7 +277,11 @@ class ToolManager(ToolManagerProtocol):
                                 if self._should_block_hf_scraping(tool_name, arguments):
                                     result_content = "You are trying to scrape a Hugging Face dataset for answers, please do not use the scrape tool for this purpose."
                             except Exception as tool_error:
-                                logger.error(f"Tool execution error: {tool_error}")
+                                self._log(
+                                    "error",
+                                    "ToolManager | Tool Execution Error",
+                                    f"Tool execution error: {tool_error}",
+                                )
                                 return {
                                     "server_name": server_name,
                                     "tool_name": tool_name,
@@ -274,7 +308,11 @@ class ToolManager(ToolManagerProtocol):
                                 if self._should_block_hf_scraping(tool_name, arguments):
                                     result_content = "You are trying to scrape a Hugging Face dataset for answers, please do not use the scrape tool for this purpose."
                             except Exception as tool_error:
-                                logger.error(f"Tool execution error: {tool_error}")
+                                self._log(
+                                    "error",
+                                    "ToolManager | Tool Execution Error",
+                                    f"Tool execution error: {tool_error}",
+                                )
                                 return {
                                     "server_name": server_name,
                                     "tool_name": tool_name,
@@ -285,8 +323,10 @@ class ToolManager(ToolManagerProtocol):
                         f"Unknown server params type for {server_name}: {type(server_params)}"
                     )
 
-                logger.info(
-                    f"Tool '{tool_name}' (server: '{server_name}') called successfully."
+                self._log(
+                    "info",
+                    "ToolManager | Tool Call Success",
+                    f"Tool '{tool_name}' (server: '{server_name}') called successfully.",
                 )
 
                 return {
@@ -296,8 +336,10 @@ class ToolManager(ToolManagerProtocol):
                 }
 
             except Exception as outer_e:  # Rename this to outer_e to avoid shadowing
-                logger.error(
-                    f"Error: Failed to call tool '{tool_name}' (server: '{server_name}'): {outer_e}"
+                self._log(
+                    "error",
+                    "ToolManager | Tool Call Failed",
+                    f"Error: Failed to call tool '{tool_name}' (server: '{server_name}'): {outer_e}",
                 )
 
                 # Store the original error message for later use
@@ -310,14 +352,22 @@ class ToolManager(ToolManagerProtocol):
                     and arguments["url"] is not None
                 ):
                     try:
-                        logger.info("Attempting fallback using MarkItDown...")
+                        self._log(
+                            "info",
+                            "ToolManager | Fallback Attempt",
+                            "Attempting fallback using MarkItDown...",
+                        )
                         from markitdown import MarkItDown
 
                         md = MarkItDown(
                             docintel_endpoint="<document_intelligence_endpoint>"
                         )
                         result = md.convert(arguments["url"])
-                        logger.info("MarkItDown fallback successful")
+                        self._log(
+                            "info",
+                            "ToolManager | Fallback Success",
+                            "MarkItDown fallback successful",
+                        )
                         return {
                             "server_name": server_name,
                             "tool_name": tool_name,
@@ -327,7 +377,11 @@ class ToolManager(ToolManagerProtocol):
                         Exception
                     ) as inner_e:  # Use a different name to avoid shadowing
                         # Log the inner exception if needed
-                        logger.error(f"Fallback also failed: {inner_e}")
+                        self._log(
+                            "error",
+                            "ToolManager | Fallback Failed",
+                            f"Fallback also failed: {inner_e}",
+                        )
                         # No need for pass here as we'll continue to the return statement
 
                 # Always use the outer exception for the final error response

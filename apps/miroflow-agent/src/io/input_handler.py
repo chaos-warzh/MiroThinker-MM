@@ -38,6 +38,57 @@ from youtube_transcript_api._api import YouTubeTranscriptApi
 from youtube_transcript_api.formatters import SRTFormatter
 
 
+def process_input_new(task_description, task_file_name):
+    """
+    Process user input, especially files.
+    Returns formatted initial user message content list and updated task description.
+    """
+    initial_user_content = []
+    updated_task_description = task_description
+
+    # todo: add the key of `url` here for differentiating youtube wikipedia and normal url
+
+    if task_file_name:
+        if not os.path.isfile(task_file_name):
+            raise FileNotFoundError(f"Error: File not found {task_file_name}")
+
+        file_extension = task_file_name.rsplit(".", maxsplit=1)[-1].lower()
+        file_type = None
+        if file_extension in ["jpg", "jpeg", "png", "gif", "webp"]:
+            file_type = "Image"
+        elif file_extension == "txt":
+            file_type = "Text"
+        elif file_extension in ["jsonld", "json"]:
+            file_type = "Json"
+        elif file_extension in ["xlsx", "xls"]:
+            file_type = "Excel"
+        elif file_extension == "pdf":
+            file_type = "PDF"
+        elif file_extension in ["docx", "doc"]:
+            file_type = "Document"
+        elif file_extension in ["html", "htm"]:
+            file_type = "HTML"
+        elif file_extension in ["pptx", "ppt"]:
+            file_type = "PPT"
+        elif file_extension in ["wav"]:
+            file_type = "WAV"
+        elif file_extension in ["mp3", "m4a"]:
+            file_type = "MP3"
+        elif file_extension in ["zip"]:
+            file_type = "Zip"
+        else:
+            file_type = file_extension
+        updated_task_description += f"\nNote: A {file_type} file '{task_file_name}' is associated with this task. You should use tools to read its content as the first step.\n\n"
+
+    # output format requiremnt
+    updated_task_description += "\nYou should follow the format instruction in the question strictly and wrap the final answer in \\boxed{}."
+
+    # Add text content (may have been updated)
+    initial_user_content = updated_task_description
+
+    return initial_user_content, updated_task_description
+
+
 def process_input(task_description, task_file_name):
     """
     Process user input, especially files.
@@ -46,8 +97,6 @@ def process_input(task_description, task_file_name):
     initial_user_content = ""
     updated_task_description = task_description
 
-    # todo: add the key of `url` here for differentiating youtube wikipedia and normal url
-
     if task_file_name:
         try:
             file_extension = task_file_name.rsplit(".", maxsplit=1)[-1].lower()
@@ -55,73 +104,54 @@ def process_input(task_description, task_file_name):
 
             if file_extension in ["jpg", "jpeg", "png", "gif", "webp"]:
                 updated_task_description += f"\nNote: An Image file '{task_file_name}' is associated with this task. You may use available tools to read its content if necessary.\n\n"
-                print(f"Info: Loaded image file {task_file_name}")
+
             elif file_extension == "txt":
                 with open(task_file_name, "r") as f:
                     initial_user_content += f.read()
                 updated_task_description += f"\nNote: An Excel file '{task_file_name}' is associated with this task. You may use available tools to read its content if necessary.\n\n"
-                print(f"Info: Loaded text file {task_file_name}")
+
             elif file_extension in ["jsonld", "json"]:
                 with open(task_file_name, "r") as f:
                     initial_user_content += json.dumps(json.load(f), ensure_ascii=False)
                 updated_task_description += f"\nNote: An Json file '{task_file_name}' is associated with this task. You may use available tools to read its content if necessary.\n\n"
-                print(f"Info: Loaded text file {task_file_name}")
+
             elif file_extension in ["xlsx", "xls"]:
                 parsing_result = XlsxConverter(local_path=task_file_name)
                 # Add note for Excel files to inform LLM that tools can be used to read
                 updated_task_description += f"\nNote: An Excel file '{task_file_name}' is associated with this task. You may use available tools to read its content if necessary.\n\n"
-                print(
-                    f"Info: Detected Excel file {task_file_name}, added note to description."
-                )
+
             elif file_extension == "pdf":
                 parsing_result = DocumentConverterResult(
                     title=None,
                     text_content=pdfminer.high_level.extract_text(task_file_name),
                 )
                 updated_task_description += f"\nNote: A PDF file '{task_file_name}' is associated with this task. You may use available tools to read its content if necessary.\n\n"
-                print(
-                    f"Info: Detected PDF file {task_file_name}, added note to description."
-                )
+
             elif file_extension in ["docx", "doc"]:
                 parsing_result = DocxConverter(local_path=task_file_name)
                 updated_task_description += f"\nNote: A Document file '{task_file_name}' is associated with this task. You may use available tools to read its content if necessary.\n\n"
-                print(
-                    f"Info: Detected Document file {task_file_name}, added note to description."
-                )
+
             elif file_extension in ["html", "htm"]:
                 parsing_result = HtmlConverter(local_path=task_file_name)
                 updated_task_description += f"\nNote: An HTML file '{task_file_name}' is associated with this task. You may use available tools to read its content if necessary.\n\n"
-                print(
-                    f"Info: Detected HTML file {task_file_name}, added note to description."
-                )
+
             elif file_extension in ["pptx", "ppt"]:
                 parsing_result = PptxConverter(local_path=task_file_name)
                 updated_task_description += f"\nNote: A PPT file '{task_file_name}' is associated with this task. You may use available tools to read its content if necessary.\n\n"
-                print(
-                    f"Info: Detected PPT file {task_file_name}, added note to description."
-                )
+
             elif file_extension in ["wav"]:
                 updated_task_description += f"\nNote: An audio file '{task_file_name}' is associated with this task. You may use available tools to read its content if necessary.\n\n"
-                print(
-                    f"Info: Detected WAV file {task_file_name}, added note to description."
-                )
+
             elif file_extension in ["mp3", "m4a"]:
                 updated_task_description += f"\nNote: An audio file '{task_file_name}' is associated with this task. You may use available tools to read its content if necessary.\n\n"
-                print(
-                    f"Info: Detected MP3 file {task_file_name}, added note to description."
-                )
+
             elif file_extension in ["zip"]:
                 parsing_result = ZipConverter(local_path=task_file_name)
                 updated_task_description += f"\nNote: Several files zipped in '{task_file_name}' are associated with this task. You may use available tools to read its content if necessary.\n\n"
-                print(
-                    f"Info: Detected Zip file {task_file_name}, added note to description."
-                )
+
             else:
                 # For other file types, consider adding general prompts or specific processing
                 updated_task_description += f"\nNote: A file '{task_file_name}' is associated with this task. You may use available tools to read its content if necessary.\n\n"
-                print(
-                    f"Warning: Unsupported file type {file_extension}, only added note to description."
-                )
 
             #### markitdown process ####
             try:

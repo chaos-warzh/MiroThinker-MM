@@ -98,7 +98,6 @@ class TraceAnalyzer:
         return {
             "status": self.data.get("status"),
             "task_id": self.data.get("task_id"),
-            "task_original_name": self.data.get("task_original_name"),
             "start_time": self.data.get("start_time"),
             "end_time": self.data.get("end_time"),
             "final_boxed_answer": self.data.get("final_boxed_answer"),
