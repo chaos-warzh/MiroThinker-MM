@@ -18,6 +18,9 @@ import sys
 from fastmcp import FastMCP
 from mcp import ClientSession, StdioServerParameters
 from mcp.client.stdio import stdio_client
+import logging
+
+logger = logging.getLogger("miroflow")
 
 # Initialize FastMCP server
 mcp = FastMCP("reading-mcp-server")
@@ -63,10 +66,10 @@ async def convert_to_markdown(uri: str) -> str:
                         tool_result.content[-1].text if tool_result.content else ""
                     )
                 except Exception as tool_error:
-                    print(f"Tool execution error: {tool_error}")
+                    logger.info(f"Tool execution error: {tool_error}")
                     return f"Error: Tool execution failed: {str(tool_error)}"
     except Exception as session_error:
-        print(f"Session error: {session_error}")
+        logger.info(f"Session error: {session_error}")
         return (
             f"Error: Failed to connect to markitdown-mcp server: {str(session_error)}"
         )

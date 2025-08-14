@@ -19,6 +19,10 @@ from fastmcp import FastMCP
 import aiohttp
 import requests
 
+import logging
+
+logger = logging.getLogger("miroflow")
+
 VISION_API_KEY = os.environ.get("VISION_API_KEY")
 VISION_BASE_URL = os.environ.get("VISION_BASE_URL")
 VISION_MODEL_NAME = os.environ.get("VISION_MODEL_NAME")
@@ -65,7 +69,6 @@ async def visual_question_answering(image_path_or_url: str, question: str) -> st
             ],
         }
     ]
-    print("messages_for_llm", messages_for_llm)
 
     headers = {
         "Authorization": f"Bearer {VISION_API_KEY}",
@@ -103,7 +106,7 @@ async def visual_question_answering(image_path_or_url: str, question: str) -> st
         payload = {"model": VISION_MODEL_NAME, "messages": messages_for_llm}
 
         response = requests.post(VISION_BASE_URL, json=payload, headers=headers)
-        print(response)
+        logger.info(response)
     except Exception as e:
         return f"Error: {e}\n payload: {payload}"
 

@@ -16,6 +16,9 @@ import os
 
 from anthropic import Anthropic
 from fastmcp import FastMCP
+import logging
+
+logger = logging.getLogger("miroflow")
 
 ANTHROPIC_API_KEY = os.environ.get("ANTHROPIC_API_KEY", "")
 
@@ -63,7 +66,7 @@ async def reasoning(question: str) -> str:
         return response.content[-1].text
     except Exception:
         # Handle the case where the text just missing
-        print("Reasoning Error: only thinking content is returned")
+        logger.info("Reasoning Error: only thinking content is returned")
         return response.content[-1].thinking
 
 

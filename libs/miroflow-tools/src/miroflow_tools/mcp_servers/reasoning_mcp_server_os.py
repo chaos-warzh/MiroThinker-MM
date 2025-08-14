@@ -16,6 +16,9 @@ import os
 
 from fastmcp import FastMCP
 import requests
+import logging
+
+logger = logging.getLogger("miroflow")
 
 REASONING_API_KEY = os.environ.get("REASONING_API_KEY")
 REASONING_BASE_URL = os.environ.get("REASONING_BASE_URL")
@@ -54,7 +57,7 @@ async def reasoning(question: str) -> str:
             content = content.split("</think>", 1)[1].strip()
         return content
     except Exception:
-        print("Reasoning Error: only thinking content is returned")
+        logger.info("Reasoning Error: only thinking content is returned")
         return json_response["choices"][0]["message"]["reasoning_content"]
 
 
