@@ -543,7 +543,7 @@ class BenchmarkEvaluator(ABC):
                 log_data = json.load(f)
 
             # Update with evaluation result
-            log_data["model_boxed_answer"] = model_boxed_answer
+            log_data["final_boxed_answer"] = model_boxed_answer
             log_data["final_judge_result"] = evaluation_result
             log_data["judge_type"] = judge_type
 
