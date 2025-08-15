@@ -31,7 +31,7 @@ VISION_MODEL_NAME = os.environ.get("VISION_MODEL_NAME")
 mcp = FastMCP("vision-mcp-server-os")
 
 
-async def guess_mime_media_type_from_extension(file_path: str) -> str:
+def guess_mime_media_type_from_extension(file_path: str) -> str:
     """Guess the MIME type based on the file extension."""
     _, ext = os.path.splitext(file_path)
     ext = ext.lower()
@@ -79,12 +79,11 @@ async def visual_question_answering(image_path_or_url: str, question: str) -> st
         if os.path.exists(image_path_or_url):  # Check if the file exists locally
             with open(image_path_or_url, "rb") as image_file:
                 image_data = base64.b64encode(image_file.read()).decode("utf-8")
+                mime_type = guess_mime_media_type_from_extension(image_path_or_url)
                 messages_for_llm[0]["content"][0]["image_url"]["url"] = (
-                    f"data:{await guess_mime_media_type_from_extension(image_path_or_url)};base64,{image_data}"
+                    f"data:{mime_type};base64,{image_data}"
                 )
-        elif image_path_or_url.startswith("http://") or image_path_or_url.startswith(
-            "https://"
-        ):
+        elif image_path_or_url.startswith(("http://", "https://")):
             async with aiohttp.ClientSession() as session:
                 async with session.get(image_path_or_url) as resp:
                     if resp.status == 200:
@@ -97,9 +96,7 @@ async def visual_question_answering(image_path_or_url: str, question: str) -> st
                             f"data:{mime_type};base64,{image_data}"
                         )
                     else:
-                        raise ValueError(
-                            f"Failed to fetch image from URL: {image_path_or_url}"
-                        )
+                        return f"Failed to fetch image from URL: {image_path_or_url}"
         else:
             messages_for_llm[0]["content"][0]["image_url"]["url"] = image_path_or_url
 
@@ -107,8 +104,9 @@ async def visual_question_answering(image_path_or_url: str, question: str) -> st
 
         response = requests.post(VISION_BASE_URL, json=payload, headers=headers)
         logger.info(response)
+
     except Exception as e:
-        return f"Error: {e}\n payload: {payload}"
+        return f"Error: {e}"
 
     try:
         return response.json()["choices"][0]["message"]["content"]
