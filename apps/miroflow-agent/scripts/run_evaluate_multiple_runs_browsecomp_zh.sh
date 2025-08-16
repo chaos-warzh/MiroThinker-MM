@@ -5,10 +5,13 @@ LLM_MODEL=${LLM_MODEL:-"MiroThinker-Models"}
 BASE_URL=${BASE_URL:-"https://your-api.com/v1"}
 
 # Configuration parameters
-NUM_RUNS=4
+NUM_RUNS=${NUM_RUNS:-4}
 BENCHMARK_NAME="browsecomp_zh"
-LLM_PROVIDER="qwen"
+LLM_PROVIDER=${LLM_PROVIDER:-"qwen"}
 AGENT_SET=${AGENT_SET:-"evaluation"}
+MAX_CONTEXT_LENGTH=${MAX_CONTEXT_LENGTH:-40960}
+MAX_CONCURRENT=${MAX_CONCURRENT:-10}
+PASS_AT_K=${PASS_AT_K:-1}
 
 # Set results directory
 RESULTS_DIR="../../logs/${BENCHMARK_NAME}/$(date +%m%d)/${LLM_PROVIDER}_${LLM_MODEL}_${AGENT_SET}"
@@ -39,10 +42,10 @@ for i in $(seq 1 $NUM_RUNS); do
             llm.openai_base_url=$BASE_URL \
             llm.async_client=true \
             llm.temperature=0.3 \
-            llm.max_context_length=40960 \
+            llm.max_context_length=$MAX_CONTEXT_LENGTH \
             benchmark.execution.max_tasks=null \
-            benchmark.execution.max_concurrent=20 \
-            benchmark.execution.pass_at_k=1 \
+            benchmark.execution.max_concurrent=$MAX_CONCURRENT \
+            benchmark.execution.pass_at_k=$PASS_AT_K \
             benchmark.data.data_dir=../../data/browsecomp_zh \
             agent=$AGENT_SET \
             hydra.run.dir=${RESULTS_DIR}/$RUN_ID \
