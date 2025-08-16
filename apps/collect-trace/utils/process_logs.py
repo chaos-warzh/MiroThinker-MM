@@ -20,28 +20,55 @@ import argparse
 
 def get_successful_log_paths(jsonl_file_path: str) -> list:
     """
-    Extract log_file_path from records in JSONL file where final_judge_result is PASS_AT_K_SUCCESS
+    Collects the paths of successful log files from a dataset.
+
+    This function extracts log file paths of successful records based on
+    the value of `final_judge_result`. If the dataset has been fully
+    processed, it reads from a `benchmark_results.jsonl` file. Otherwise,
+    if processing was interrupted, it falls back to scanning individual
+    `.json` files in the given directory.
+
+    Success is determined by:
+    - `PASS_AT_K_SUCCESS` for records in JSONL files.
+    - `CORRECT` for records in individual JSON files.
 
     Args:
-        jsonl_file_path: Path to the JSONL file
+        jsonl_file_path (str): Path to a JSONL file or a directory of JSON files.
 
     Returns:
-        list: List of log_file_path
+        list: A list of log file paths for successful records.
     """
     log_paths = []
 
-    with open(jsonl_file_path, "r", encoding="utf-8") as f:
-        for line in f:
-            line = line.strip()
-            if line:
-                try:
-                    data = json.loads(line)
-                    if data.get("final_judge_result") == "PASS_AT_K_SUCCESS":
-                        log_path = data.get("log_file_path")
-                        if log_path:
-                            log_paths.append(log_path)
-                except json.JSONDecodeError:
-                    continue
+    if jsonl_file_path.endswith(".jsonl"):
+        with open(jsonl_file_path, "r", encoding="utf-8") as f:
+            for line in f:
+                line = line.strip()
+                if line:
+                    try:
+                        data = json.loads(line)
+                        if data.get("final_judge_result") == "PASS_AT_K_SUCCESS":
+                            log_path = data.get("log_file_path")
+                            if log_path:
+                                log_paths.append(log_path)
+                    except json.JSONDecodeError:
+                        continue
+    else:
+        filenames = os.listdir(jsonl_file_path)
+        filenames = [filename for filename in filenames if filename.endswith(".json")]
+        for filename in filenames:
+            filepath = os.path.join(jsonl_file_path, filename)
+            try:
+                data = json.load(open(filepath, "r"))
+            except Exception:
+                continue
+            try:
+                final_judge_result = data["final_judge_result"]
+            except KeyError:
+                print(data.keys())
+                continue
+            if final_judge_result == "CORRECT":
+                log_paths.append(filepath)
 
     return log_paths
 

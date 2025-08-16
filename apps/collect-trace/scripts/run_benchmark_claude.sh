@@ -17,12 +17,14 @@ mkdir -p $LOG_DIR
 uv run python benchmarks/common_benchmark.py \
     benchmark=gaia-validation \
     benchmark.data.data_dir="../../data/gaia-2023-validation" \
+    benchmark.data.metadata_file="standardized_data.jsonl" \
     llm=claude \
     llm.provider=anthropic \
     llm.model_name=claude-3-7-sonnet-20250219 \
     llm.async_client=true \
-    benchmark.execution.max_tasks=10 \
+    benchmark.execution.max_tasks=null \
     benchmark.execution.max_concurrent=10 \
+    benchmark.execution.pass_at_k=1 \
     agent=evaluation \
     hydra.run.dir=$LOG_DIR \
     2>&1 | tee "$LOG_DIR/output.log"
