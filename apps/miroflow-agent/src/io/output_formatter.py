@@ -18,23 +18,63 @@ import re
 class OutputFormatter:
     def _extract_boxed_content(self, text: str) -> str:
         """
-        Extract content from \\boxed{} patterns in the text.
-        Uses safe regex patterns to avoid catastrophic backtracking.
-        Returns the last matched content, or empty string if no match found.
+        Extract the content of the last \boxed{...} occurrence in the given text.
+        Supports:
+          - Arbitrary levels of nested braces
+          - Escaped braces (\{ and \})
+          - Whitespace between \boxed and the opening brace
+          - Empty content inside braces
+        Returns an empty string if no match is found.
         """
         if not text:
             return ""
 
-        # Primary pattern: handles single-level brace nesting
-        primary_pattern = r"\\boxed\{([^{}]*(?:\{[^{}]*\}[^{}]*)*)\}"
-        matches = re.findall(primary_pattern, text, re.DOTALL)
+        _BOXED_RE = re.compile(r"\\boxed\b", re.DOTALL)
 
-        # Fallback pattern: simpler match for any content until first closing brace
-        if not matches:
-            fallback_pattern = r"\\boxed\{([^}]+)\}"
-            matches = re.findall(fallback_pattern, text, re.DOTALL)
+        last = ""
+        i = 0
+        while True:
+            # Find the next \boxed occurrence
+            m = _BOXED_RE.search(text, i)
+            if not m:
+                break
+            j = m.end()
 
-        return matches[-1].strip() if matches else ""
+            # Skip any whitespace after \boxed
+            n = len(text)
+            while j < n and text[j].isspace():
+                j += 1
+
+            # Require that the next character is '{'
+            if j >= n or text[j] != "{":
+                i = j
+                continue
+
+            # Parse the brace content manually to handle nesting and escapes
+            depth = 0
+            k = j
+            escaped = False
+            while k < n:
+                ch = text[k]
+                if escaped:
+                    escaped = False
+                elif ch == "\\":
+                    escaped = True
+                elif ch == "{":
+                    depth += 1
+                elif ch == "}":
+                    depth -= 1
+                    # When depth returns to zero, the boxed content ends
+                    if depth == 0:
+                        last = text[j + 1 : k]
+                        i = k + 1
+                        break
+                k += 1
+            else:
+                # No closing brace found — stop processing
+                break
+
+        return last.strip()
 
     def format_tool_result_for_user(self, tool_call_execution_result):
         """
