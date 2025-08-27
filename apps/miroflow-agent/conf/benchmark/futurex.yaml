@@ -1,12 +1,12 @@
-# conf/benchmark/hle.yaml
+# conf/benchmark/futurex.yaml
 defaults:
   - default
   - _self_
 
-name: "hle"
+name: "futurex"
 
 data:
-  data_dir: "../../data/hle"
+  data_dir: "../../data/futurex"
 
 execution:
   max_tasks: null  # null means no limit

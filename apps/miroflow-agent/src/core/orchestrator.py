@@ -616,6 +616,9 @@ class Orchestrator:
 
         self.task_log.end_sub_agent_session(sub_agent_name)
 
+        # Remove thinking content in tool response
+        final_answer_text = final_answer_text.split("</think>")[-1].strip()
+
         # Stream sub-agent end
         await self._stream_end_llm(display_name)
         await self._stream_end_agent(display_name, sub_agent_id)

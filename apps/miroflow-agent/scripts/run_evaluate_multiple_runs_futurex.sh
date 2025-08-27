@@ -6,7 +6,7 @@ BASE_URL=${BASE_URL:-"https://your-api.com/v1"}
 
 # Configuration parameters
 NUM_RUNS=${NUM_RUNS:-8}
-BENCHMARK_NAME="gaia-validation-text-103"
+BENCHMARK_NAME="futurex"
 LLM_PROVIDER=${LLM_PROVIDER:-"qwen"}
 AGENT_SET=${AGENT_SET:-"evaluation"}
 MAX_CONTEXT_LENGTH=${MAX_CONTEXT_LENGTH:-40960}
@@ -36,7 +36,7 @@ for i in $(seq 1 $NUM_RUNS); do
     (
         uv run python benchmarks/common_benchmark.py \
             benchmark=$BENCHMARK_NAME \
-            benchmark.data.metadata_file="standardized_data.jsonl" \
+            benchmark.data.metadata_file="standardized_data_250827_250902.jsonl" \
             llm=qwen3-32b \
             llm.provider=$LLM_PROVIDER \
             llm.model_name=$LLM_MODEL \
@@ -47,7 +47,7 @@ for i in $(seq 1 $NUM_RUNS); do
             benchmark.execution.max_tasks=null \
             benchmark.execution.max_concurrent=$MAX_CONCURRENT \
             benchmark.execution.pass_at_k=$PASS_AT_K \
-            benchmark.data.data_dir=../../data/gaia-2023-validation-text-103 \
+            benchmark.data.data_dir=../../data/futurex \
             agent=$AGENT_SET \
             hydra.run.dir=${RESULTS_DIR}/$RUN_ID \
             2>&1 | tee "$RESULTS_DIR/${RUN_ID}_output.log" 
@@ -81,8 +81,18 @@ echo "All $NUM_RUNS runs completed!"
 echo "=========================================="
 
 # Calculate average scores
-echo "Calculating average scores..."
-uv run python benchmarks/evaluators/calculate_average_score.py "$RESULTS_DIR"
+# echo "Calculating average scores..."
+# uv run python benchmarks/evaluators/calculate_average_score.py "$RESULTS_DIR"
+echo "Extracting predictions and formatting for FutureX submission..."
+uv run python benchmarks/evaluators/extract_futurex_results.py "$RESULTS_DIR"
+
+# Check status and provide user-friendly message
+if [ $? -eq 0 ]; then
+    echo "✅ Submission file generated: $RESULTS_DIR/futurex_submission.jsonl"
+    echo "You can now upload this file to the FutureX test server."
+else
+    echo "❌ Failed to generate submission file. Please check the logs for details."
+fi
 
 echo "=========================================="
 echo "Multiple runs evaluation completed!"
