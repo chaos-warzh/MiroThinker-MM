@@ -1,6 +1,6 @@
 # USE-OS-TOOL for Evaluation
 
-This project supports **two tool configuration modes**:
+This project supports **two tool configuration modes** for benchmark testing:
 
 1. **Default Setting with Open-Source Tools** — Uses open-source tools as much as possible.
    *Config file:* [`evaluation_os.yaml`](../apps/miroflow-agent/conf/agent/evaluation_os.yaml)
@@ -10,7 +10,7 @@ This project supports **two tool configuration modes**:
 
 ## Tool List
 
-|           Tools           |                         Default Setting<br>with Open-Source Tools                          |                        Advanced Setting<br>with Commercial Tools                         |
+|         Tool Set          |                         Default Setting<br>with Open-Source Tools                          |                        Advanced Setting<br>with Commercial Tools                         |
 | :-----------------------: |:------------------------------------------------------------------------------------------:|:----------------------------------------------------------------------------------------:|
 |       Google Search       |                               [Serper](https://serper.dev/)                                |                              [Serper](https://serper.dev/)                               |
 |       Linux Sandbox       |                                  [E2B](https://e2b.dev/)                                   |                                 [E2B](https://e2b.dev/)                                  |
@@ -18,40 +18,47 @@ This project supports **two tool configuration modes**:
 | Visual Question Answering |       [Qwen2.5-VL-72B-Instruct](https://huggingface.co/Qwen/Qwen2.5-VL-72B-Instruct)       |   [Claude Sonnet 3.7](https://docs.anthropic.com/en/docs/about-claude/models/overview)   |
 |         Reasoning         | [Qwen3-235B-A22B-Thinking-2507](https://huggingface.co/Qwen/Qwen3-235B-A22B-Thinking-2507) |   [Claude Sonnet 3.7](https://docs.anthropic.com/en/docs/about-claude/models/overview)   |
 
----
-
 ## Environment Variables
 
 Configure the following variables in your `apps/miroflow-agent/.env` file according to the mode you choose:
 
-```bash
-# Required APIs
+```python
+# API for Google Search (recommended)
 SERPER_API_KEY=your_serper_key
+SERPER_BASE_URL="https://google.serper.dev"
+
+# API for Web Scraping (recommended)
+JINA_API_KEY=your_jina_key
+JINA_BASE_URL="https://r.jina.ai"
+
+# API for Linux Sandbox (recommended)
 E2B_API_KEY=your_e2b_key
 
-# APIs for Commercial Tools
-ANTHROPIC_API_KEY=your_anthropic_key
+# API for LLM-as-Judge (for benchmark testing, optional)
 OPENAI_API_KEY=your_openai_key
 
-# APIs for Open-Source Tools
-REASONING_MODEL_NAME="Qwen/Qwen3-235B-A22B-Thinking-2507"
-REASONING_API_KEY=your_reasoning_key
-REASONING_BASE_URL="https://your_reasoning_base_url/v1/chat/completions"
-
-VISION_MODEL_NAME="Qwen/Qwen2.5-VL-72B-Instruct"
-VISION_API_KEY=your_vision_key
-VISION_BASE_URL="https://your_vision_base_url/v1/chat/completions"
-
+# API for Open-Source Audio Transcription Tool (for benchmark testing, optional)
 WHISPER_MODEL_NAME="openai/whisper-large-v3-turbo"
 WHISPER_API_KEY=your_whisper_key
 WHISPER_BASE_URL="https://your_whisper_base_url/v1"
 
-# Future APIs (Use dummy values for now)
-GEMINI_API_KEY=your_gemini_key
-JINA_API_KEY=your_jina_key
-```
+# API for Open-Source VQA Tool (for benchmark testing, optional)
+VISION_MODEL_NAME="Qwen/Qwen2.5-VL-72B-Instruct"
+VISION_API_KEY=your_vision_key
+VISION_BASE_URL="https://your_vision_base_url/v1/chat/completions"
 
----
+# API for Open-Source Reasoning Tool (for benchmark testing, optional)
+REASONING_MODEL_NAME="Qwen/Qwen3-235B-A22B-Thinking-2507"
+REASONING_API_KEY=your_reasoning_key
+REASONING_BASE_URL="https://your_reasoning_base_url/v1/chat/completions"
+
+# APIs for Claude Sonnet 3.7 as Commercial Tools (optional)
+ANTHROPIC_API_KEY=your_anthropic_key
+
+# API for Sougou Search (optional)
+TENCENTCLOUD_SECRET_ID=your_tencent_cloud_secret_id
+TENCENTCLOUD_SECRET_KEY=your_tencent_cloud_secret_key
+```
 
 ## Tool Descriptions and Deployment
 
@@ -65,7 +72,6 @@ Supports local image files and URLs. Automatically encodes local images to Base6
 
 * **Open-Source Mode:** Qwen2.5-VL-72B-Instruct
 * **Commercial Mode:** Claude Sonnet 3.7
-
 
 **Local Deployment (Open-Source Mode):**
 
@@ -100,13 +106,12 @@ python3 -m sglang.launch_server \
   --show-time-cost --context-length 131072
 ```
 
-
 ### 3. Audio Transcription Tool
 
 **Tool Name:** `audio_transcription`
 
 **Description:**
-A transcription service converting audio files to text.
+A transcription service converts audio files to text.
 Supports MP3, WAV, M4A, AAC, OGG, FLAC, and WMA formats. Can process both local and remote audio. Includes format detection, temporary file handling, and robust error handling.
 
 * **Open-Source Mode:** Whisper-Large-v3-Turbo
