@@ -7,7 +7,7 @@
 [![DEMO](https://img.shields.io/badge/Demo-FFB300?style=for-the-badge&logo=airplayvideo&logoColor=white)](https://dr.miromind.ai/)
 [![MODELS](https://img.shields.io/badge/Models-5EDDD2?style=for-the-badge&logo=huggingface&logoColor=ffffff&labelColor)](https://huggingface.co/collections/miromind-ai/mirothinker-v02-68af084a18035f57b17cd902)
 [![DATA](https://img.shields.io/badge/Data-0040A1?style=for-the-badge&logo=huggingface&logoColor=ffffff&labelColor)](https://huggingface.co/datasets/miromind-ai/MiroVerse-v0.1)
-[![Blog](https://img.shields.io/badge/Blog-4285F4?style=for-the-badge&logo=google-chrome&logoColor=white)](https://miromind.ai/blog/miromind-open-deep-research)
+[![Blog](https://img.shields.io/badge/Blog-4285F4?style=for-the-badge&logo=google-chrome&logoColor=white)](https://miromind.ai/blog/miromind-research-agent)
 
 [![GITHUB](https://img.shields.io/badge/Github-24292F?style=for-the-badge&logo=github&logoColor=white)](https://github.com/MiroMindAI)
 [![WEBSITE](https://img.shields.io/badge/Website-4285F4?style=for-the-badge&logo=google-chrome&logoColor=white)](https://miromind.ai/)
@@ -21,18 +21,18 @@
 
 ## 📰 News & Updates
 
-- **[2025-09-11]** 🎉🎉 MiroThinker-72B-Preview ranked 4th in this week’s FutureX benchmark.
-- **[2025-09-08]** 🎉 [MiroThinker-v0.2](https://huggingface.co/collections/miromind-ai/mirothinker-v02-68af084a18035f57b17cd902) is now released, achieving open-source SOTA performance across multiple benchmarks. See [here](#-introduction) for more details.
-- **[2025-09-04]** Our in-development model, MiroThinker-72B-Preview, ranked 6th in this week’s [FutureX benchmark](https://futurex-ai.github.io/). We will release the stable version of MiroThinker-72B soon.
-- **[2025-09-07]** We supported more benchmarks, including [BrowseComp-ZH](https://arxiv.org/abs/2504.19314), [XBench-DeepResearch](https://xbench.org/agi/aisearch), and [FutureX](https://futurex-ai.github.io/). We plan to add more benchmarks in the future.
-- **[2025-08-22]** Introducing streamlined deployment options for MiroThinker models with optimized resource usage and faster startup times. Experience the interactive demo: [🚀 Try Gradio Demo](apps/gradio-demo)
-- **[2025-08-08]** [MiroThinker-v0.1](https://huggingface.co/collections/miromind-ai/mirothinker-v01-689301b6d0563321862d44a1) released. Models, framework, and data are now fully open-sourced!
+- **\[2025-09-11\]** 🎉🎉 MiroThinker-72B-Preview ranked 4th in this week’s FutureX benchmark.
+- **\[2025-09-08\]** 🎉 [MiroThinker-v0.2](https://huggingface.co/collections/miromind-ai/mirothinker-v02-68af084a18035f57b17cd902) is now released, achieving open-source SOTA performance across multiple benchmarks. See [here](#-introduction) for more details.
+- **\[2025-09-04\]** Our in-development model, MiroThinker-72B-Preview, ranked 6th in this week’s [FutureX benchmark](https://futurex-ai.github.io/). We will release the stable version of MiroThinker-72B soon.
+- **\[2025-09-07\]** We supported more benchmarks, including [BrowseComp-ZH](https://arxiv.org/abs/2504.19314), [XBench-DeepResearch](https://xbench.org/agi/aisearch), and [FutureX](https://futurex-ai.github.io/). We plan to add more benchmarks in the future.
+- **\[2025-08-22\]** Introducing streamlined deployment options for MiroThinker models with optimized resource usage and faster startup times. Experience the interactive demo: [🚀 Try Gradio Demo](apps/gradio-demo)
+- **\[2025-08-08\]** [MiroThinker-v0.1](https://huggingface.co/collections/miromind-ai/mirothinker-v01-689301b6d0563321862d44a1) released. Models, framework, and data are now fully open-sourced!
 
 ## 📝 Introduction
 
 **MiroThinker** is an open-source agentic model series. Designed as a research agent for complex, long-horizon problem solving, it integrates strong capabilities in task decomposition, multi-hop reasoning, retrieval-augmented generation, code execution, web browsing, and document/file processing, enabling a wide range of real-world applications.
 
-**MiroFlow** is a framework for agent development that supports various language models and provides a comprehensive framework for building intelligent agents. The framework includes enhanced conversation management, flexible tool integration, and extensive benchmark evaluations across multiple datasets. 
+**MiroFlow** is a framework for agent development that supports various language models and provides a comprehensive framework for building intelligent agents. The framework includes enhanced conversation management, flexible tool integration, and extensive benchmark evaluations across multiple datasets.
 
 <img src="https://huggingface.co/datasets/miromind-ai/MiroFlow-Benchmarks/resolve/main/assets/MiroThinker_v0.2_Performance_2.png" width="100%" alt="MiroThinker" />
 
@@ -154,9 +154,10 @@ cp .env.example .env
 ```
 
 We currently support two tool configurations for benchmark testing:
+
 1. Using the default settings of open-source tools as much as possible. ([config](apps/miroflow-agent/conf/agent/evaluation_os.yaml))
-2. Using advanced settings of commercial tools. ([config](apps/miroflow-agent/conf/agent/evaluation.yaml))
-   
+1. Using advanced settings of commercial tools. ([config](apps/miroflow-agent/conf/agent/evaluation.yaml))
+
 The tool lists for these two settings are shown in the table below:
 
 |         Tool Set          |                         Default Setting <br>with Open-Source Tools                          |                        Advanced Setting <br>with Commercial Tools                        |
@@ -184,7 +185,7 @@ E2B_API_KEY=your_e2b_key
 
 <details> 
 <summary>Optional API keys (click to open)</summary>
-  
+
 ```python
 # API for LLM-as-Judge (for benchmark testing, optional)
 OPENAI_API_KEY=your_openai_key
@@ -249,7 +250,7 @@ We also provide comprehensive guidance for serving MiroThinker models using CPU-
 
 ```bash
 cd apps/miroflow-agent
-uv run main.py llm=qwen3-32b agent=evaluation llm.openai_base_url=https://your_base_url/v1
+uv run main.py llm=qwen-3 agent=evaluation llm.openai_base_url=https://your_base_url/v1
 ```
 
 #### 2. **Run comprehensive benchmark evaluation**
@@ -265,7 +266,7 @@ LLM_MODEL="xxx" BASE_URL="xxx" bash scripts/run_evaluate_multiple_runs_gaia-vali
 
 <details>
   <summary>Show all benchmark commands</summary>
-  
+
 ```bash
 # GAIA-Text-103
 LLM_MODEL="xxx" BASE_URL="xxx" bash scripts/run_evaluate_multiple_runs_gaia-validation-text-103.sh
@@ -311,7 +312,7 @@ python benchmarks/check_progress/check_progress_gaia-validation-text-103.py /pat
 
 ## 🛠️ Using Open-Source Tools
 
-We provide the option to use open-source tools as alternatives to commercial tools. 
+We provide the option to use open-source tools as alternatives to commercial tools.
 One way to access these open-source tools is to purchase them from API providers, such as [SiliconFlow](https://www.siliconflow.com/).
 
 Of course, these tools can also be deployed on local servers.
@@ -319,7 +320,8 @@ For detailed setup and local deployment instructions, please refer to our docume
 
 ## 📈 Benchmark Performance
 
-> [!IMPORTANT]
+> \[!IMPORTANT\]
+>
 > <div>
 > To prevent data leakage during searches, we block Hugging Face domains to ensure the model doesn't access answers through shortcuts.
 > For the detailed implementation, see
@@ -347,42 +349,42 @@ For detailed setup and local deployment instructions, please refer to our docume
 
 #### GAIA Benchmark
 
-| **Method** | Text-103<br>Best Pass@1 | Text-103<br>Pass@1 (Avg@8) | Val-165<br>Best Pass@1 | Val-165<br>Pass@1 (Avg@8) |
-| ----------------------------------------------------------------- | :--: | :--: | :--: | :--: |
-| **🔹—— 7B/8B Models ——** | | | | |
-| Search-o1-7B                                                      | 17.5 | -    | -    | -    |
-| R1-Searcher-7B                                                    | 20.4 | -    | -    | -    |
-| WebDancer-7B                                                      | 31.0 | -    | -    | -    |
-| WebSailor-7B                                                      | 37.9 | -    | -    | -    |
-| CK-Pro-8B                                                         | 40.3 | -    | 32.7 | -    |
-| **MiroThinker-8B-SFT-v0.1**                                           | 44.7 | 40.1 | 34.6 | 31.8 |
-|     + Commercial Tools                        | 46.6 | 42.1 | 37.6 | 33.9 |
-| **MiroThinker-8B-DPO-v0.1**                                           | 46.6 | 44.8 | 37.0 | 35.4 |
-|     + Commercial Tools                        | **50.5** | **46.7** | **38.2** | **35.9** |
-| **🔹—— 14B Models ——** | | | | |
-| **MiroThinker-14B-SFT-v0.1**                                          | 47.6 | 44.4 | 37.0 | 34.4 |
-|     + Commercial Tools                        | 49.5 | 47.5 | 41.8 | 39.8 |
-| **MiroThinker-14B-DPO-v0.1**                                          | 48.5 | 46.6 | 42.4 | 39.2 |
-|     + Commercial Tools                        | **52.4** | **48.5** | **45.5** | **42.0** |
-| **🔹—— 32B Models ——** | | | | |
-| Qwen3-32B                                                         | 31.1 | 26.7 | 29.7 | 26.4 |
-| Search-o1-32B                                                     | 28.2 | -    | -    | -    |
-| WebThinker-32B-RL                                                 | 48.5 | -    | -    | -    |
-| WebDancer-QwQ-32B                                                 | 51.5 | -    | -    | -    |
-| WebSailor-32B                                                     | 53.2 | -    | -    | -    |
-| WebShaper-QwQ-32B                                                 | 53.3 | -    | -    | -    |
-| **MiroThinker-32B-SFT-v0.1**                                      | 55.3 | 51.3 | 44.9 | 42.7 |
-|     + Commercial Tools                                            | 58.3 | 54.2 | 48.5 | 45.8 |
-| **MiroThinker-32B-DPO-v0.1**                                      | 57.3 | 54.1 | 48.5 | 45.9 |
-|     + Commercial Tools                                            | **60.2** | **57.9** | **50.9** | **48.9** |
+| **Method**                   | Text-103<br>Best Pass@1 | Text-103<br>Pass@1 (Avg@8) | Val-165<br>Best Pass@1 | Val-165<br>Pass@1 (Avg@8) |
+|------------------------------|:-----------------------:|:--------------------------:|:----------------------:|:-------------------------:|
+| **🔹—— 7B/8B Models ——**     |                         |                            |                        |                           |
+| Search-o1-7B                 |          17.5           |             -              |           -            |             -             |
+| R1-Searcher-7B               |          20.4           |             -              |           -            |             -             |
+| WebDancer-7B                 |          31.0           |             -              |           -            |             -             |
+| WebSailor-7B                 |          37.9           |             -              |           -            |             -             |
+| CK-Pro-8B                    |          40.3           |             -              |          32.7          |             -             |
+| **MiroThinker-8B-SFT-v0.1**  |          44.7           |            40.1            |          34.6          |           31.8            |
+|     + Commercial Tools       |          46.6           |            42.1            |          37.6          |           33.9            |
+| **MiroThinker-8B-DPO-v0.1**  |          46.6           |            44.8            |          37.0          |           35.4            |
+|     + Commercial Tools       |        **50.5**         |          **46.7**          |        **38.2**        |         **35.9**          |
+| **🔹—— 14B Models ——**       |                         |                            |                        |                           |
+| **MiroThinker-14B-SFT-v0.1** |          47.6           |            44.4            |          37.0          |           34.4            |
+|     + Commercial Tools       |          49.5           |            47.5            |          41.8          |           39.8            |
+| **MiroThinker-14B-DPO-v0.1** |          48.5           |            46.6            |          42.4          |           39.2            |
+|     + Commercial Tools       |        **52.4**         |          **48.5**          |        **45.5**        |         **42.0**          |
+| **🔹—— 32B Models ——**       |                         |                            |                        |                           |
+| Qwen3-32B                    |          31.1           |            26.7            |          29.7          |           26.4            |
+| Search-o1-32B                |          28.2           |             -              |           -            |             -             |
+| WebThinker-32B-RL            |          48.5           |             -              |           -            |             -             |
+| WebDancer-QwQ-32B            |          51.5           |             -              |           -            |             -             |
+| WebSailor-32B                |          53.2           |             -              |           -            |             -             |
+| WebShaper-QwQ-32B            |          53.3           |             -              |           -            |             -             |
+| **MiroThinker-32B-SFT-v0.1** |          55.3           |            51.3            |          44.9          |           42.7            |
+|     + Commercial Tools       |          58.3           |            54.2            |          48.5          |           45.8            |
+| **MiroThinker-32B-DPO-v0.1** |          57.3           |            54.1            |          48.5          |           45.9            |
+|     + Commercial Tools       |        **60.2**         |          **57.9**          |        **50.9**        |         **48.9**          |
 
 1. Following the practices of WebThinker, WebAgents, and CognitiveKernel, we report the Best Pass@1, the highest score across three runs, which often reflects stronger performance, though it may exhibit some variability. To provide a more stable measure, we additionally report Pass@1 (Avg@8), which offers greater consistency at the cost of slightly lower scores.
 
-2. For consistency with prior open-source works, we evaluate GAIA-Text-103 using the WebAgents LLM-as-judge template, and report results on GAIA-Val-165 using the official GAIA scorer script.
+1. For consistency with prior open-source works, we evaluate GAIA-Text-103 using the WebAgents LLM-as-judge template, and report results on GAIA-Val-165 using the official GAIA scorer script.
 
-3. By default, we use open-source tools wherever possible, except for the code tool [E2B](https://github.com/e2b-dev/E2B) and the Google search tool [Serper](https://serper.dev/). We use [Whisper](https://huggingface.co/openai/whisper-large-v3-turbo), [Qwen2.5-VL-72B-Instruct](https://huggingface.co/Qwen/Qwen2.5-VL-72B-Instruct), and [Qwen3-235B-A22B-Thinking-2507](https://huggingface.co/Qwen/Qwen3-235B-A22B-Thinking-2507) in our implementation. The framework can be easily extended to other open-source tools of your choice.
+1. By default, we use open-source tools wherever possible, except for the code tool [E2B](https://github.com/e2b-dev/E2B) and the Google search tool [Serper](https://serper.dev/). We use [Whisper](https://huggingface.co/openai/whisper-large-v3-turbo), [Qwen2.5-VL-72B-Instruct](https://huggingface.co/Qwen/Qwen2.5-VL-72B-Instruct), and [Qwen3-235B-A22B-Thinking-2507](https://huggingface.co/Qwen/Qwen3-235B-A22B-Thinking-2507) in our implementation. The framework can be easily extended to other open-source tools of your choice.
 
-4. Replacing these open-source tools with commercial alternatives can yield performance gains. Commercial tools were mainly used for multimodal capabilities and certain complex reasoning subtasks. The majority of tasks, including planning, browsing, refinement, navigation, and more, were handled by our models.
+1. Replacing these open-source tools with commercial alternatives can yield performance gains. Commercial tools were mainly used for multimodal capabilities and certain complex reasoning subtasks. The majority of tasks, including planning, browsing, refinement, navigation, and more, were handled by our models.
 
 #### More Benchmarks
 
@@ -406,7 +408,7 @@ For detailed setup and local deployment instructions, please refer to our docume
 
 1. MiroThinker’s performance was tested with this repository and open-source tools; other models’ results are from their papers and official sites.
 
-2. As [MiroVerse-v0.1](https://huggingface.co/datasets/miromind-ai/MiroVerse-v0.1) mainly contains English data, the model’s Chinese capability is limited. We plan to add more Chinese data to improve performance in the next version.
+1. As [MiroVerse-v0.1](https://huggingface.co/datasets/miromind-ai/MiroVerse-v0.1) mainly contains English data, the model’s Chinese capability is limited. We plan to add more Chinese data to improve performance in the next version.
 
 </details>
 
@@ -418,10 +420,11 @@ The trace collection scripts automatically save logs in the `logs/` directory in
 cd apps/collect-trace
 
 # Collect Traces for SFT
-bash scripts/run_benchmark_claude.sh
+uv run bash scripts/collect_trace_claude37.sh
+uv run bash scripts/collect_trace_gpt5.sh
 
 # Collect Traces for DPO
-bash scripts/run_benchmark_qwen.sh
+uv run bash scripts/collect_trace_qwen3.sh
 ```
 
 ## 📄 License

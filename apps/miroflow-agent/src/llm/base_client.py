@@ -49,7 +49,7 @@ class TokenUsage(TypedDict, total=True):
 
 
 @dataclasses.dataclass
-class LLMProviderClientBase(ABC):
+class BaseClient(ABC):
     # Required arguments (no default value)
     task_id: str
     cfg: DictConfig
@@ -79,9 +79,6 @@ class LLMProviderClientBase(ABC):
         self.openai_base_url: Optional[str] = os.environ.get(
             "OPENAI_BASE_URL"
         ) or self.cfg.llm.get("openai_base_url")
-        self.newapi_base_url: Optional[str] = os.environ.get(
-            "NEWAPI_BASE_URL"
-        ) or self.cfg.llm.get("newapi_base_url")
         self.use_tool_calls: Optional[bool] = self.cfg.llm.get("use_tool_calls")
 
         self.token_usage = self._reset_token_usage()
@@ -102,9 +99,11 @@ class LLMProviderClientBase(ABC):
             total_cache_read_input_tokens=0,
         )
 
-    def _remove_tool_result_from_messages(self, messages, keep_tool_result):
-        messages_copy = [m.copy() for m in messages]
+    def _remove_tool_result_from_messages(
+        self, messages, keep_tool_result
+    ) -> List[Dict]:
         """Remove tool results from messages"""
+        messages_copy = [m.copy() for m in messages]
         if keep_tool_result >= 0:
             # Find indices of all user messages
             user_indices = [

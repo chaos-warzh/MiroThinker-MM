@@ -12,6 +12,7 @@ AGENT_SET=${AGENT_SET:-"evaluation_os"}
 MAX_CONTEXT_LENGTH=${MAX_CONTEXT_LENGTH:-40960}
 MAX_CONCURRENT=${MAX_CONCURRENT:-1}
 PASS_AT_K=${PASS_AT_K:-1}
+TEMPERATURE=${TEMPERATURE:-0.3}
 
 # Set results directory
 RESULTS_DIR="../../logs/${BENCHMARK_NAME}/$(date +%m%d)/${LLM_PROVIDER}_${LLM_MODEL}_${AGENT_SET}"
@@ -37,12 +38,12 @@ for i in $(seq 1 $NUM_RUNS); do
         uv run python benchmarks/common_benchmark.py \
             benchmark=$BENCHMARK_NAME \
             benchmark.data.metadata_file="standardized_data.jsonl" \
-            llm=qwen3-32b \
+            llm=qwen-3 \
             llm.provider=$LLM_PROVIDER \
             llm.model_name=$LLM_MODEL \
             llm.openai_base_url=$BASE_URL \
             llm.async_client=true \
-            llm.temperature=0.3 \
+            llm.temperature=$TEMPERATURE \
             llm.max_context_length=$MAX_CONTEXT_LENGTH \
             benchmark.execution.max_tasks=null \
             benchmark.execution.max_concurrent=$MAX_CONCURRENT \

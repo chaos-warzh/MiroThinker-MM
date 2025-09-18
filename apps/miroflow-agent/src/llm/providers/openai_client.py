@@ -12,46 +12,44 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-
 import asyncio
 import dataclasses
 import logging
 import os
-from typing import Any, Dict, List
+from typing import Any, Dict, List, Tuple, Union
 
 import tiktoken
 from openai import AsyncOpenAI, DefaultAsyncHttpxClient, DefaultHttpxClient, OpenAI
 from tenacity import retry, stop_after_attempt, wait_fixed
 
 from ...utils.prompt_utils import generate_mcp_system_prompt
-from ..provider_client_base import LLMProviderClientBase
+from ..base_client import BaseClient
 
 logger = logging.getLogger("miroflow_agent")
 
 
 @dataclasses.dataclass
-class QwenLLMClient(LLMProviderClientBase):
-    def _create_client(self):
-        """Create configured Qwen client"""
-
-        QWEN_API_KEY = os.environ.get("QWEN_API_KEY", None)
-
+class OpenAIClient(BaseClient):
+    def _create_client(self) -> Union[AsyncOpenAI, OpenAI]:
+        """Create LLM client"""
+        api_key = os.environ.get("OPENAI_API_KEY", None)
         http_client_args = {}
 
         if self.async_client:
             return AsyncOpenAI(
-                api_key=QWEN_API_KEY,
+                api_key=api_key,
                 base_url=self.openai_base_url,
                 http_client=DefaultAsyncHttpxClient(**http_client_args),
             )
         else:
             return OpenAI(
-                api_key=QWEN_API_KEY,
+                api_key=api_key,
                 base_url=self.openai_base_url,
                 http_client=DefaultHttpxClient(**http_client_args),
             )
 
-    def _update_token_usage(self, usage_data):
+    def _update_token_usage(self, usage_data: Any) -> None:
+        """Update cumulative token usage"""
         if usage_data:
             input_tokens = getattr(usage_data, "prompt_tokens", 0)
             output_tokens = getattr(usage_data, "completion_tokens", 0)
@@ -75,7 +73,8 @@ class QwenLLMClient(LLMProviderClientBase):
             self.task_log.log_step(
                 "info",
                 "LLM | Token Usage",
-                f"Input: {self.token_usage['total_input_tokens']}, Output: {self.token_usage['total_output_tokens']}",
+                f"Input: {self.token_usage['total_input_tokens']}, "
+                f"Output: {self.token_usage['total_output_tokens']}",
             )
 
     @retry(wait=wait_fixed(30), stop=stop_after_attempt(10))
@@ -89,7 +88,7 @@ class QwenLLMClient(LLMProviderClientBase):
         """
         Send message to OpenAI API.
         :param system_prompt: System prompt string.
-        :param messages: Message history list.
+        :param messages_history: Message history list.
         :return: OpenAI API response object or None (if error occurs).
         """
 
@@ -121,12 +120,18 @@ class QwenLLMClient(LLMProviderClientBase):
         params = {
             "model": self.model_name,
             "temperature": self.temperature,
-            "max_tokens": self.max_tokens,
             "messages": messages_history,
             "tools": [],
             "stream": False,
             "top_p": self.top_p,
         }
+        # Check if the model is GPT-5, and adjust the parameter accordingly
+        if "gpt-5" in self.model_name:
+            # Use 'max_completion_tokens' for GPT-5
+            params["max_completion_tokens"] = self.max_tokens
+        else:
+            # Use 'max_tokens' for GPT-4 and other models
+            params["max_tokens"] = self.max_tokens
 
         try:
             if self.async_client:
@@ -174,10 +179,9 @@ class QwenLLMClient(LLMProviderClientBase):
                 raise e
 
     def process_llm_response(
-        self, llm_response, message_history, agent_type="main"
-    ) -> tuple[str, bool, list]:
-        """Process OpenAI LLM response"""
-
+        self, llm_response: Any, message_history: List[Dict], agent_type: str = "main"
+    ) -> tuple[str, bool, List[Dict]]:
+        """Process LLM response"""
         if not llm_response or not llm_response.choices:
             error_msg = "LLM did not return a valid response."
             self.task_log.log_step(
@@ -213,27 +217,29 @@ class QwenLLMClient(LLMProviderClientBase):
                     message_history,
                 )  # Return True to indicate need to exit loop
 
+            # Add assistant response to history
             message_history.append(
                 {"role": "assistant", "content": assistant_response_text}
             )
 
         else:
-            # Different from Openai Client, we don't use tool calls for qwen,
-            # so we don't support tool_call finish reason
             raise ValueError(
                 f"Unsupported finish reason: {llm_response.choices[0].finish_reason}"
             )
 
         return assistant_response_text, False, message_history
 
-    def extract_tool_calls_info(self, llm_response, assistant_response_text) -> list:
-        """Extract tool call information from Qwen LLM response"""
+    def extract_tool_calls_info(
+        self, llm_response: Any, assistant_response_text: str
+    ) -> List[Dict]:
+        """Extract tool call information from LLM response"""
         from ...utils.parsing_utils import parse_llm_response_for_tool_calls
 
-        # For qwen, use the same parsing method as anthropic
         return parse_llm_response_for_tool_calls(assistant_response_text)
 
-    def update_message_history(self, message_history, all_tool_results_content_with_id):
+    def update_message_history(
+        self, message_history: List[Dict], all_tool_results_content_with_id: List[Tuple]
+    ) -> List[Dict]:
         """Update message history with tool calls data (llm client specific)"""
 
         merged_text = "\n".join(
@@ -253,7 +259,7 @@ class QwenLLMClient(LLMProviderClientBase):
 
         return message_history
 
-    def generate_agent_system_prompt(self, date, mcp_servers) -> str:
+    def generate_agent_system_prompt(self, date: Any, mcp_servers: List[Dict]) -> str:
         return generate_mcp_system_prompt(date, mcp_servers)
 
     def _estimate_tokens(self, text: str) -> int:
@@ -271,9 +277,9 @@ class QwenLLMClient(LLMProviderClientBase):
         except Exception as e:
             # If encoding fails, use simple estimation: approximately 1 token per 4 characters
             self.task_log.log_step(
+                "error",
                 "LLM | Token Estimation Error",
                 f"Error: {str(e)}",
-                "error",
             )
             return len(text) // 4
 
@@ -339,22 +345,19 @@ class QwenLLMClient(LLMProviderClientBase):
         )
         return True, message_history
 
-    def handle_max_turns_reached_summary_prompt(self, message_history, summary_prompt):
+    def handle_max_turns_reached_summary_prompt(
+        self, message_history: List[Dict], summary_prompt: str
+    ) -> str:
         """Handle max turns reached summary prompt"""
         if message_history[-1]["role"] == "user":
             message_history.pop()  # Remove the last user message
             # TODO: this part is a temporary fix, we need to find a better way to handle this
             return summary_prompt
-            # return (
-            #     last_user_message["content"]
-            #     + "\n*************\n"
-            #     + summary_prompt
-            # )
         else:
             return summary_prompt
 
-    def format_token_usage_summary(self):
-        """Format token usage statistics, return summary_lines for format_final_summary and log string - Qwen implementation"""
+    def format_token_usage_summary(self) -> tuple[List[str], str]:
+        """Format token usage statistics, return summary_lines for format_final_summary and log string"""
         token_usage = self.get_token_usage()
 
         total_input = token_usage.get("total_input_tokens", 0)
@@ -371,7 +374,11 @@ class QwenLLMClient(LLMProviderClientBase):
         summary_lines.append("-" * (40 + len(" Token Usage ")))
 
         # Generate log string
-        log_string = f"[Qwen/{self.model_name}] Total Input: {total_input}, Cache Input: {cache_input}, Output: {total_output}"
+        log_string = (
+            f"[{self.model_name}] Total Input: {total_input}, "
+            f"Cache Input: {cache_input}, "
+            f"Output: {total_output}"
+        )
 
         return summary_lines, log_string
 

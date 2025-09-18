@@ -27,7 +27,7 @@ from omegaconf import DictConfig
 from ..config.settings import expose_sub_agents_as_tools
 from ..io.input_handler import process_input
 from ..io.output_formatter import OutputFormatter
-from ..llm.client import LLMClient
+from ..llm.factory import ClientFactory
 from ..logging.task_logger import (
     TaskLog,
     get_utc_plus_8_time,
@@ -65,7 +65,7 @@ class Orchestrator:
         self,
         main_agent_tool_manager: ToolManager,
         sub_agent_tool_managers: Dict[str, ToolManager],
-        llm_client: LLMClient,
+        llm_client: ClientFactory,
         output_formatter: OutputFormatter,
         cfg: DictConfig,
         task_log: Optional["TaskLog"] = None,
@@ -234,7 +234,7 @@ class Orchestrator:
 
     def get_scrape_result(self, result: str) -> str:
         """
-        Check if the scrape result is an error
+        Process scrape result and truncate if too long to support more conversation turns.
         """
         SCRAPE_MAX_LENGTH = 20000
         try:
@@ -365,9 +365,7 @@ class Orchestrator:
     async def run_sub_agent(
         self, sub_agent_name, task_description, keep_tool_result: int = -1
     ):
-        """
-        Run sub agent
-        """
+        """Run sub agent"""
         self.task_log.log_step(
             "info", f"{sub_agent_name} | Start Task", f"Starting {sub_agent_name}"
         )
@@ -713,6 +711,7 @@ class Orchestrator:
         self.task_log.end_sub_agent_session(sub_agent_name)
 
         # Remove thinking content in tool response
+        # For the return result of a sub-agent, the content within the `<think>` tags is unnecessary in any case.
         final_answer_text = final_answer_text.split("</think>")[-1].strip()
 
         # Stream sub-agent end
@@ -725,9 +724,7 @@ class Orchestrator:
     async def run_main_agent(
         self, task_description, task_file_name=None, task_id="default_task"
     ):
-        """
-        Execute the main end-to-end task.
-        """
+        """Execute the main end-to-end task"""
         workflow_id = await self._stream_start_workflow(task_description)
         keep_tool_result = int(self.cfg.agent.keep_tool_result)
 
