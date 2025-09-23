@@ -95,6 +95,7 @@ class Orchestrator:
             "search_and_browse": defaultdict(int),
             "google_search": defaultdict(int),
             "sougou_search": defaultdict(int),
+            "scrape_website": defaultdict(int),
         }
 
     async def _stream_update(self, event_type: str, data: dict):
@@ -712,6 +713,7 @@ class Orchestrator:
 
         # Remove thinking content in tool response
         # For the return result of a sub-agent, the content within the `<think>` tags is unnecessary in any case.
+        final_answer_text = final_answer_text.split("<think>")[-1].strip()
         final_answer_text = final_answer_text.split("</think>")[-1].strip()
 
         # Stream sub-agent end
