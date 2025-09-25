@@ -15,7 +15,6 @@
 import asyncio
 import dataclasses
 import json
-import os
 from abc import ABC
 from typing import (
     Any,
@@ -73,12 +72,7 @@ class BaseClient(ABC):
         self.max_tokens: int = self.cfg.llm.max_tokens
         self.async_client: bool = self.cfg.llm.async_client
         self.keep_tool_result: int = self.cfg.llm.keep_tool_result
-        self.anthropic_base_url: Optional[str] = os.environ.get(
-            "ANTHROPIC_BASE_URL"
-        ) or self.cfg.llm.get("anthropic_base_url")
-        self.openai_base_url: Optional[str] = os.environ.get(
-            "OPENAI_BASE_URL"
-        ) or self.cfg.llm.get("openai_base_url")
+        self.base_url: Optional[str] = self.cfg.llm.get("base_url")
         self.use_tool_calls: Optional[bool] = self.cfg.llm.get("use_tool_calls")
 
         self.token_usage = self._reset_token_usage()

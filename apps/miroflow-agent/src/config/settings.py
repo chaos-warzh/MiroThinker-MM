@@ -50,9 +50,11 @@ REASONING_MODEL_NAME = os.environ.get("REASONING_MODEL_NAME")
 
 # API for Claude Sonnet 3.7 as Commercial Tools
 ANTHROPIC_API_KEY = os.environ.get("ANTHROPIC_API_KEY")
+ANTHROPIC_BASE_URL = os.environ.get("ANTHROPIC_BASE_URL", "https://api.anthropic.com")
 
 # API Keys for Commercial Tools
 OPENAI_API_KEY = os.environ.get("OPENAI_API_KEY")
+OPENAI_BASE_URL = os.environ.get("OPENAI_BASE_URL", "https://api.openai.com/v1")
 
 # API for Sougou Search
 TENCENTCLOUD_SECRET_ID = os.environ.get("TENCENTCLOUD_SECRET_ID")
@@ -63,15 +65,6 @@ TENCENTCLOUD_SECRET_KEY = os.environ.get("TENCENTCLOUD_SECRET_KEY")
 def create_mcp_server_parameters(cfg: DictConfig, agent_cfg: DictConfig):
     """Define and return MCP server configuration list"""
     configs = []
-    os.environ["OPENAI_BASE_URL"] = (
-        cfg.llm.get("openai_base_url") or "https://api.openai.com/v1"
-    )
-    os.environ["ANTHROPIC_BASE_URL"] = (
-        cfg.llm.get("anthropic_base_url") or "https://api.anthropic.com"
-    )
-
-    OPENAI_BASE_URL = os.environ.get("OPENAI_BASE_URL")
-    ANTHROPIC_BASE_URL = os.environ.get("ANTHROPIC_BASE_URL")
 
     if (
         agent_cfg.get("tools", None) is not None
@@ -323,6 +316,7 @@ def get_env_info(cfg: DictConfig) -> dict:
     return {
         # LLM Configuration
         "llm_provider": cfg.llm.provider,
+        "llm_base_url": cfg.llm.base_url,
         "llm_model_name": cfg.llm.model_name,
         "llm_temperature": cfg.llm.temperature,
         "llm_top_p": cfg.llm.top_p,
@@ -346,8 +340,8 @@ def get_env_info(cfg: DictConfig) -> dict:
         "has_tencent_secret_id": bool(TENCENTCLOUD_SECRET_ID),
         "has_tencent_secret_key": bool(TENCENTCLOUD_SECRET_KEY),
         # Base URLs
-        "openai_base_url": os.environ.get("OPENAI_BASE_URL"),
-        "anthropic_base_url": os.environ.get("ANTHROPIC_BASE_URL"),
+        "openai_base_url": OPENAI_BASE_URL,
+        "anthropic_base_url": ANTHROPIC_BASE_URL,
         "jina_base_url": JINA_BASE_URL,
         "serper_base_url": SERPER_BASE_URL,
         "whisper_base_url": WHISPER_BASE_URL,
