@@ -39,7 +39,7 @@ async def create_sandbox(timeout=DEFAULT_TIMEOUT) -> str:
     """Create a linux sandbox.
 
     Args:
-        timeout: Time in seconds before the sandbox is automatically shutdown. The default is 300 seconds.
+        timeout: Time in seconds before the sandbox is automatically shutdown. The default is 600 seconds.
 
     Returns:
         The id of the newly created sandbox. You should use this sandbox_id to run other tools in the sandbox.
