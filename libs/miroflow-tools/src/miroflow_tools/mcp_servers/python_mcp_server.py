@@ -35,7 +35,7 @@ DEFAULT_TIMEOUT = 600  # seconds
 
 
 @mcp.tool()
-async def create_sandbox() -> str:
+async def create_sandbox(timeout=DEFAULT_TIMEOUT) -> str:
     """Create a linux sandbox.
 
     Args:
@@ -50,7 +50,7 @@ async def create_sandbox() -> str:
         try:
             sandbox = Sandbox(
                 template=DEFAULT_TEMPLATE_ID,
-                timeout=DEFAULT_TIMEOUT,
+                timeout=timeout,
                 api_key=E2B_API_KEY,
             )
             info = sandbox.get_info()
@@ -66,7 +66,7 @@ async def create_sandbox() -> str:
         finally:
             # Set timeout before exit to prevent timeout after function exits
             try:
-                sandbox.set_timeout(DEFAULT_TIMEOUT)
+                sandbox.set_timeout(timeout)
             except Exception:
                 pass  # Ignore timeout setting errors
 
