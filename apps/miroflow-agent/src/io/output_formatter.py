@@ -17,11 +17,11 @@ import re
 
 class OutputFormatter:
     def _extract_boxed_content(self, text: str) -> str:
-        """
+        r"""
         Extract the content of the last \boxed{...} occurrence in the given text.
         Supports:
           - Arbitrary levels of nested braces
-          - Escaped braces (\{ and \})
+          - Escaped braces (\\{ and \\})
           - Whitespace between \boxed and the opening brace
           - Empty content inside braces
         Returns an empty string if no match is found.
@@ -116,8 +116,7 @@ class OutputFormatter:
         if boxed_result:
             summary_lines.append(boxed_result)
         elif final_answer_text:
-            summary_lines.append("No \\boxed{} content found.")
-            boxed_result = "No \\boxed{} content found in the final answer."
+            summary_lines.append(final_answer_text)
 
         # Token usage statistics and cost estimation - use client method
         if client and hasattr(client, "format_token_usage_summary"):

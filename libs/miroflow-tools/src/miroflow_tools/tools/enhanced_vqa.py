@@ -243,19 +243,19 @@ class EnhancedVQAClient:
         """Call OpenAI-compatible VLLM (GPT-4V, GPT-4o, etc.)."""
         # Determine if image_data is URL or base64
         if image_data.startswith(("http://", "https://")):
-            image_source = {"type": "url", "url": image_data}
+            image_url = image_data
         else:
-            image_source = {
-                "type": "base64",
-                "media_type": image_media_type,
-                "data": image_data,
-            }
+            # For base64, use data URI format
+            image_url = f"data:{image_media_type};base64,{image_data}"
         
         messages = [
             {
                 "role": "user",
                 "content": [
-                    {"type": "image", "image": image_source},
+                    {
+                        "type": "image_url",
+                        "image_url": {"url": image_url},
+                    },
                     {
                         "type": "text",
                         "text": self._build_prompt(question, context, include_reasoning),
