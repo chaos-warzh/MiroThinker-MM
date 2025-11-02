@@ -52,12 +52,30 @@ def process_input(task_description, task_file_name):
             parsing_result = None
 
             if file_extension in ["jpg", "jpeg", "png", "gif", "webp"]:
-                updated_task_description += f"\nNote: An Image file '{task_file_name}' is associated with this task. You may use available tools to read its content if necessary.\n\n"
-
-            elif file_extension in ["mp4", "avi", "mov", "mkv", "flv", "wmv", "webm", "m4v"]:
-                parsing_result = VideoConverter(local_path=task_file_name)
-                # TODO: No video processing tools yet
-                updated_task_description += f"\nNote: A Video file '{task_file_name}' is associated with this task. You may use available tools to read its content if necessary.\n\n"
+                # Provide initial visual analysis to guide LLM's visual understanding
+                image_note = f"\nNote: An Image file '{task_file_name}' is associated with this task.\n"
+                
+                # Try to get image dimensions and basic info for context
+                try:
+                    from PIL import Image
+                    with Image.open(task_file_name) as img:
+                        width, height = img.size
+                        image_note += f"Image dimensions: {width}x{height} pixels.\n"
+                except:
+                    pass  # PIL not available or image can't be opened
+                
+                # Encourage LLM to use vision tools with structured guidance
+                image_note += (
+                    "IMPORTANT: Use the 'vision_understanding_advanced' tool to analyze this image. "
+                    "This tool provides multi-turn verification, confidence scoring, and cross-validation. "
+                    "Do NOT skip image analysis - it is critical for accurate task completion.\n"
+                    "Recommended approach:\n"
+                    "1. Call vision_understanding_advanced with a specific question about the image\n"
+                    "2. Review the confidence score and metadata\n"
+                    "3. If confidence < 0.75, use follow-up analysis or web search for verification\n\n"
+                )
+                
+                updated_task_description += image_note
 
             elif file_extension == "txt":
                 with open(task_file_name, "r") as f:
@@ -94,10 +112,100 @@ def process_input(task_description, task_file_name):
                 updated_task_description += f"\nNote: A PPT file '{task_file_name}' is associated with this task. You may use available tools to read its content if necessary.\n\n"
 
             elif file_extension in ["wav"]:
-                updated_task_description += f"\nNote: An audio file '{task_file_name}' is associated with this task. You may use available tools to read its content if necessary.\n\n"
+                # Extract audio metadata
+                notes = []
+                try:
+                    import wave
+                    with wave.open(task_file_name, "rb") as audio_file:
+                        duration = audio_file.getnframes() / float(audio_file.getframerate())
+                        sample_rate = audio_file.getframerate()
+                        channels = audio_file.getnchannels()
+                        notes.append(f"Duration: {duration:.2f} seconds")
+                        notes.append(f"Sample rate: {sample_rate} Hz")
+                        notes.append(f"Channels: {channels}")
+                except Exception:
+                    pass
+                
+                # Structured guidance for LLM
+                updated_task_description += f"\nNote: An audio file '{task_file_name}' is associated with this task."
+                if notes:
+                    updated_task_description += " " + ", ".join(notes) + "."
+                updated_task_description += "\n\nIMPORTANT: Use the 'audio_understanding_advanced' tool to analyze this audio.\n"
+                updated_task_description += "Recommendation:\n"
+                updated_task_description += "- Use enable_verification=true for critical transcriptions (interviews, lectures)\n"
+                updated_task_description += "- For quick transcription, use 'audio_quick_transcription' tool\n"
+                updated_task_description += "- To answer specific questions about the audio, use 'audio_question_answering_enhanced'\n"
+                updated_task_description += "- Check confidence score (>= 0.7 is ideal, < 0.4 needs review)\n\n"
 
             elif file_extension in ["mp3", "m4a"]:
-                updated_task_description += f"\nNote: An audio file '{task_file_name}' is associated with this task. You may use available tools to read its content if necessary.\n\n"
+                # Extract audio metadata
+                notes = []
+                try:
+                    from mutagen import File as MutagenFile
+                    audio = MutagenFile(task_file_name)
+                    if audio and hasattr(audio, "info") and hasattr(audio.info, "length"):
+                        duration = audio.info.length
+                        notes.append(f"Duration: {duration:.2f} seconds")
+                        if hasattr(audio.info, "sample_rate"):
+                            notes.append(f"Sample rate: {audio.info.sample_rate} Hz")
+                except Exception:
+                    pass
+                
+                # Structured guidance for LLM
+                updated_task_description += f"\nNote: An audio file '{task_file_name}' is associated with this task."
+                if notes:
+                    updated_task_description += " " + ", ".join(notes) + "."
+                updated_task_description += "\n\nIMPORTANT: Use the 'audio_understanding_advanced' tool to analyze this audio.\n"
+                updated_task_description += "Recommendation:\n"
+                updated_task_description += "- Use enable_verification=true for critical transcriptions (interviews, lectures)\n"
+                updated_task_description += "- For quick transcription, use 'audio_quick_transcription' tool\n"
+                updated_task_description += "- To answer specific questions about the audio, use 'audio_question_answering_enhanced'\n"
+                updated_task_description += "- Check confidence score (>= 0.7 is ideal, < 0.4 needs review)\n\n"
+
+            elif file_extension in ["mp4", "avi", "mov", "mkv", "webm", "flv", "wmv", "m4v"]:
+                # Extract video metadata
+                notes = []
+                try:
+                    # Try using moviepy first
+                    from moviepy.editor import VideoFileClip
+                    clip = VideoFileClip(task_file_name)
+                    duration = clip.duration
+                    fps = clip.fps
+                    resolution = f"{clip.w}x{clip.h}"
+                    notes.append(f"Duration: {duration:.2f} seconds")
+                    notes.append(f"Resolution: {resolution}")
+                    notes.append(f"FPS: {fps:.1f}")
+                    clip.close()
+                except Exception:
+                    # Fallback to opencv
+                    try:
+                        import cv2
+                        cap = cv2.VideoCapture(task_file_name)
+                        fps = cap.get(cv2.CAP_PROP_FPS)
+                        frame_count = int(cap.get(cv2.CAP_PROP_FRAME_COUNT))
+                        width = int(cap.get(cv2.CAP_PROP_FRAME_WIDTH))
+                        height = int(cap.get(cv2.CAP_PROP_FRAME_HEIGHT))
+                        if fps > 0:
+                            duration = frame_count / fps
+                            notes.append(f"Duration: {duration:.2f} seconds")
+                        notes.append(f"Resolution: {width}x{height}")
+                        notes.append(f"FPS: {fps:.1f}")
+                        cap.release()
+                    except Exception:
+                        pass
+                
+                # Structured guidance for LLM
+                updated_task_description += f"\nNote: A video file '{task_file_name}' is associated with this task."
+                if notes:
+                    updated_task_description += " " + ", ".join(notes) + "."
+                updated_task_description += "\n\nIMPORTANT: Use the 'video_understanding_advanced' tool to analyze this video.\n"
+                updated_task_description += "Recommendation:\n"
+                updated_task_description += "- Use enable_verification=true for detailed action/scene analysis\n"
+                updated_task_description += "- For quick preview, use 'video_quick_analysis' tool\n"
+                updated_task_description += "- To analyze specific time ranges, use 'video_temporal_qa' with start_time and end_time\n"
+                updated_task_description += "- To extract key moments/frames, use 'video_extract_keyframes' tool\n"
+                updated_task_description += "- Check confidence score (>= 0.7 is ideal, < 0.4 needs review)\n"
+                updated_task_description += "- Review 'key_moments' field for timestamp evidence\n\n"
 
             elif file_extension in ["zip"]:
                 parsing_result = ZipConverter(local_path=task_file_name)
@@ -956,268 +1064,3 @@ def ZipConverter(local_path: str, **kwargs):
         title="Extracted Files", text_content=md_content.strip()
     )
 
-
-def VideoConverter(local_path: str) -> 'DocumentConverterResult':
-    """
-    Handling video files, extracting meta-data, screenshot, and audios
-
-    File extension: mp4, avi, mov, mkv, flv, wmv, webm
-
-    Args:
-        local_path: video file path
-
-    Returns:
-        DocumentConverterResult with video information
-    """
-    md_content = ""
-
-    # 1. Extract meta-data
-    metadata = _get_video_metadata(local_path)
-    if metadata:
-        md_content += "## Video Metadata\n\n"
-        for key, value in metadata.items():
-            md_content += f"- **{key}**: {value}\n"
-        md_content += "\n"
-
-    # 2. Extract key frames (Optional)
-    try:
-        frame_paths = _extract_video_frames(local_path, num_frames=3)
-        if frame_paths:
-            md_content += "## Key Frames\n\n"
-            md_content += f"Note: {len(frame_paths)} key frames extracted. "
-            md_content += "Use vision tools to analyze these frames for visual content.\n\n"
-            for i, frame_path in enumerate(frame_paths, 1):
-                md_content += f"- Frame {i}: `{frame_path}`\n"
-            md_content += "\n"
-    except Exception as e:
-        md_content += f"Note: Could not extract video frames: {str(e)}\n\n"
-
-    # 3. Extract the audio and transcribe it
-    try:
-        audio_transcript = _extract_and_transcribe_video_audio(local_path)
-        if audio_transcript:
-            md_content += "## Audio Transcript\n\n"
-            md_content += audio_transcript + "\n"
-    except Exception as e:
-        md_content += f"## Audio Transcript\n\nError: Could not transcribe audio: {str(e)}\n"
-
-    return DocumentConverterResult(
-        title=os.path.basename(local_path),
-        text_content=md_content.strip()
-    )
-
-
-def _get_video_metadata(video_path: str) -> Optional[Dict[str, str]]:
-    """
-    Use ffprobe to extract meta-data
-
-    Need to install:
-        ffmpeg: `apt-get install ffmpeg` or `brew install ffmpeg`
-    """
-    ffprobe = shutil.which("ffprobe")
-    if not ffprobe:
-        print("Warning: ffprobe not found. Install ffmpeg to extract video metadata.")
-        return None
-
-    try:
-        cmd = [
-            ffprobe,
-            "-v", "quiet",
-            "-print_format", "json",
-            "-show_format",
-            "-show_streams",
-            video_path
-        ]
-        result = subprocess.run(cmd, capture_output=True, text=True, timeout=30)
-
-        if result.returncode != 0:
-            return None
-
-        data = json.loads(result.stdout)
-
-        metadata = {}
-
-        if "format" in data:
-            fmt = data["format"]
-            metadata["Filename"] = fmt.get("filename", "")
-            metadata["Format"] = fmt.get("format_long_name", "")
-            metadata["Duration"] = _format_duration(float(fmt.get("duration", 0)))
-            metadata["Size"] = _format_size(int(fmt.get("size", 0)))
-            metadata["Bitrate"] = f"{int(fmt.get('bit_rate', 0)) // 1000} kbps"
-
-        if "streams" in data:
-            for stream in data["streams"]:
-                codec_type = stream.get("codec_type")
-
-                if codec_type == "video":
-                    metadata["Video Codec"] = stream.get("codec_long_name", "")
-                    metadata["Resolution"] = f"{stream.get('width', 0)}x{stream.get('height', 0)}"
-
-                    fps = stream.get("r_frame_rate", "")
-                    if fps and "/" in fps:
-                        num, den = map(float, fps.split("/"))
-                        if den > 0:
-                            metadata["Frame Rate"] = f"{num / den:.2f} fps"
-
-                elif codec_type == "audio":
-                    metadata["Audio Codec"] = stream.get("codec_long_name", "")
-                    metadata["Sample Rate"] = f"{stream.get('sample_rate', 0)} Hz"
-                    metadata["Channels"] = str(stream.get('channels', 0))
-
-        return metadata
-
-    except Exception as e:
-        print(f"Error extracting video metadata: {e}")
-        return None
-
-
-def _extract_video_frames(video_path: str, num_frames: int = 3) -> List[str]:
-    """
-    Extract key video frames
-
-    Args:
-        video_path: path to video file
-        num_frames: frames to extract from video
-
-    Returns:
-        List of frames
-    """
-    ffmpeg = shutil.which("ffmpeg")
-    if not ffmpeg:
-        raise Exception("ffmpeg not found")
-
-    temp_dir = tempfile.mkdtemp(prefix="video_frames_")
-    frame_paths = []
-
-    try:
-        duration = _get_video_duration(video_path)
-        if duration <= 0:
-            return []
-
-        intervals = [duration * i / (num_frames + 1) for i in range(1, num_frames + 1)]
-
-        for i, timestamp in enumerate(intervals):
-            output_path = os.path.join(temp_dir, f"frame_{i + 1}.jpg")
-
-            cmd = [
-                ffmpeg,
-                "-ss", str(timestamp),
-                "-i", video_path,
-                "-vframes", "1",
-                "-q:v", "2",  # high quality
-                "-y",  # overwriting
-                output_path
-            ]
-
-            result = subprocess.run(
-                cmd,
-                capture_output=True,
-                text=True,
-                timeout=10
-            )
-
-            if result.returncode == 0 and os.path.exists(output_path):
-                frame_paths.append(output_path)
-
-        return frame_paths
-
-    except Exception as e:
-        print(f"Error extracting video frames: {e}")
-        if os.path.exists(temp_dir):
-            shutil.rmtree(temp_dir, ignore_errors=True)
-        return []
-
-
-def _get_video_duration(video_path: str) -> float:
-    """Get video duration in seconds"""
-    ffprobe = shutil.which("ffprobe")
-    if not ffprobe:
-        return 0
-
-    try:
-        cmd = [
-            ffprobe,
-            "-v", "error",
-            "-show_entries", "format=duration",
-            "-of", "default=noprint_wrappers=1:nokey=1",
-            video_path
-        ]
-        result = subprocess.run(cmd, capture_output=True, text=True, timeout=10)
-        return float(result.stdout.strip())
-    except:
-        return 0
-
-
-def _extract_and_transcribe_video_audio(video_path: str) -> str:
-    """
-    Extract audio from video and transcribe it
-
-    Process:
-    1. use `ffmpeg` to extract audio as WAV
-    2. use `speech_recognition` to transcribe audio
-    """
-    ffmpeg = shutil.which("ffmpeg")
-    if not ffmpeg:
-        return "Error: ffmpeg not found. Cannot extract audio from video."
-
-    temp_audio = tempfile.NamedTemporaryFile(suffix=".wav", delete=False)
-    temp_audio_path = temp_audio.name
-    temp_audio.close()
-
-    try:
-        cmd = [
-            ffmpeg,
-            "-i", video_path,
-            "-vn",  # not including videos
-            "-acodec", "pcm_s16le",  # WAV
-            "-ar", "16000",  # sampling rate 16kHz
-            "-ac", "1",
-            "-y",  # overwriting
-            temp_audio_path
-        ]
-
-        result = subprocess.run(
-            cmd,
-            capture_output=True,
-            text=True,
-            timeout=60
-        )
-
-        if result.returncode != 0 or not os.path.exists(temp_audio_path):
-            return "Error: Failed to extract audio from video."
-
-        # transcribing
-        try:
-            transcript = _transcribe_audio(temp_audio_path)
-            return transcript if transcript else "[No speech detected in video]"
-        except Exception as e:
-            return f"Error transcribing audio: {str(e)}"
-
-    finally:
-        if os.path.exists(temp_audio_path):
-            os.unlink(temp_audio_path)
-
-
-def _format_duration(seconds: float) -> str:
-    """format duration as HH:MM:SS"""
-    hours = int(seconds // 3600)
-    minutes = int((seconds % 3600) // 60)
-    secs = int(seconds % 60)
-
-    if hours > 0:
-        return f"{hours:02d}:{minutes:02d}:{secs:02d}"
-    else:
-        return f"{minutes:02d}:{secs:02d}"
-
-
-def _format_size(bytes_size: int) -> str:
-    """format size"""
-    for unit in ['B', 'KB', 'MB', 'GB']:
-        if bytes_size < 1024.0:
-            return f"{bytes_size:.2f} {unit}"
-        bytes_size /= 1024.0
-    return f"{bytes_size:.2f} TB"
-
-
-if __name__ == "__main__":
-    pass

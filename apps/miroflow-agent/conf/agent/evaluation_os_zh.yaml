@@ -8,8 +8,11 @@ defaults:
 main_agent:
   tools:
     - tool-python
+    - tool-vqa-enhanced
     - tool-vqa-os
+    - tool-audio-enhanced
     - tool-transcribe-os
+    - tool-video-enhanced
     - tool-reasoning-os
     - tool-reader
   max_turns: 50  # Maximum number of turns for main agent execution
@@ -18,7 +21,10 @@ sub_agents:
   agent-browsing:
     tools:
       - tool-sougou-search
+      - tool-vqa-enhanced
       - tool-vqa-os
+      - tool-audio-enhanced
+      - tool-video-enhanced
       - tool-reader
       - tool-python
     max_turns: 50

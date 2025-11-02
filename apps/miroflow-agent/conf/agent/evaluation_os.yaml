@@ -8,8 +8,11 @@ defaults:
 main_agent:
   tools:
     - tool-python
-    - tool-vqa-os
+    - tool-vqa-enhanced  # Enhanced vision understanding with multi-turn verification
+    - tool-vqa-os        # Fallback for simple VQA tasks
+    - tool-audio-enhanced  # Enhanced audio understanding with multi-turn verification
     - tool-transcribe-os
+    - tool-video-enhanced  # Enhanced video understanding with temporal analysis
     - tool-reasoning-os
     - tool-reader
   max_turns: 50  # Maximum number of turns for main agent execution
@@ -18,7 +21,10 @@ sub_agents:
   agent-browsing:
     tools:
       - tool-google-search
-      - tool-vqa-os
+      - tool-vqa-enhanced  # Enhanced vision understanding with multi-turn verification
+      - tool-vqa-os        # Fallback for simple VQA tasks
+      - tool-audio-enhanced  # Enhanced audio understanding with multi-turn verification
+      - tool-video-enhanced  # Enhanced video understanding with temporal analysis
       - tool-reader
       - tool-python
     max_turns: 50

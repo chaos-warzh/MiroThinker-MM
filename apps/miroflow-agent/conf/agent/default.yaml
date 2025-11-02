@@ -4,8 +4,11 @@
 main_agent:
   tools:
     - tool-python
-    - tool-vqa
+    - tool-vqa-enhanced  # Enhanced vision understanding with multi-turn verification
+    - tool-vqa          # Fallback to commercial Claude vision
+    - tool-audio-enhanced  # Enhanced audio understanding with multi-turn verification
     - tool-transcribe
+    - tool-video-enhanced  # Enhanced video understanding with temporal analysis
     - tool-reasoning
     - tool-reader
   max_turns: 20  # Maximum number of turns for main agent execution
@@ -14,7 +17,10 @@ sub_agents:
   agent-browsing:
     tools:
       - tool-google-search
-      - tool-vqa
+      - tool-vqa-enhanced  # Enhanced vision understanding with multi-turn verification
+      - tool-vqa          # Fallback to commercial Claude vision
+      - tool-audio-enhanced  # Enhanced audio understanding with multi-turn verification
+      - tool-video-enhanced  # Enhanced video understanding with temporal analysis
       - tool-reader
       - tool-python
     max_turns: 20

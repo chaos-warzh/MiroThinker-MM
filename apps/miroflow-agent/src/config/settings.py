@@ -60,6 +60,121 @@ OPENAI_BASE_URL = os.environ.get("OPENAI_BASE_URL", "https://api.openai.com/v1")
 TENCENTCLOUD_SECRET_ID = os.environ.get("TENCENTCLOUD_SECRET_ID")
 TENCENTCLOUD_SECRET_KEY = os.environ.get("TENCENTCLOUD_SECRET_KEY")
 
+# ==================== Enhanced Vision Understanding (VLLM) ====================
+# Multi-provider Vision Language Model support for advanced image understanding
+# Similar to Google Search API configuration pattern
+
+# Primary VLLM Provider - supports: "openai", "anthropic", "qwen", "custom"
+VLLM_PROVIDER = os.environ.get("VLLM_PROVIDER", "openai")
+
+# OpenAI-compatible VLLM configuration (GPT-4V, GPT-4o, etc.)
+VLLM_OPENAI_API_KEY = os.environ.get("VLLM_OPENAI_API_KEY") or OPENAI_API_KEY
+VLLM_OPENAI_BASE_URL = os.environ.get("VLLM_OPENAI_BASE_URL") or OPENAI_BASE_URL
+VLLM_OPENAI_MODEL = os.environ.get("VLLM_OPENAI_MODEL", "gpt-4-vision")
+
+# Anthropic Claude Vision configuration
+VLLM_ANTHROPIC_API_KEY = os.environ.get("VLLM_ANTHROPIC_API_KEY") or ANTHROPIC_API_KEY
+VLLM_ANTHROPIC_BASE_URL = os.environ.get("VLLM_ANTHROPIC_BASE_URL") or ANTHROPIC_BASE_URL
+VLLM_ANTHROPIC_MODEL = os.environ.get("VLLM_ANTHROPIC_MODEL", "claude-3-5-sonnet-20241022")
+
+# Qwen Vision configuration (Open-source option)
+VLLM_QWEN_API_KEY = os.environ.get("VLLM_QWEN_API_KEY") or VISION_API_KEY
+VLLM_QWEN_BASE_URL = os.environ.get("VLLM_QWEN_BASE_URL") or VISION_BASE_URL
+VLLM_QWEN_MODEL = os.environ.get("VLLM_QWEN_MODEL", "Qwen/Qwen2.5-VL-72B-Instruct")
+
+# Custom VLLM configuration (for self-hosted or other providers)
+VLLM_CUSTOM_API_KEY = os.environ.get("VLLM_CUSTOM_API_KEY")
+VLLM_CUSTOM_BASE_URL = os.environ.get("VLLM_CUSTOM_BASE_URL")
+VLLM_CUSTOM_MODEL = os.environ.get("VLLM_CUSTOM_MODEL")
+
+# Enable multi-round vision understanding for enhanced accuracy
+VLLM_ENABLE_MULTI_TURN = os.environ.get("VLLM_ENABLE_MULTI_TURN", "true").lower() == "true"
+
+# Confidence threshold for vision understanding (0.0-1.0)
+VLLM_CONFIDENCE_THRESHOLD = float(os.environ.get("VLLM_CONFIDENCE_THRESHOLD", "0.6"))
+
+# ==================== Vision Understanding Configuration ====================
+
+# ==================== Enhanced Audio Understanding ====================
+# Multi-provider Audio Language Model support for advanced audio processing
+# Supports transcription, question answering, and audio feature extraction
+
+# Primary Audio Provider - supports: "openai_whisper", "whisper_os", "qwen_audio", "gpt4o_audio"
+AUDIO_PROVIDER = os.environ.get("AUDIO_PROVIDER", "openai_whisper")
+
+# OpenAI Whisper configuration (Commercial ASR)
+WHISPER_OPENAI_API_KEY = os.environ.get("WHISPER_OPENAI_API_KEY") or OPENAI_API_KEY
+WHISPER_OPENAI_BASE_URL = os.environ.get("WHISPER_OPENAI_BASE_URL") or OPENAI_BASE_URL
+WHISPER_OPENAI_MODEL = os.environ.get("WHISPER_OPENAI_MODEL", "whisper-1")
+
+# Open-Source Whisper configuration (Self-hosted or third-party)
+WHISPER_OS_API_KEY = os.environ.get("WHISPER_OS_API_KEY") or WHISPER_API_KEY
+WHISPER_OS_BASE_URL = os.environ.get("WHISPER_OS_BASE_URL") or WHISPER_BASE_URL
+WHISPER_OS_MODEL = os.environ.get("WHISPER_OS_MODEL") or WHISPER_MODEL_NAME or "whisper-large-v3"
+
+# Qwen-Audio configuration (Supports audio understanding + QA)
+QWEN_AUDIO_API_KEY = os.environ.get("QWEN_AUDIO_API_KEY")
+QWEN_AUDIO_BASE_URL = os.environ.get("QWEN_AUDIO_BASE_URL", "https://dashscope.aliyuncs.com/compatible-mode/v1")
+QWEN_AUDIO_MODEL = os.environ.get("QWEN_AUDIO_MODEL", "qwen-audio-turbo")
+
+# GPT-4o-audio configuration (Advanced audio understanding)
+GPT4O_AUDIO_API_KEY = os.environ.get("GPT4O_AUDIO_API_KEY") or OPENAI_API_KEY
+GPT4O_AUDIO_BASE_URL = os.environ.get("GPT4O_AUDIO_BASE_URL") or OPENAI_BASE_URL
+GPT4O_AUDIO_MODEL = os.environ.get("GPT4O_AUDIO_MODEL", "gpt-4o-audio-preview")
+
+# Enable multi-turn audio verification for enhanced accuracy
+AUDIO_ENABLE_MULTI_TURN = os.environ.get("AUDIO_ENABLE_MULTI_TURN", "true").lower() == "true"
+
+# Enable web search validation for audio transcriptions
+AUDIO_ENABLE_WEB_SEARCH = os.environ.get("AUDIO_ENABLE_WEB_SEARCH", "false").lower() == "true"
+
+# Confidence threshold for audio understanding (0.0-1.0)
+AUDIO_CONFIDENCE_THRESHOLD = float(os.environ.get("AUDIO_CONFIDENCE_THRESHOLD", "0.6"))
+
+# ==================== Audio Understanding Configuration ====================
+
+
+# ==================== Enhanced Video Understanding ====================
+# Multi-provider Video Language Model support for advanced video understanding
+# Supports temporal analysis, action recognition, and scene understanding
+
+# Primary Video Provider - supports: "gemini", "gpt4o_video", "qwen_video", "custom"
+VIDEO_PROVIDER = os.environ.get("VIDEO_PROVIDER", "gemini")
+
+# Google Gemini configuration (Primary - best video understanding as of 2025)
+GEMINI_API_KEY = os.environ.get("GEMINI_API_KEY")
+GEMINI_BASE_URL = os.environ.get("GEMINI_BASE_URL", "https://generativelanguage.googleapis.com/v1beta")
+GEMINI_MODEL = os.environ.get("GEMINI_MODEL", "gemini-2.0-flash-exp")
+
+# GPT-4o-video configuration (Backup - frame-based analysis)
+GPT4O_VIDEO_API_KEY = os.environ.get("GPT4O_VIDEO_API_KEY") or OPENAI_API_KEY
+GPT4O_VIDEO_BASE_URL = os.environ.get("GPT4O_VIDEO_BASE_URL") or OPENAI_BASE_URL
+GPT4O_VIDEO_MODEL = os.environ.get("GPT4O_VIDEO_MODEL", "gpt-4o")
+
+# Qwen-VL-Video configuration (Open-source option)
+QWEN_VIDEO_API_KEY = os.environ.get("QWEN_VIDEO_API_KEY")
+QWEN_VIDEO_BASE_URL = os.environ.get("QWEN_VIDEO_BASE_URL", "https://dashscope.aliyuncs.com/compatible-mode/v1")
+QWEN_VIDEO_MODEL = os.environ.get("QWEN_VIDEO_MODEL", "qwen-vl-max")
+
+# Custom video API configuration
+CUSTOM_VIDEO_API_KEY = os.environ.get("CUSTOM_VIDEO_API_KEY")
+CUSTOM_VIDEO_BASE_URL = os.environ.get("CUSTOM_VIDEO_BASE_URL")
+CUSTOM_VIDEO_MODEL = os.environ.get("CUSTOM_VIDEO_MODEL")
+
+# Enable multi-turn video verification for enhanced accuracy
+VIDEO_ENABLE_MULTI_TURN = os.environ.get("VIDEO_ENABLE_MULTI_TURN", "true").lower() == "true"
+
+# Enable web search validation for video analysis
+VIDEO_ENABLE_WEB_SEARCH = os.environ.get("VIDEO_ENABLE_WEB_SEARCH", "false").lower() == "true"
+
+# Confidence threshold for video understanding (0.0-1.0)
+VIDEO_CONFIDENCE_THRESHOLD = float(os.environ.get("VIDEO_CONFIDENCE_THRESHOLD", "0.6"))
+
+# Maximum keyframes to extract for analysis
+VIDEO_MAX_KEYFRAMES = int(os.environ.get("VIDEO_MAX_KEYFRAMES", "10"))
+
+# ==================== Video Understanding Configuration ====================
+
 
 # MCP server configuration generation function
 def create_mcp_server_parameters(cfg: DictConfig, agent_cfg: DictConfig):
@@ -172,6 +287,60 @@ def create_mcp_server_parameters(cfg: DictConfig, agent_cfg: DictConfig):
             }
         )
 
+    # ==================== Enhanced VQA Tool (New) ====================
+    # Advanced vision understanding with multi-round verification and cross-validation
+    if agent_cfg.get("tools", None) is not None and "tool-vqa-enhanced" in agent_cfg["tools"]:
+        vllm_env = {
+            "VLLM_PROVIDER": VLLM_PROVIDER,
+            "VLLM_ENABLE_MULTI_TURN": str(VLLM_ENABLE_MULTI_TURN),
+            "VLLM_CONFIDENCE_THRESHOLD": str(VLLM_CONFIDENCE_THRESHOLD),
+        }
+        
+        # Configure based on selected provider
+        if VLLM_PROVIDER == "openai":
+            vllm_env.update({
+                "VLLM_API_KEY": VLLM_OPENAI_API_KEY,
+                "VLLM_BASE_URL": VLLM_OPENAI_BASE_URL,
+                "VLLM_MODEL": VLLM_OPENAI_MODEL,
+            })
+        elif VLLM_PROVIDER == "anthropic":
+            vllm_env.update({
+                "VLLM_API_KEY": VLLM_ANTHROPIC_API_KEY,
+                "VLLM_BASE_URL": VLLM_ANTHROPIC_BASE_URL,
+                "VLLM_MODEL": VLLM_ANTHROPIC_MODEL,
+            })
+        elif VLLM_PROVIDER == "qwen":
+            vllm_env.update({
+                "VLLM_API_KEY": VLLM_QWEN_API_KEY,
+                "VLLM_BASE_URL": VLLM_QWEN_BASE_URL,
+                "VLLM_MODEL": VLLM_QWEN_MODEL,
+            })
+        elif VLLM_PROVIDER == "custom":
+            vllm_env.update({
+                "VLLM_API_KEY": VLLM_CUSTOM_API_KEY,
+                "VLLM_BASE_URL": VLLM_CUSTOM_BASE_URL,
+                "VLLM_MODEL": VLLM_CUSTOM_MODEL,
+            })
+        
+        # Add Google Search API for verification
+        vllm_env.update({
+            "SERPER_API_KEY": SERPER_API_KEY,
+            "SERPER_BASE_URL": SERPER_BASE_URL,
+            "JINA_API_KEY": JINA_API_KEY,
+            "JINA_BASE_URL": JINA_BASE_URL,
+        })
+        
+        configs.append(
+            {
+                "name": "tool-vqa-enhanced",
+                "params": StdioServerParameters(
+                    command=sys.executable,
+                    args=["-m", "miroflow_tools.mcp_servers.enhanced_vqa_mcp_server"],
+                    env=vllm_env,
+                ),
+            }
+        )
+
     if (
         agent_cfg.get("tools", None) is not None
         and "tool-transcribe" in agent_cfg["tools"]
@@ -205,6 +374,111 @@ def create_mcp_server_parameters(cfg: DictConfig, agent_cfg: DictConfig):
                         "WHISPER_API_KEY": WHISPER_API_KEY,
                         "WHISPER_MODEL_NAME": WHISPER_MODEL_NAME,
                     },
+                ),
+            }
+        )
+
+    if (
+        agent_cfg.get("tools", None) is not None
+        and "tool-audio-enhanced" in agent_cfg["tools"]
+    ):
+        # Enhanced audio understanding with multi-provider support
+        audio_env = {
+            "AUDIO_PROVIDER": AUDIO_PROVIDER,
+            "AUDIO_ENABLE_MULTI_TURN": str(AUDIO_ENABLE_MULTI_TURN).lower(),
+            "AUDIO_ENABLE_WEB_SEARCH": str(AUDIO_ENABLE_WEB_SEARCH).lower(),
+            "SERPER_API_KEY": SERPER_API_KEY or "",
+        }
+
+        # Add provider-specific environment variables
+        if AUDIO_PROVIDER == "openai_whisper":
+            audio_env.update({
+                "WHISPER_OPENAI_API_KEY": WHISPER_OPENAI_API_KEY,
+                "WHISPER_OPENAI_BASE_URL": WHISPER_OPENAI_BASE_URL,
+                "WHISPER_OPENAI_MODEL": WHISPER_OPENAI_MODEL,
+            })
+        elif AUDIO_PROVIDER == "whisper_os":
+            audio_env.update({
+                "WHISPER_OS_API_KEY": WHISPER_OS_API_KEY or "",
+                "WHISPER_OS_BASE_URL": WHISPER_OS_BASE_URL or "",
+                "WHISPER_OS_MODEL": WHISPER_OS_MODEL,
+            })
+        elif AUDIO_PROVIDER == "qwen_audio":
+            audio_env.update({
+                "QWEN_AUDIO_API_KEY": QWEN_AUDIO_API_KEY or "",
+                "QWEN_AUDIO_BASE_URL": QWEN_AUDIO_BASE_URL,
+                "QWEN_AUDIO_MODEL": QWEN_AUDIO_MODEL,
+            })
+        elif AUDIO_PROVIDER == "gpt4o_audio":
+            audio_env.update({
+                "GPT4O_AUDIO_API_KEY": GPT4O_AUDIO_API_KEY,
+                "GPT4O_AUDIO_BASE_URL": GPT4O_AUDIO_BASE_URL,
+                "GPT4O_AUDIO_MODEL": GPT4O_AUDIO_MODEL,
+            })
+
+        configs.append(
+            {
+                "name": "tool-audio-enhanced",
+                "params": StdioServerParameters(
+                    command=sys.executable,
+                    args=[
+                        "-m",
+                        "miroflow_tools.mcp_servers.enhanced_audio_mcp_server",
+                    ],
+                    env=audio_env,
+                ),
+            }
+        )
+
+    if (
+        agent_cfg.get("tools", None) is not None
+        and "tool-video-enhanced" in agent_cfg["tools"]
+    ):
+        # Enhanced video understanding with multi-provider support
+        video_env = {
+            "VIDEO_PROVIDER": VIDEO_PROVIDER,
+            "VIDEO_ENABLE_MULTI_TURN": str(VIDEO_ENABLE_MULTI_TURN).lower(),
+            "VIDEO_ENABLE_WEB_SEARCH": str(VIDEO_ENABLE_WEB_SEARCH).lower(),
+            "VIDEO_MAX_KEYFRAMES": str(VIDEO_MAX_KEYFRAMES),
+            "SERPER_API_KEY": SERPER_API_KEY or "",
+        }
+
+        # Add provider-specific environment variables
+        if VIDEO_PROVIDER == "gemini":
+            video_env.update({
+                "GEMINI_API_KEY": GEMINI_API_KEY or "",
+                "GEMINI_BASE_URL": GEMINI_BASE_URL,
+                "GEMINI_MODEL": GEMINI_MODEL,
+            })
+        elif VIDEO_PROVIDER == "gpt4o_video":
+            video_env.update({
+                "GPT4O_VIDEO_API_KEY": GPT4O_VIDEO_API_KEY,
+                "GPT4O_VIDEO_BASE_URL": GPT4O_VIDEO_BASE_URL,
+                "GPT4O_VIDEO_MODEL": GPT4O_VIDEO_MODEL,
+            })
+        elif VIDEO_PROVIDER == "qwen_video":
+            video_env.update({
+                "QWEN_VIDEO_API_KEY": QWEN_VIDEO_API_KEY or "",
+                "QWEN_VIDEO_BASE_URL": QWEN_VIDEO_BASE_URL,
+                "QWEN_VIDEO_MODEL": QWEN_VIDEO_MODEL,
+            })
+        elif VIDEO_PROVIDER == "custom":
+            video_env.update({
+                "CUSTOM_VIDEO_API_KEY": CUSTOM_VIDEO_API_KEY or "",
+                "CUSTOM_VIDEO_BASE_URL": CUSTOM_VIDEO_BASE_URL or "",
+                "CUSTOM_VIDEO_MODEL": CUSTOM_VIDEO_MODEL or "",
+            })
+
+        configs.append(
+            {
+                "name": "tool-video-enhanced",
+                "params": StdioServerParameters(
+                    command=sys.executable,
+                    args=[
+                        "-m",
+                        "miroflow_tools.mcp_servers.enhanced_video_mcp_server",
+                    ],
+                    env=video_env,
                 ),
             }
         )
