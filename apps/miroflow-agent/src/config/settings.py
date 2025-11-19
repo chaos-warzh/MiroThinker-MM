@@ -485,6 +485,46 @@ def create_mcp_server_parameters(cfg: DictConfig, agent_cfg: DictConfig):
 
     if (
         agent_cfg.get("tools", None) is not None
+        and "tool-image-search" in agent_cfg["tools"]
+    ):
+        configs.append(
+            {
+                "name": "tool-image-search",
+                "params": StdioServerParameters(
+                    command=sys.executable,
+                    args=[
+                        "-m",
+                        "miroflow_tools.mcp_servers.image_search_mcp_server",
+                    ],
+                    env={
+                        "JINA_API_KEY": JINA_API_KEY,
+                        "JINA_BASE_URL": JINA_BASE_URL,
+                        "VLLM_PROVIDER": VLLM_PROVIDER,
+                        "VLLM_API_KEY": VLLM_OPENAI_API_KEY if VLLM_PROVIDER == "openai" else (
+                            VLLM_ANTHROPIC_API_KEY if VLLM_PROVIDER == "anthropic" else (
+                                VLLM_QWEN_API_KEY if VLLM_PROVIDER == "qwen" else 
+                                VLLM_CUSTOM_API_KEY
+                            )
+                        ),
+                        "VLLM_BASE_URL": VLLM_OPENAI_BASE_URL if VLLM_PROVIDER == "openai" else (
+                            VLLM_ANTHROPIC_BASE_URL if VLLM_PROVIDER == "anthropic" else (
+                                VLLM_QWEN_BASE_URL if VLLM_PROVIDER == "qwen" else 
+                                VLLM_CUSTOM_BASE_URL
+                            )
+                        ),
+                        "VLLM_MODEL": VLLM_OPENAI_MODEL if VLLM_PROVIDER == "openai" else (
+                            VLLM_ANTHROPIC_MODEL if VLLM_PROVIDER == "anthropic" else (
+                                VLLM_QWEN_MODEL if VLLM_PROVIDER == "qwen" else 
+                                VLLM_CUSTOM_MODEL
+                            )
+                        ),
+                    },
+                ),
+            }
+        )
+
+    if (
+        agent_cfg.get("tools", None) is not None
         and "tool-reasoning" in agent_cfg["tools"]
     ):
         configs.append(

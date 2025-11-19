@@ -657,13 +657,20 @@ async def search_archived_webpage(url: str, year: int, month: int, day: int) -> 
 
 
 @mcp.tool()
-async def scrape_website(url: str) -> str:
-    """This tool is used to scrape a website for its content. Search engines are not supported by this tool. This tool can also be used to get YouTube video non-visual information (however, it may be incomplete), such as video subtitles, titles, descriptions, key moments, etc.
+async def scrape_website(url: str, include_images: bool = True) -> str:
+    """This tool is used to scrape a website for its content and optionally extract images. 
+    Search engines are not supported by this tool. This tool can also be used to get YouTube 
+    video non-visual information (however, it may be incomplete), such as video subtitles, 
+    titles, descriptions, key moments, etc.
 
     Args:
         url: The URL of the website to scrape.
+        include_images: Whether to extract images from the webpage (default: True). 
+                       Set to False if you only need text content.
     Returns:
-        The scraped website content.
+        A JSON string containing the scraped content and images (if requested).
+        Format: {"content": "markdown text", "images": [{"title": "img_title", "url": "img_url"}, ...]}
+        If include_images=False, only returns the text content as plain string (backward compatible).
     """
     # Validate URL format
     if not url or not url.startswith(("http://", "https://")):
@@ -682,18 +689,69 @@ async def scrape_website(url: str) -> str:
 
         # Make request with proper headers
         headers = {"Authorization": f"Bearer {JINA_API_KEY}"}
+        
+        # Add image extraction header if requested
+        if include_images:
+            headers["X-With-Images-Summary"] = "true"
 
         response = requests.get(jina_url, headers=headers, timeout=60)
         response.raise_for_status()
 
-        # Get the content
-        content = response.text.strip()
-        content = strip_markdown_links(content)
-
-        if not content:
-            return f"No content retrieved from URL: {url}"
-
-        return content
+        # Handle response based on include_images flag
+        if include_images:
+            try:
+                # Parse JSON response
+                data = response.json()
+                
+                # Extract content and images
+                content = data.get("data", {}).get("content", "").strip()
+                content = strip_markdown_links(content)
+                
+                # Extract images with proper structure
+                raw_images = data.get("data", {}).get("images", {})
+                images = []
+                
+                if isinstance(raw_images, dict):
+                    for title, img_url in raw_images.items():
+                        # Basic quality filtering
+                        if img_url and not any(keyword in img_url.lower() for keyword in 
+                                              ["icon", "logo", "favicon", "avatar", "thumbnail", "button", "badge"]):
+                            images.append({
+                                "title": title or "Untitled Image",
+                                "url": img_url,
+                                "source": url  # Track where the image came from
+                            })
+                
+                if not content:
+                    return f"No content retrieved from URL: {url}"
+                
+                # Return structured JSON
+                result = {
+                    "content": content,
+                    "images": images,
+                    "source_url": url
+                }
+                
+                return json.dumps(result, ensure_ascii=False, indent=2)
+                
+            except json.JSONDecodeError:
+                # Fallback: if JSON parsing fails, treat as text-only response
+                content = response.text.strip()
+                content = strip_markdown_links(content)
+                return json.dumps({
+                    "content": content,
+                    "images": [],
+                    "source_url": url
+                }, ensure_ascii=False, indent=2)
+        else:
+            # Backward compatible: return plain text when include_images=False
+            content = response.text.strip()
+            content = strip_markdown_links(content)
+            
+            if not content:
+                return f"No content retrieved from URL: {url}"
+            
+            return content
 
     except requests.exceptions.Timeout:
         return f"[ERROR]: Timeout Error: Request timed out while scraping '{url}'. The website may be slow or unresponsive."
