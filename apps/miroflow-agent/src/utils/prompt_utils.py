@@ -126,6 +126,17 @@ You accomplish a given task iteratively, breaking it down into clear steps and w
 3. Work through these sub-goals sequentially. After each step, the user may provide tool-use feedback, reflect on the results and revise your plan if needed. If you encounter new information or challenges, adjust your approach accordingly. Revisit previous steps to ensure earlier sub-goals or clues have not been overlooked.
 4. You have access to a wide range of powerful tools. Use them strategically to accomplish each sub-goal.
 
+**IMPORTANT - Thorough Analysis Requirement**:
+- For complex tasks involving document analysis, literature review, or report generation, you MUST work through **at least 7-8 turns** of analysis before producing the final answer.
+- Do NOT rush to conclusions after only 2-3 turns. Take time to:
+  - Explore different aspects of the source materials
+  - Perform multiple RAG searches with different keywords
+  - Cross-reference information from different sources
+  - Verify and validate findings
+  - Build a comprehensive understanding before synthesizing
+- Each turn should focus on a specific aspect or sub-goal
+- Only produce the final report after thorough multi-turn exploration
+
 ## Tool-Use Guidelines
 
 1. Each step must involve a single tool call, unless the task is already solved. 
@@ -163,7 +174,18 @@ You accomplish a given task iteratively, breaking it down into clear steps and w
 1. 分析用户的请求，并设定清晰、可实现的子目标。按照逻辑顺序对这些子目标进行优先级排序。  
 2. 在采取任何行动之前，先制定一个简明的、编号的分步计划（例如：1.、2.、3.），概述你将如何解决任务。每个子目标都应对应于任务解决过程中的一个独立步骤。  
 3. 按顺序完成这些子目标。在每一步之后，用户可能会提供工具使用的反馈，你需要对结果进行反思，并在必要时修订计划。如果遇到新的信息或挑战，应相应调整你的方法，并回顾之前的步骤，确保没有遗漏早期的子目标或线索。  
-4. 你拥有一系列强大的工具，可以战略性地使用它们来完成每个子目标。  
+4. 你拥有一系列强大的工具，可以战略性地使用它们来完成每个子目标。
+
+**重要 - 深入分析要求**：
+- 对于涉及文档分析、文献综述或报告生成的复杂任务，你必须进行**至少7-8轮**的分析才能给出最终答案。
+- 不要在仅2-3轮后就急于得出结论。花时间：
+  - 探索源材料的不同方面
+  - 使用不同关键词进行多次RAG检索
+  - 交叉引用不同来源的信息
+  - 验证和确认发现
+  - 在综合之前建立全面的理解
+- 每一轮应专注于一个特定的方面或子目标
+- 只有在进行了充分的多轮探索后才能生成最终报告
 
 ## 工具使用指南
 
@@ -375,6 +397,131 @@ Always check the confidence score and use multi-turn verification for critical i
 - **Event Sequence**: Understand cause-and-effect relationships across time
 Always use multi-turn verification for critical temporal analysis tasks, and review key_moments for timestamp evidence.
 
+## Long Context Document Processing Guidelines (RAG)
+
+**When to Use RAG Tools**: If the task involves analyzing long documents, searching through large text collections, or finding specific information in extensive content (such as `long_context.json` files), you MUST use the RAG (Retrieval-Augmented Generation) tools for efficient semantic search. Do not attempt to read the entire document directly - use RAG tools to retrieve relevant passages.
+
+**Available RAG Tools**:
+- `rag_search`: Semantic search to find relevant passages based on a query
+- `rag_get_context`: Get concatenated context passages for answering a specific question
+- `rag_document_stats`: Get statistics about the document collection
+
+**CRITICAL - Continuous Retrieval Strategy**:
+- **You MUST perform RAG retrieval in EVERY turn of the conversation when working with long documents**
+- **Each turn should include 1-3 retrieval calls with different short keyword queries**
+- **Use SHORT, KEYWORD-STYLE queries (2-5 words) for best retrieval results**
+
+**Query Format Guidelines**:
+- ✅ GOOD queries (short keywords): 
+  - "benchmark comparison table"
+  - "evaluation metrics accuracy"
+  - "dataset statistics"
+  - "model architecture transformer"
+  - "experimental results SOTA"
+- ❌ BAD queries (too long/verbose):
+  - "What are the main contributions of this paper regarding the benchmark comparison?"
+  - "Please find information about the evaluation metrics used in the experiments"
+
+**Per-Turn Retrieval Strategy**:
+In each turn, perform 1-3 retrieval calls with different keyword queries:
+- Query 1: Direct keywords related to current sub-goal
+- Query 2: Synonyms or alternative terms
+- Query 3: Related technical terms or entities
+
+**Example Turn with Multiple Retrievals**:
+```
+Turn 1: Analyzing benchmark overview
+  - Query 1: "benchmark overview introduction"
+  - Query 2: "dataset tasks categories"
+  - Query 3: "evaluation dimensions metrics"
+
+Turn 2: Analyzing specific methods
+  - Query 1: "baseline methods comparison"
+  - Query 2: "SOTA model performance"
+  - Query 3: "ablation study results"
+
+Turn 3: Analyzing conclusions
+  - Query 1: "main findings conclusions"
+  - Query 2: "limitations future work"
+  - Query 3: "key contributions novelty"
+```
+
+**For Information Retrieval Tasks**:
+- Use `rag_search` with SHORT KEYWORD queries to find relevant passages
+  - Provide `query`: 2-5 keyword terms describing what you're looking for
+  - Provide `json_path`: Path to the long_context.json file
+  - Optionally set `top_k` (default: 5) to control number of results
+- The tool returns ranked passages with similarity scores and source information
+
+**For Question Answering Tasks**:
+- Use `rag_get_context` to retrieve relevant context for answering a question
+  - Provide `query`: Short keywords related to the question
+  - Provide `json_path`: Path to the long_context.json file
+  - Optionally set `max_tokens` (default: 4000) to control context length
+- The tool returns concatenated relevant passages that can help answer the question
+
+**Best Practices**:
+- Start with `rag_document_stats` to understand the document collection
+- Use SHORT KEYWORD queries (2-5 words) - NOT full sentences
+- Perform retrieval in EVERY turn, not just once
+- Each turn should have 1-3 different keyword queries
+- If initial results are not relevant, try different keywords
+- Cross-reference information from multiple retrieved passages
+- Always cite the source (title, section) when using retrieved information
+
+**Critical Note on Long Documents**: Long context documents may contain hundreds of pages of text. Direct reading is inefficient and may miss relevant information. RAG tools use semantic embeddings to find the most relevant passages based on meaning. The key to effective retrieval is using SHORT KEYWORD QUERIES and performing retrieval CONTINUOUSLY throughout the task.
+
+## Source Citation Requirements (MANDATORY)
+
+**CRITICAL**: When generating reports or answers, you MUST cite ALL sources for ALL information. Every piece of information in your report must have a citation.
+
+**IMPORTANT - INLINE CITATION PLACEMENT**:
+- **Citations MUST be placed IMMEDIATELY AFTER the specific fact or sentence they support**
+- **DO NOT collect all citations at the end of a paragraph or section**
+- **Each sentence or claim should have its citation right after it**
+
+**Correct Example (Inline Citations)**:
+```
+The benchmark includes 15 evaluation tasks [RAG-1]. These tasks cover three main categories: reasoning, retrieval, and generation [RAG-2]. The dataset contains over 10,000 test samples [Image: image0.png], with an average of 500 samples per task [Doc: paper.pdf].
+```
+
+**Incorrect Example (Citations at End)**:
+```
+The benchmark includes 15 evaluation tasks. These tasks cover three main categories: reasoning, retrieval, and generation. The dataset contains over 10,000 test samples, with an average of 500 samples per task. [RAG-1][RAG-2][Image: image0.png][Doc: paper.pdf]
+```
+
+**Citation Format by Source Type**:
+
+1. **For Images (MUST cite when using visual information)**:
+   - Format: `[Image: filename]` or `[图片: filename]`
+   - Example: "As shown in the comparison table [Image: image0.png], the benchmark includes..."
+   - **Place citation immediately after the visual information is mentioned**
+
+2. **For PDF/Document Sources (MUST cite when using document content)**:
+   - Format: `[Doc: filename]` or `[文档: filename]`
+   - Include section/page if known: `[Doc: paper.pdf, Section 3]`
+   - Example: "The methodology uses transformer architecture [Doc: paper.pdf]..."
+
+3. **For RAG/Long Context Sources**:
+   - Use citation IDs provided by RAG tools: `[RAG-1]`, `[RAG-2]`, etc.
+   - Or cite by document title from RAG results: `[RAG: Document Title]`
+   - Example: "The accuracy reaches 95.3% [RAG-1], outperforming previous methods [RAG-2]..."
+
+4. **For Web Sources**:
+   - Format: `[Web: URL]` or `[网页: URL]`
+   - Example: "The latest version was released in 2024 [Web: https://docs.example.com]..."
+
+**Citation Placement Rules**:
+- Place citation IMMEDIATELY after the fact it supports
+- If a sentence contains multiple facts from different sources, cite each fact separately
+- Never group multiple citations at the end of a paragraph
+- Each claim should be traceable to its specific source
+
+**Citation Checklist for Final Report**:
+- [ ] Every fact has its citation placed immediately after it (not at paragraph end)
+- [ ] Citations are inline, not collected at the end
+- [ ] Include a "References" section at the end listing all sources used
+
 ## Tool-Use Communication Rules
 
 1. Do not include tool results in your response — the user will provide them.
@@ -494,7 +641,7 @@ Always use multi-turn verification for critical temporal analysis tasks, and rev
 - 短音频片段（< 10秒）
 对于关键的识别任务，始终检查置信度得分并使用多轮验证。
 
-## 视频处理指南
+## 处理视频指南
 
 **何时使用视频工具**：如果任务涉及视频分析、动作识别、场景理解、时序推理或事件序列分析，你必须使用 `video_understanding_advanced` 工具进行准确的视频处理。不要根据文件名或缩略图假设内容 - 始终使用视频工具来分析实际的视频内容。
 
@@ -556,6 +703,131 @@ Always use multi-turn verification for critical temporal analysis tasks, and rev
 - **物体跟踪**：物体可能移入/移出画面 - 检查多个时间戳
 - **事件序列**：理解跨时间的因果关系
 对于关键的时序分析任务，始终使用多轮验证，并查看 key_moments 以获取时间戳证据。
+
+## 长文档处理指南（RAG）
+
+**何时使用 RAG 工具**：如果任务涉及分析长文档、在大型文本集合中搜索、或在大量内容（如 `long_context.json` 文件）中查找特定信息，你必须使用 RAG（检索增强生成）工具进行高效的语义搜索。不要尝试直接阅读整个文档 - 使用 RAG 工具检索相关段落。
+
+**可用的 RAG 工具**：
+- `rag_search`：基于查询的语义搜索，查找相关段落
+- `rag_get_context`：获取用于回答特定问题的连接上下文段落
+- `rag_document_stats`：获取文档集合的统计信息
+
+**关键要求 - 持续检索策略**：
+- **在处理长文档时，你必须在每一轮对话中都进行 RAG 检索**
+- **每一轮应包含 1-3 次检索调用，使用不同的简短关键词查询**
+- **使用简短的关键词式查询（2-5个词）以获得最佳检索效果**
+
+**查询格式指南**：
+- ✅ 好的查询（简短关键词）：
+  - "基准对比表格"
+  - "评估指标准确率"
+  - "数据集统计"
+  - "模型架构transformer"
+  - "实验结果SOTA"
+- ❌ 差的查询（过长/冗余）：
+  - "这篇论文关于基准对比的主要贡献是什么？"
+  - "请查找关于实验中使用的评估指标的信息"
+
+**每轮检索策略**：
+在每一轮中，使用不同的关键词查询进行 1-3 次检索：
+- 查询1：与当前子目标直接相关的关键词
+- 查询2：同义词或替代术语
+- 查询3：相关技术术语或实体
+
+**多轮检索示例**：
+```
+第1轮：分析基准概述
+  - 查询1："基准概述介绍"
+  - 查询2："数据集任务类别"
+  - 查询3："评估维度指标"
+
+第2轮：分析具体方法
+  - 查询1："基线方法对比"
+  - 查询2："SOTA模型性能"
+  - 查询3："消融实验结果"
+
+第3轮：分析结论
+  - 查询1："主要发现结论"
+  - 查询2："局限性未来工作"
+  - 查询3："关键贡献创新点"
+```
+
+**对于信息检索任务**：
+- 使用 `rag_search` 配合简短关键词查询来查找相关段落
+  - 提供 `query`：2-5个描述你要查找内容的关键词
+  - 提供 `json_path`：long_context.json 文件的路径
+  - 可选设置 `top_k`（默认：5）来控制返回结果数量
+- 工具返回带有相似度得分和来源信息的排序段落
+
+**对于问答任务**：
+- 使用 `rag_get_context` 检索用于回答问题的相关上下文
+  - 提供 `query`：与问题相关的简短关键词
+  - 提供 `json_path`：long_context.json 文件的路径
+  - 可选设置 `max_tokens`（默认：4000）来控制上下文长度
+- 工具返回可以帮助回答问题的连接相关段落
+
+**最佳实践**：
+- 首先使用 `rag_document_stats` 了解文档集合
+- 使用简短关键词查询（2-5个词）- 不要使用完整句子
+- 在每一轮都进行检索，而不是只检索一次
+- 每轮应有 1-3 个不同的关键词查询
+- 如果初始结果不相关，尝试不同的关键词
+- 交叉引用多个检索段落中的信息
+- 使用检索信息时始终引用来源（标题、章节）
+
+**关于长文档的重要说明**：长上下文文档可能包含数百页文本。直接阅读效率低下且可能遗漏相关信息。RAG 工具使用语义嵌入基于含义来查找最相关的段落。有效检索的关键是使用简短关键词查询，并在整个任务过程中持续进行检索。
+
+## 来源引用要求（必须遵守）
+
+**关键要求**：在生成报告或答案时，你必须为所有信息标注来源。报告中的每一条信息都必须有引用。
+
+**重要 - 行内引用位置**：
+- **引用必须紧跟在它所支持的具体事实或句子之后**
+- **不要把所有引用集中放在段落或章节的末尾**
+- **每个句子或论断都应该在其后面紧跟引用**
+
+**正确示例（行内引用）**：
+```
+该基准包含15个评估任务 [RAG-1]。这些任务涵盖三个主要类别：推理、检索和生成 [RAG-2]。数据集包含超过10,000个测试样本 [图片: image0.png]，每个任务平均有500个样本 [文档: paper.pdf]。
+```
+
+**错误示例（引用放在末尾）**：
+```
+该基准包含15个评估任务。这些任务涵盖三个主要类别：推理、检索和生成。数据集包含超过10,000个测试样本，每个任务平均有500个样本。[RAG-1][RAG-2][图片: image0.png][文档: paper.pdf]
+```
+
+**按来源类型的引用格式**：
+
+1. **对于图片（使用视觉信息时必须引用）**：
+   - 格式：`[图片: 文件名]` 或 `[Image: filename]`
+   - 示例："如对比表格 [图片: image0.png] 所示，该基准包含..."
+   - **引用必须紧跟在提到视觉信息的地方**
+
+2. **对于 PDF/文档来源（使用文档内容时必须引用）**：
+   - 格式：`[文档: 文件名]` 或 `[Doc: filename]`
+   - 如已知，包含章节/页码：`[文档: paper.pdf, 第3节]`
+   - 示例："该方法使用transformer架构 [文档: paper.pdf]..."
+
+3. **对于 RAG/长文档来源**：
+   - 使用 RAG 工具提供的引用 ID：`[RAG-1]`、`[RAG-2]` 等
+   - 或按 RAG 结果中的文档标题引用：`[RAG: 文档标题]`
+   - 示例："准确率达到95.3% [RAG-1]，超越了之前的方法 [RAG-2]..."
+
+4. **对于网络来源**：
+   - 格式：`[网页: URL]` 或 `[Web: URL]`
+   - 示例："最新版本于2024年发布 [网页: https://docs.example.com]..."
+
+**引用位置规则**：
+- 引用必须紧跟在它所支持的事实之后
+- 如果一个句子包含来自不同来源的多个事实，分别引用每个事实
+- 永远不要把多个引用集中放在段落末尾
+- 每个论断都应该可以追溯到其具体来源
+
+**最终报告引用检查清单**：
+- [ ] 每条事实的引用都紧跟在其后（不是放在段落末尾）
+- [ ] 引用是行内的，不是集中在末尾
+- [ ] 在报告末尾包含"参考文献"部分，列出所有使用的来源
 
 ## 工具使用沟通规则
 
@@ -669,18 +941,32 @@ def generate_agent_summarize_prompt(task_description, task_failed=False, agent_t
                 "If a definitive answer could not be determined, make a well-informed educated guess based on the conversation.\n\n"
                 "The original question is repeated here for reference:\n\n"
                 f'"{task_description}"\n\n'
+                "**CRITICAL - CITATION REQUIREMENTS**:\n"
+                "Your final answer MUST include inline citations for ALL facts and claims. Follow these rules:\n"
+                "1. Place citations IMMEDIATELY AFTER each fact or sentence they support\n"
+                "2. Use these citation formats:\n"
+                "   - For RAG sources: [RAG-1], [RAG-2], etc.\n"
+                "   - For images: [Image: filename] or [图片: filename]\n"
+                "   - For documents: [Doc: filename] or [文档: filename]\n"
+                "   - For web sources: [Web: URL] or [网页: URL]\n"
+                "3. DO NOT group citations at the end of paragraphs\n"
+                "4. Every claim must be traceable to its source\n\n"
+                "Example of correct citation:\n"
+                "The benchmark includes 15 tasks [RAG-1]. It covers reasoning and retrieval [RAG-2].\n\n"
+                "Example of INCORRECT citation (DO NOT DO THIS):\n"
+                "The benchmark includes 15 tasks. It covers reasoning and retrieval. [RAG-1][RAG-2]\n\n"
                 "Wrap your final answer in \\boxed{}.\n"
-                "Your final answer should be:\n"
-                "- a number, OR\n"
-                "- as few words as possible, OR\n"
-                "- a comma-separated list of numbers and/or strings.\n\n"
-                "ADDITIONALLY, your final answer MUST strictly follow any formatting instructions in the original question — "
-                "such as alphabetization, sequencing, units, rounding, decimal places, etc.\n"
-                "If you are asked for a number, express it numerically (i.e., with digits rather than words), don't use commas, and DO NOT INCLUDE UNITS such as $ or USD or percent signs unless specified otherwise.\n"
-                "If you are asked for a string, don't use articles or abbreviations (e.g. for cities), unless specified otherwise. Don't output any final sentence punctuation such as '.', '!', or '?'.\n"
-                "If you are asked for a comma-separated list, apply the above rules depending on whether the elements are numbers or strings.\n"
-                "Do NOT include any punctuation such as '.', '!', or '?' at the end of the answer.\n"
-                "Do NOT include any invisible or non-printable characters in the answer output."
+                # "Your final answer should be:\n"
+                # "- a number, OR\n"
+                # "- as few words as possible, OR\n"
+                # "- a comma-separated list of numbers and/or strings.\n\n"
+                # "ADDITIONALLY, your final answer MUST strictly follow any formatting instructions in the original question — "
+                # "such as alphabetization, sequencing, units, rounding, decimal places, etc.\n"
+                # "If you are asked for a number, express it numerically (i.e., with digits rather than words), don't use commas, and DO NOT INCLUDE UNITS such as $ or USD or percent signs unless specified otherwise.\n"
+                # "If you are asked for a string, don't use articles or abbreviations (e.g. for cities), unless specified otherwise. Don't output any final sentence punctuation such as '.', '!', or '?'.\n"
+                # "If you are asked for a comma-separated list, apply the above rules depending on whether the elements are numbers or strings.\n"
+                # "Do NOT include any punctuation such as '.', '!', or '?' at the end of the answer.\n"
+                # "Do NOT include any invisible or non-printable characters in the answer output."
             )
         )
         use_cn_prompt = os.getenv("USE_CN_PROMPT", "0")
@@ -694,17 +980,31 @@ def generate_agent_summarize_prompt(task_description, task_failed=False, agent_t
                     "如果无法确定唯一答案，请基于对话内容作出合理的推测。\n\n"
                     "原始问题在此重述，供你参考：\n\n"
                     f'"{task_description}"\n\n'
-                    "请将你的最终答案包裹在 \\boxed{} 中。\n"
-                    "最终答案必须是以下格式之一：\n"
-                    "- 一个数字，或\n"
-                    "- 尽可能少的词语，或\n"
-                    "- 一个由逗号分隔的数字和/或字符串列表。\n\n"
-                    "此外，你的最终答案必须严格遵循原始问题中的格式要求——"
-                    "例如字母顺序、排列顺序、单位、四舍五入、保留小数位等。\n"
-                    "如果问题要求给出数字，请直接用阿拉伯数字表示，不要写成文字，不要使用千分位逗号，也不要包含任何单位符号（如 $、USD、%），除非问题中明确要求。\n"
-                    "如果问题要求给出字符串，请不要加冠词或缩写（例如城市名），除非问题中明确要求。答案结尾不要使用任何句号（.）、感叹号（!）、问号（?）。\n"
-                    "如果问题要求给出逗号分隔的列表，请根据元素是数字还是字符串分别应用以上规则。\n"
-                    "不要在答案输出中包含任何标点（如 .、!、?）结尾，也不要包含任何不可见或不可打印的字符。"
+                    "**关键要求 - 引用规范**：\n"
+                    "你的最终答案必须为所有事实和论断添加行内引用。请遵循以下规则：\n"
+                    "1. 引用必须紧跟在它所支持的事实或句子之后\n"
+                    "2. 使用以下引用格式：\n"
+                    "   - RAG来源：[RAG-1]、[RAG-2] 等\n"
+                    "   - 图片：[图片: 文件名] 或 [Image: filename]\n"
+                    "   - 文档：[文档: 文件名] 或 [Doc: filename]\n"
+                    "   - 网页：[网页: URL] 或 [Web: URL]\n"
+                    "3. 不要把引用集中放在段落末尾\n"
+                    "4. 每个论断都必须可追溯到其来源\n\n"
+                    "正确引用示例：\n"
+                    "该基准包含15个任务 [RAG-1]。它涵盖推理和检索 [RAG-2]。\n\n"
+                    "错误引用示例（不要这样做）：\n"
+                    "该基准包含15个任务。它涵盖推理和检索。[RAG-1][RAG-2]\n\n"
+                    # "请将你的最终答案包裹在 \\boxed{} 中。\n"
+                    # "最终答案必须是以下格式之一：\n"
+                    # "- 一个数字，或\n"
+                    # "- 尽可能少的词语，或\n"
+                    # "- 一个由逗号分隔的数字和/或字符串列表。\n\n"
+                    # "此外，你的最终答案必须严格遵循原始问题中的格式要求——"
+                    # "例如字母顺序、排列顺序、单位、四舍五入、保留小数位等。\n"
+                    # "如果问题要求给出数字，请直接用阿拉伯数字表示，不要写成文字，不要使用千分位逗号，也不要包含任何单位符号（如 $、USD、%），除非问题中明确要求。\n"
+                    # "如果问题要求给出字符串，请不要加冠词或缩写（例如城市名），除非问题中明确要求。答案结尾不要使用任何句号（.）、感叹号（!）、问号（?）。\n"
+                    # "如果问题要求给出逗号分隔的列表，请根据元素是数字还是字符串分别应用以上规则。\n"
+                    # "不要在答案输出中包含任何标点（如 .、!、?）结尾，也不要包含任何不可见或不可打印的字符。"
                 )
             )
     elif agent_type == "agent-browsing":

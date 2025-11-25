@@ -552,6 +552,25 @@ def create_mcp_server_parameters(cfg: DictConfig, agent_cfg: DictConfig):
             }
         )
 
+    # RAG tool for long context document search
+    if (
+        agent_cfg.get("tools", None) is not None
+        and "tool-rag" in agent_cfg["tools"]
+    ):
+        configs.append(
+            {
+                "name": "tool-rag",
+                "params": StdioServerParameters(
+                    command=sys.executable,
+                    args=["-m", "miroflow_tools.mcp_servers.rag_mcp_server"],
+                    env={
+                        "OPENAI_API_KEY": OPENAI_API_KEY,
+                        "OPENAI_BASE_URL": OPENAI_BASE_URL,
+                    },
+                ),
+            }
+        )
+
     blacklist = set()
     for black_list_item in agent_cfg.get("tool_blacklist", []):
         blacklist.add((black_list_item[0], black_list_item[1]))

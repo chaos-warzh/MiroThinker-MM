@@ -1,12 +1,13 @@
 # conf/llm/default.yaml - Default LLM configuration
-provider: "anthropic" # openai, anthropic, qwen
-model_name: "claude-3-7-sonnet-20250219"
+provider: "openai" # openai, anthropic, qwen
+model_name: "gpt-4.1"
 async_client: false
 temperature: 0.3
 top_p: 1.0
 min_p: 0.0
 top_k: -1
 max_tokens: 4096
-api_key: ""
-base_url: https://api.anthropic.com
+max_context_length: 200000
+api_key: "f9730c76c39b4f70beb16572890a952d"
+base_url: https://idealab.alibaba-inc.com/api/openai/v1
 keep_tool_result: -1
