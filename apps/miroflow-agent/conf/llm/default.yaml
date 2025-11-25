@@ -1,5 +1,5 @@
-# conf/llm/default.yaml - Default LLM configuration
-#
+conf/llm/default.yaml - Default LLM configuration
+
 # NOTE: Sensitive information (api_key, base_url) should be set in .env file
 # The system will automatically read from environment variables:
 #   - OPENAI_API_KEY / OPENAI_BASE_URL (for openai/qwen provider)
