@@ -8,6 +8,6 @@ min_p: 0.0
 top_k: -1
 max_tokens: 4096
 max_context_length: 200000
-api_key: "f9730c76c39b4f70beb16572890a952d"
-base_url: https://idealab.alibaba-inc.com/api/openai/v1
+api_key: ""
+base_url: 
 keep_tool_result: -1
