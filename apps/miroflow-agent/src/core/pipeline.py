@@ -13,8 +13,9 @@
 # limitations under the License.
 
 
+import os
 import traceback
-from typing import Any, Dict, List, Optional
+from typing import Any, Dict, List, Optional, Union
 
 from miroflow_tools.manager import ToolManager
 from omegaconf import DictConfig
@@ -36,9 +37,9 @@ async def execute_task_pipeline(
     cfg: DictConfig,
     task_id: str,
     task_description: str,
-    task_file_name: str,
+    task_file_paths: Union[str, List[str]],
     main_agent_tool_manager: ToolManager,
-    sub_agent_tool_managers: List[Dict[str, ToolManager]],
+    sub_agent_tool_managers: Dict[str, ToolManager],
     output_formatter: OutputFormatter,
     ground_truth: Optional[Any] = None,
     log_dir: str = "logs",
@@ -52,7 +53,7 @@ async def execute_task_pipeline(
     Args:
         cfg: The Hydra configuration object.
         task_description: The description of the task for the LLM.
-        task_file_name: The path to an associated file (optional).
+        task_file_paths: The path(s) to associated file(s) (optional).
         task_id: A unique identifier for this task run (used for logging).
         main_agent_tool_manager: An initialized main agent ToolManager instance.
         sub_agent_tool_managers: A dictionary of initialized sub-agent ToolManager instances.
@@ -73,7 +74,7 @@ async def execute_task_pipeline(
         log_dir=log_dir,
         task_id=task_id,
         start_time=get_utc_plus_8_time(),
-        input={"task_description": task_description, "task_file_name": task_file_name},
+        input={"task_description": task_description, "task_file_paths": task_file_paths},
         env_info=get_env_info(cfg),
         ground_truth=ground_truth,
     )
@@ -105,11 +106,44 @@ async def execute_task_pipeline(
             sub_agent_tool_definitions=sub_agent_tool_definitions,
         )
 
-        final_summary, final_boxed_answer = await orchestrator.run_main_agent(
-            task_description=task_description,
-            task_file_name=task_file_name,
-            task_id=task_id,
-        )
+        # Decide which workflow to run based on agent mode
+        agent_mode = getattr(getattr(cfg, "agent", None), "mode", None)
+
+        if agent_mode == "report":
+            # Multi-stage report workflow: returns a single markdown report string
+            final_report = await orchestrator.run_report_workflow(task_description)
+
+            # Save report to file for later inspection
+            report_dir = "report"
+            report_file_name = f"{task_id}.md"
+            report_path = os.path.join(report_dir, report_file_name)
+            try:
+                os.makedirs(report_dir, exist_ok=True)
+                with open(report_path, "w", encoding="utf-8") as f:
+                    f.write(final_report or "")
+                task_log.log_step(
+                    "info",
+                    "Report | Save",
+                    f"Saved final report to {report_path}",
+                )
+            except Exception as e:
+                task_log.log_step(
+                    "error",
+                    "Report | Save",
+                    f"Failed to save report to {report_path}: {e}",
+                )
+
+            # Reuse existing formatter to get summary/boxed answer
+            final_summary, final_boxed_answer, _ = output_formatter.format_final_summary_and_log(
+                final_report, llm_client
+            )
+        else:
+            # Default behavior: run main agent loop
+            final_summary, final_boxed_answer = await orchestrator.run_main_agent(
+                task_description=task_description,
+                task_file_paths=task_file_paths,
+                task_id=task_id,
+            )
 
         llm_client.close()
 
@@ -131,7 +165,7 @@ async def execute_task_pipeline(
         error_message = (
             f"Error executing task {task_id}:\n"
             f"Description: {task_description}\n"
-            f"File: {task_file_name}\n"
+            f"Files: {task_file_paths}\n"
             f"Error Type: {type(e).__name__}\n"
             f"Error Details:\n{error_details}"
         )

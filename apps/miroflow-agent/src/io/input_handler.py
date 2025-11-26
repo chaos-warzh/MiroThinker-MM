@@ -38,7 +38,7 @@ from youtube_transcript_api._api import YouTubeTranscriptApi
 from youtube_transcript_api.formatters import SRTFormatter
 
 
-def process_input(task_description, task_file_name):
+def process_input(task_description, task_file_paths):
     """
     Process user input, especially files.
     Returns formatted initial user message content list and updated task description.
@@ -46,7 +46,18 @@ def process_input(task_description, task_file_name):
     initial_user_content = ""
     updated_task_description = task_description
 
-    if task_file_name:
+    # Normalize to list
+    files_to_process = []
+    if isinstance(task_file_paths, str):
+        if task_file_paths:
+            files_to_process = [task_file_paths]
+    elif isinstance(task_file_paths, list):
+        files_to_process = task_file_paths
+
+    for task_file_name in files_to_process:
+        if not task_file_name:
+            continue
+
         try:
             file_extension = task_file_name.rsplit(".", maxsplit=1)[-1].lower()
             parsing_result = None
@@ -253,12 +264,12 @@ def process_input(task_description, task_file_name):
                 pass  # for image file
 
         except FileNotFoundError:
-            raise (f"Error: File not found {task_file_name}")
+            # raise (f"Error: File not found {task_file_name}")
             updated_task_description += (
                 f"\nWarning: The specified file '{task_file_name}' was not found."
             )
         except Exception as e:
-            raise (f"Error: Error processing file {task_file_name}: {e}")
+            # raise (f"Error: Error processing file {task_file_name}: {e}")
             updated_task_description += (
                 f"\nWarning: There was an error processing the file '{task_file_name}'."
             )

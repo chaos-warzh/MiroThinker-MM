@@ -93,6 +93,406 @@ class Orchestrator:
         # Record used subtask / q / Query
         self.used_queries = {}
 
+    # =========================
+    # Multi-stage report workflow
+    # =========================
+
+    async def run_report_workflow(self, task_description: str) -> str:
+        """High-level multi-stage report workflow.
+
+        Stages:
+        1) Research: use existing browsing sub-agent/tools to collect notes
+        2) Outline: generate structured outline (JSON-like) from research notes
+        3) Section writing: generate each section's content based on outline
+        4) Polish: global refinement + formatting to final markdown report
+        """
+
+        self.task_log.log_step(
+            "info", "Report Workflow", "Starting multi-stage report workflow",
+        )
+
+        research_notes = await self._run_research_phase(task_description)
+        outline = await self._generate_outline_phase(task_description, research_notes)
+        draft_sections = await self._write_sections_phase(
+            task_description, outline, research_notes
+        )
+        final_report = await self._polish_phase(
+            task_description, draft_sections, research_notes, outline=outline
+        )
+
+        self.task_log.log_step(
+            "info", "Report Workflow", "Completed multi-stage report workflow",
+        )
+
+        # Also log a brief preview to console for debugging (truncated)
+        preview = (final_report or "").strip()
+        if len(preview) > 500:
+            preview = preview[:500] + "... [truncated]"
+        logger.info("[Report Workflow] Final report preview:\n%s", preview)
+
+        return final_report
+
+    async def _run_research_phase(self, task_description: str) -> List[str]:
+        """Stage 1: use existing sub-agent/tools to collect research notes.
+
+        For now we simply call agent-browsing (if configured) as a research
+        helper and treat its final answer as a single research note.
+        """
+
+        self.task_log.log_step(
+            "info", "Report | Research", "Starting research phase",
+        )
+
+        research_notes: List[str] = []
+
+        # Prefer an explicit browsing sub-agent if available
+        if "agent-browsing" in self.sub_agent_tool_managers:
+            try:
+                subtask = (
+                    task_description
+                    + "\n\nPlease collect background information, key facts, data, and references that are helpful for writing a technical report."
+                )
+                browsing_result = await self.run_sub_agent(
+                    "agent-browsing", subtask
+                )
+                if isinstance(browsing_result, str) and browsing_result.strip():
+                    research_notes.append(browsing_result.strip())
+            except Exception as e:
+                self.task_log.log_step(
+                    "warning",
+                    "Report | Research",
+                    f"agent-browsing failed, skip research phase: {e}",
+                )
+
+        # If no notes collected (or no browsing agent), still return a fallback
+        if not research_notes:
+            research_notes.append(
+                "(No external research collected; write based on task description and your own knowledge.)"
+            )
+
+        # Log research notes length / brief preview
+        preview = "\n---\n".join(note[:500] for note in research_notes)
+        self.task_log.log_step(
+            "info",
+            "Report | Research",
+            f"Finished research phase, collected {len(research_notes)} notes. Preview:\n{preview}",
+        )
+        return research_notes
+
+    async def _generate_outline_phase(
+        self, task_description: str, research_notes: List[str]
+    ) -> Dict[str, Any]:
+        """Stage 2: generate a structured outline for the report.
+
+        We ask the LLM to output JSON-like text. We keep parsing simple here:
+        try json.loads, otherwise wrap as a minimal outline with one section.
+        """
+
+        self.task_log.log_step(
+            "info", "Report | Outline", "Starting outline phase",
+        )
+
+        system_prompt = (
+            "You are an expert researcher and technical writer. "
+            "Create a comprehensive outline for a research report based on the provided task and research notes. "
+            "The structure should follow standard academic or professional report conventions.\n"
+            "Guidelines:\n"
+            "- **Language**: Detect the language of the task description. The outline (titles and summaries) MUST be in the SAME language (Chinese or English).\n"
+            "- **Word Count Planning**: Check if the task specifies a total word count (e.g., '1500-2000 words'). If so, you MUST plan the word count for EACH section to ensure the total meets the requirement. Even if not specified, aim for a comprehensive length (~1500 words) and allocate accordingly.\n"
+            "- **Structure**: Each section object MUST include a 'word_count' field specifying the target length. The value must be in the SAME language as the outline (e.g., '~300字' for Chinese, '~300 words' for English).\n"
+            "- The outline must include 'Introduction' (or '引言'), 'Conclusion' (or '结论'), and 'References' (or '参考资料') sections, translated appropriately.\n"
+            "- Organize the main body into logical sections and subsections based on the research findings.\n"
+            "- Do NOT use generic section titles like 'Main Report Body' or 'Body'. Use descriptive titles.\n"
+            "- Output STRICTLY in JSON format with the following structure:\n"
+            "{\n"
+            "  \"title\": \"Proposed Report Title\",\n"
+            "  \"sections\": [\n"
+            "    {\n"
+            "      \"id\": \"1\",\n"
+            "      \"title\": \"Introduction\",\n"
+            "      \"summary\": \"Context, objectives, and scope.\",\n"
+            "      \"word_count\": \"~200 words\"\n"
+            "    },\n"
+            "    ...\n"
+            "    {\n"
+            "      \"id\": \"N\",\n"
+            "      \"title\": \"References\",\n"
+            "      \"summary\": \"List of sources.\",\n"
+            "      \"word_count\": \"~100 words\"\n"
+            "    }\n"
+            "  ]\n"
+            "}"
+        )
+
+        user_prompt = (
+            f"Task description:\n{task_description}\n\n"
+            "Research notes (may be truncated):\n"
+            + "\n\n".join(research_notes)
+        )
+
+        # Reuse main-agent style system prompt for tools/context if desired
+        # but here we keep it simple and avoid tools.
+        message_history = [
+            {"role": "user", "content": user_prompt},
+        ]
+
+        response, message_history = await self.llm_client.create_message(
+            system_prompt=system_prompt,
+            message_history=message_history,
+            tool_definitions=None,
+            keep_tool_result=-1,
+            step_id=0,
+            task_log=self.task_log,
+            agent_type="main",
+        )
+
+        outline_text = ""
+        if response is not None:
+            outline_text, _, _ = self.llm_client.process_llm_response(
+                response, message_history, agent_type="main"
+            )
+
+        # Try to parse JSON; fall back to a minimal outline structure
+        outline: Dict[str, Any]
+        try:
+            outline = json.loads(outline_text)
+            if not isinstance(outline, dict):
+                raise ValueError("Outline root is not a JSON object")
+        except Exception as e:
+            self.task_log.log_step(
+                "warning",
+                "Report | Outline",
+                f"Failed to parse outline JSON, using fallback outline: {e}",
+            )
+            outline = {
+                "title": task_description[:80],
+                "sections": [
+                    {
+                        "id": "1",
+                        "title": "Introduction",
+                        "summary": "Introduction to the topic.",
+                        "word_count": "~200 words",
+                    },
+                    {
+                        "id": "2",
+                        "title": "Analysis",
+                        "summary": "Detailed analysis based on research.",
+                        "word_count": "~800 words",
+                    },
+                    {
+                        "id": "3",
+                        "title": "Conclusion",
+                        "summary": "Summary of findings.",
+                        "word_count": "~300 words",
+                    },
+                    {
+                        "id": "4",
+                        "title": "References",
+                        "summary": "List of sources.",
+                        "word_count": "~100 words",
+                    },
+                ],
+            }
+
+        # Log outline JSON (truncated if very long)
+        try:
+            outline_str = json.dumps(outline, ensure_ascii=False, indent=2)
+        except Exception:
+            outline_str = str(outline)
+        if len(outline_str) > 2000:
+            outline_str = outline_str[:2000] + "... [truncated]"
+        self.task_log.log_step(
+            "info",
+            "Report | Outline",
+            f"Finished outline phase. Outline:\n{outline_str}",
+        )
+        return outline
+
+    async def _write_sections_phase(
+        self,
+        task_description: str,
+        outline: Dict[str, Any],
+        research_notes: List[str],
+    ) -> List[Dict[str, str]]:
+        """Stage 3: generate each section content and return as a list of dicts."""
+
+        self.task_log.log_step(
+            "info", "Report | Sections", "Starting section writing phase",
+        )
+
+        sections = outline.get("sections") or []
+        draft_sections: List[Dict[str, str]] = []
+
+        for section in sections:
+            sec_title = section.get("title", "Section")
+            sec_summary = section.get("summary", "")
+            sec_word_count = section.get("word_count", "")
+
+            system_prompt = (
+                "You are writing ONE section of a technical report. "
+                "Write only the body for the current section in Markdown. "
+                "Do not include the report title. "
+                "Do not repeat the section header (e.g. '## Introduction'). "
+                "Focus on content generation.\n"
+                "Requirements:\n"
+                "1. **Language**: Write in the SAME language as the task description and section title.\n"
+                "2. **Length**: Strictly adhere to the target word count specified in the user prompt. Do not exceed it significantly. Be concise if the limit is low."
+            )
+
+            user_prompt = (
+                f"Task description:\n{task_description}\n\n"
+                f"Current section title: {sec_title}\n"
+                f"Section summary: {sec_summary}\n"
+                f"Target word count: {sec_word_count}\n\n"
+                "Research notes (may be truncated):\n"
+                + "\n\n".join(research_notes)
+            )
+
+            message_history = [
+                {"role": "user", "content": user_prompt},
+            ]
+
+            response, message_history = await self.llm_client.create_message(
+                system_prompt=system_prompt,
+                message_history=message_history,
+                tool_definitions=None,
+                keep_tool_result=-1,
+                step_id=0,
+                task_log=self.task_log,
+                agent_type="main",
+            )
+
+            section_text = ""
+            if response is not None:
+                section_text, _, _ = self.llm_client.process_llm_response(
+                    response, message_history, agent_type="main"
+                )
+
+            if section_text:
+                draft_sections.append({"title": sec_title, "content": section_text.strip()})
+
+        # Log draft report preview
+        preview_parts = [f"## {s['title']}\n\n{s['content']}" for s in draft_sections]
+        preview = "\n\n".join(preview_parts).strip()
+        if len(preview) > 2000:
+            preview = preview[:2000] + "... [truncated]"
+        self.task_log.log_step(
+            "info",
+            "Report | Sections",
+            f"Finished section writing phase. Draft preview:\n{preview}",
+        )
+        return draft_sections
+
+    async def _polish_phase(
+        self,
+        task_description: str,
+        draft_sections: List[Dict[str, str]],
+        research_notes: List[str],
+        outline: Optional[Dict[str, Any]] = None,
+    ) -> str:
+        """Stage 4: global polish + formatting to final markdown report.
+
+        Optimized to handle long contexts by:
+        1. Removing raw research notes (relying on draft content).
+        2. Segmenting processing (Front matter, Sections).
+        """
+
+        self.task_log.log_step(
+            "info", "Report | Polish", "Starting polish phase (segmented)",
+        )
+
+        polished_parts = []
+
+        # 1. Generate Title and Abstract (Front Matter)
+        if outline:
+            system_prompt = (
+                "You are a senior technical writer. "
+                "Based on the task and outline, write the Title and Abstract for the report.\n"
+                "Requirements:\n"
+                "1. **Language**: Detect the language of the task. If Chinese, use Chinese for the Title and Abstract content. If English, use English.\n"
+                "2. **Headers**: If Chinese, use '## 摘要' instead of '## Abstract'.\n"
+                "Format:\n"
+                "# [Report Title]\n\n"
+                "## Abstract (or 摘要)\n"
+                "[Abstract Content]\n\n"
+                "Output ONLY the Markdown content. Do not include Introduction."
+            )
+            outline_str = json.dumps(outline, ensure_ascii=False, indent=2)
+            user_prompt = (
+                f"Task: {task_description}\n\n"
+                f"Outline:\n{outline_str}\n"
+            )
+
+            message_history = [{"role": "user", "content": user_prompt}]
+            response, message_history = await self.llm_client.create_message(
+                system_prompt=system_prompt,
+                message_history=message_history,
+                tool_definitions=None,
+                keep_tool_result=-1,
+                step_id=0,
+                task_log=self.task_log,
+                agent_type="main",
+            )
+            if response:
+                text, _, _ = self.llm_client.process_llm_response(
+                    response, message_history, agent_type="main"
+                )
+                if text:
+                    polished_parts.append(text)
+
+        # 2. Polish Sections
+        for section in draft_sections:
+            title = section["title"]
+            content = section["content"]
+            full_text = f"## {title}\n\n{content}"
+
+            system_prompt = (
+                "You are a senior technical writer. "
+                "Polish the following report section. Improve clarity, flow, and tone. "
+                "Fix any grammar issues. Keep the Markdown format (headers, lists, etc.). "
+                "Do NOT remove the section header.\n"
+                "Requirements:\n"
+                "1. **Language**: Ensure the content is in the same language as the input (Chinese or English).\n"
+                "2. **Length**: Respect any implied length constraints from the content. Do not arbitrarily shorten detailed technical content unless it is repetitive.\n"
+                "IMPORTANT: Output ONLY the polished Markdown content. Do not add conversational filler.\n"
+                "CRITICAL: Convert all plain text URLs into Markdown hyperlinks (e.g., [Title](url))."
+            )
+            user_prompt = f"Section Content:\n{full_text}"
+
+            message_history = [{"role": "user", "content": user_prompt}]
+            response, message_history = await self.llm_client.create_message(
+                system_prompt=system_prompt,
+                message_history=message_history,
+                tool_definitions=None,
+                keep_tool_result=-1,
+                step_id=0,
+                task_log=self.task_log,
+                agent_type="main",
+            )
+            if response:
+                text, _, _ = self.llm_client.process_llm_response(
+                    response, message_history, agent_type="main"
+                )
+                if text:
+                    polished_parts.append(text)
+                else:
+                    polished_parts.append(full_text)
+            else:
+                polished_parts.append(full_text)
+
+        final_report = "\n\n".join(polished_parts)
+
+        # Log final polished report preview
+        preview = final_report.strip()
+        if len(preview) > 2000:
+            preview = preview[:2000] + "... [truncated]"
+        self.task_log.log_step(
+            "info",
+            "Report | Polish",
+            f"Finished polish phase. Final report preview:\n{preview}",
+        )
+        return final_report
+
     async def _stream_update(self, event_type: str, data: dict):
         """Send streaming update in new SSE protocol format"""
         if self.stream_queue:
@@ -724,7 +1124,7 @@ class Orchestrator:
         return final_answer_text
 
     async def run_main_agent(
-        self, task_description, task_file_name=None, task_id="default_task"
+        self, task_description, task_file_paths=None, task_id="default_task"
     ):
         """Execute the main end-to-end task"""
         workflow_id = await self._stream_start_workflow(task_description)
@@ -734,21 +1134,21 @@ class Orchestrator:
         self.task_log.log_step(
             "info", "Main Agent", f"Task description: {task_description}"
         )
-        if task_file_name:
+        if task_file_paths:
             self.task_log.log_step(
-                "info", "Main Agent", f"Associated file: {task_file_name}"
+                "info", "Main Agent", f"Associated files: {task_file_paths}"
             )
 
         # 1. Process input
         initial_user_content, processed_task_desc = process_input(
-            task_description, task_file_name
+            task_description, task_file_paths
         )
         message_history = [{"role": "user", "content": initial_user_content}]
 
         # Record initial user input
         user_input = processed_task_desc
-        if task_file_name:
-            user_input += f"\n[Attached file: {task_file_name}]"
+        if task_file_paths:
+            user_input += f"\n[Attached files: {task_file_paths}]"
 
         # 2. Get tool definitions
         if not self.tool_definitions:

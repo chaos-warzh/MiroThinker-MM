@@ -220,3 +220,9 @@ data/
 .DS_Store
 
 apps/collect-trace/scripts/*/*.sh
+
+deep_research_bench-main/
+
+cases1114/
+
+apps/miroflow-agent/report/

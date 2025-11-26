@@ -13,7 +13,15 @@ uv run python main.py llm=gpt-5 agent=evaluation_os benchmark=debug
 
 # Use a different benchmark configuration
 uv run python main.py llm=qwen-3 agent=evaluation_os benchmark=debug llm.base_url=<base_url>
+
+cd apps/miroflow-agent/
+
+set -a; source .env; set +a
+
+uv run python main.py   llm=qwen-3 agent=report benchmark=debug   llm.base_url="$OPENAI_BASE_URL"   llm.api_key="$OPENAI_API_KEY"
+
 ```
+
 
 This will execute the default task: "What is the title of today's arxiv paper in computer science?"
 

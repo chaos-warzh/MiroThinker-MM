@@ -130,6 +130,7 @@ async def vision_understanding_advanced(
 async def vision_quick_answer(
     image_path_or_url: str,
     question: str,
+    enable_verification: bool = False,
 ) -> str:
     """
     Quick vision question answering without multi-turn verification.
@@ -140,6 +141,7 @@ async def vision_quick_answer(
     Args:
         image_path_or_url: Local file path or URL of the image
         question: Question about the image
+        enable_verification: (Optional) Ignored for quick answer, included for compatibility.
     
     Returns:
         JSON with answer, confidence, and basic metadata
@@ -166,6 +168,7 @@ async def vision_quick_answer(
 @mcp.tool()
 async def vision_extract_metadata(
     image_path_or_url: str,
+    enable_verification: bool = False,
 ) -> str:
     """
     Extract visual metadata from an image without answering a specific question.
@@ -174,6 +177,7 @@ async def vision_extract_metadata(
     
     Args:
         image_path_or_url: Local file path or URL of the image
+        enable_verification: (Optional) Ignored for metadata extraction, included for compatibility.
     
     Returns:
         JSON with extracted visual information:

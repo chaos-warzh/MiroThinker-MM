@@ -120,7 +120,6 @@ class OpenAIClient(BaseClient):
             "model": self.model_name,
             "temperature": self.temperature,
             "messages": messages_history,
-            "tools": [],
             "stream": False,
             "top_p": self.top_p,
         }
@@ -131,6 +130,21 @@ class OpenAIClient(BaseClient):
         else:
             # Use 'max_tokens' for GPT-4 and other models
             params["max_tokens"] = self.max_tokens
+
+        # Attach OpenAI function tools only when enabled and non-empty.
+        # This prevents DashScope 400: "[] is too short - 'tools'".
+        try:
+            # self.use_tool_calls is set from cfg.llm.use_tool_calls (may be False/None by default)
+            if getattr(self, "use_tool_calls", False) and tools_definitions:
+                tool_list = await self.convert_tool_definition_to_tool_call(
+                    tools_definitions
+                )
+                if tool_list:  # only attach when non-empty
+                    params["tools"] = tool_list
+        except Exception as e:
+            self.task_log.log_step(
+                "warning", "LLM | Tool Def Convert", f"Skip attaching tools due to conversion error: {e}"
+            )
 
         try:
             if self.async_client:
