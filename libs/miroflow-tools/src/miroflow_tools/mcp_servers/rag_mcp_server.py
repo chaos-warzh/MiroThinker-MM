@@ -202,14 +202,19 @@ def rag_search(
         ]
         
         for i, result in enumerate(results, 1):
-            # Create a unique citation ID for this result
-            citation_id = f"[RAG-{i}]"
+            # Create a detailed citation ID for this result
+            # Format: [long_context: "文档标题", chunk X]
+            title_short = result.title[:50] if result.title else "Untitled"
+            chunk_idx = result.metadata.get('chunk_index', result.chunk_index if hasattr(result, 'chunk_index') else 0)
+            citation_id = f'[long_context: "{title_short}", chunk {chunk_idx}]'
             
             output_parts.append(f"\n{'='*60}")
-            output_parts.append(f"Result {i} | Citation ID: {citation_id}")
+            output_parts.append(f"Result {i}")
+            output_parts.append(f"Citation: {citation_id}")
             output_parts.append(f"{'='*60}")
             output_parts.append(f"Relevance Score: {result.score:.3f}")
             output_parts.append(f"Document Index: {result.doc_index}")
+            output_parts.append(f"Chunk Index: {chunk_idx}")
             output_parts.append(f"Title: {result.title}")
             
             if result.metadata.get('url'):
@@ -217,7 +222,8 @@ def rag_search(
             if result.metadata.get('source'):
                 output_parts.append(f"Source Type: {result.metadata['source']}")
             
-            output_parts.append(f"\n--- Content (use {citation_id} to cite this) ---")
+            output_parts.append(f"\n--- Content ---")
+            output_parts.append(f"(Cite as: {citation_id})")
             # Show more content for better context
             content_preview = result.content[:3000] if len(result.content) > 3000 else result.content
             output_parts.append(content_preview)
@@ -230,9 +236,9 @@ def rag_search(
         # Add citation guidance
         output_parts.append("\n" + "="*60)
         output_parts.append("CITATION GUIDANCE:")
-        output_parts.append("When using information from these results in your report,")
-        output_parts.append("please cite using the format: [RAG-N] where N is the result number,")
-        output_parts.append("or cite the specific document title/URL for clarity.")
+        output_parts.append("When citing information from long_context.json, use the format:")
+        output_parts.append('  [long_context: "Document Title", chunk N]')
+        output_parts.append("For PDF/image files, use: [filename.pdf, page X] or [filename.png]")
         output_parts.append("="*60)
         
         return "\n".join(output_parts)
@@ -296,14 +302,19 @@ def rag_get_context(
         max_chars = max_tokens * 4  # Approximate chars per token
         
         for i, result in enumerate(results, 1):
-            citation_id = f"[Context-{i}]"
+            # Create detailed citation format: [long_context: "文档标题", chunk X]
+            title_short = result.title[:50] if result.title else "Untitled"
+            chunk_idx = result.metadata.get('chunk_index', result.chunk_index if hasattr(result, 'chunk_index') else 0)
+            citation_id = f'[long_context: "{title_short}", chunk {chunk_idx}]'
             
             # Build document header
             doc_header = [
                 f"\n{'='*50}",
-                f"Source {i} {citation_id}",
+                f"Source {i}",
+                f"Citation: {citation_id}",
                 f"Title: {result.title}",
                 f"Document Index: {result.doc_index}",
+                f"Chunk Index: {chunk_idx}",
                 f"Relevance Score: {result.score:.3f}",
             ]
             
@@ -329,8 +340,10 @@ def rag_get_context(
         
         # Add citation guidance
         output_parts.append("\n" + "="*50)
-        output_parts.append("CITATION REMINDER:")
-        output_parts.append("Use [Context-N] or document titles to cite sources in your report.")
+        output_parts.append("CITATION GUIDANCE:")
+        output_parts.append("When citing information from long_context.json, use the format:")
+        output_parts.append('  [long_context: "Document Title", chunk N]')
+        output_parts.append("For PDF/image files, use: [filename.pdf, page X] or [filename.png]")
         output_parts.append("="*50)
         
         print(f"[RAG] Retrieved context length: {sum(len(p) for p in output_parts)} chars")

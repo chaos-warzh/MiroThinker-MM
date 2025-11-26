@@ -61,7 +61,7 @@ def save_report_to_md(
     query: str = None,
 ) -> str:
     """
-    Save the final report to a markdown file.
+    Save the final report to a markdown file with timestamp.
     
     Args:
         results_dir: Directory to save results
@@ -74,7 +74,9 @@ def save_report_to_md(
         Path to the saved file
     """
     os.makedirs(results_dir, exist_ok=True)
-    result_path = os.path.join(results_dir, f"{folder_name}.md")
+    # Add timestamp to filename to avoid overwriting
+    timestamp = datetime.now().strftime('%Y-%m-%d_%H-%M-%S')
+    result_path = os.path.join(results_dir, f"{folder_name}_{timestamp}.md")
     
     with open(result_path, 'w', encoding='utf-8') as f:
         f.write(f"# Task Report: {folder_name}\n\n")
