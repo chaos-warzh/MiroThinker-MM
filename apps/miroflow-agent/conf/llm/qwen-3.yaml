@@ -4,6 +4,8 @@ defaults:
   - _self_
 
 provider: "qwen"
-model_name: "qwen-3"
-base_url: "https://your-api.com/v1"
-max_context_length: 65536
+model_name: "qwen3-235b-a22b-instruct-2507"
+# base_url: "https://dashscope.aliyuncs.com/compatible-mode/v1"
+base_url: "http://14.103.68.46/v1"
+max_tokens: 16384
+max_context_length: 128000
