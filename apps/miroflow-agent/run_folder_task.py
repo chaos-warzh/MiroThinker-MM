@@ -22,13 +22,14 @@ This script demonstrates how to process a folder containing multiple files
 Usage:
     uv run python run_folder_task.py --folder data/000 --query "请根据图片的重要属性，整理pdf中提到的重要文献，按照图片表格的形式整合，输出1000字左右的文献综述分析。"
     uv run python run_folder_task.py --folder data/001 --query "请根据图片的重要属性，以及pdf的文献，同时参考long context里面的内容，输出1000字左右的文献综述分析。"
-
+    uv run python run_folder_task.py --folder data/bench_case1104/001 --query "Assume you are a cultural travel researcher preparing a comprehensive tourism report for an international travel magazine. Based on the materials I provide, please write a report titled 'Exploring Cambodia: A Cultural and Culinary Journey'. The report should analyze Cambodia’s major tourist attractions, recommend representative local cuisines, and provide practical travel tips for international visitors.\n\nRequirements:\n1. The report must integrate information from the provided documents and, where necessary, additional verified online sources.\n2. All factual statements must be accurate, verifiable, and properly cited with clear references to both the source document and specific location.\n3. The writing style should be formal, engaging, and suitable for publication in an academic travel review.\n4. The report should be between 500 and 600 words."
 """
 
 import argparse
 import asyncio
 import os
 import sys
+from datetime import datetime
 
 import hydra
 from omegaconf import DictConfig, OmegaConf
@@ -47,6 +48,50 @@ except ImportError:
     set_retrieval_log_path = None
 
 logger = bootstrap_logger()
+
+# Default results directory
+DEFAULT_RESULTS_DIR = "results"
+
+
+def save_report_to_md(
+    results_dir: str,
+    folder_name: str,
+    final_answer: str,
+    summary: str = None,
+    query: str = None,
+) -> str:
+    """
+    Save the final report to a markdown file.
+    
+    Args:
+        results_dir: Directory to save results
+        folder_name: Name of the task folder (used as filename)
+        final_answer: The final boxed answer/report
+        summary: Optional summary text
+        query: Optional original query
+        
+    Returns:
+        Path to the saved file
+    """
+    os.makedirs(results_dir, exist_ok=True)
+    result_path = os.path.join(results_dir, f"{folder_name}.md")
+    
+    with open(result_path, 'w', encoding='utf-8') as f:
+        f.write(f"# Task Report: {folder_name}\n\n")
+        f.write(f"Generated at: {datetime.now().strftime('%Y-%m-%d %H:%M:%S')}\n\n")
+        
+        if query:
+            f.write("## Query\n\n")
+            f.write(f"{query}\n\n")
+        
+        f.write("## Final Report\n\n")
+        f.write(final_answer if final_answer else "No answer generated.")
+        
+        if summary:
+            f.write("\n\n## Summary\n\n")
+            f.write(summary)
+    
+    return result_path
 
 
 async def run_folder_task(
@@ -206,6 +251,35 @@ def preview_folder(folder_path: str, recursive: bool = False) -> None:
     print("\n" + "=" * 60)
 
 
+def get_results_dir_for_folder(folder_path: str) -> str:
+    """
+    Determine the results directory based on folder path structure.
+    
+    For paths like 'data/bench_case1104/001', returns 'results/bench_case1104'
+    For paths like 'data/000', returns 'results'
+    
+    Args:
+        folder_path: Path to the task folder
+        
+    Returns:
+        Path to the results directory
+    """
+    abs_path = os.path.abspath(folder_path)
+    parts = abs_path.split(os.sep)
+    
+    # Find 'data' in path and get the structure after it
+    try:
+        data_idx = parts.index('data')
+        # If there's a parent folder between 'data' and the task folder
+        if len(parts) > data_idx + 2:
+            parent_folder = parts[data_idx + 1]
+            return os.path.join(DEFAULT_RESULTS_DIR, parent_folder)
+    except ValueError:
+        pass
+    
+    return DEFAULT_RESULTS_DIR
+
+
 @hydra.main(config_path="conf", config_name="config", version_base=None)
 def main(cfg: DictConfig) -> None:
     """Main entry point with Hydra config."""
@@ -216,6 +290,7 @@ def main(cfg: DictConfig) -> None:
     parser.add_argument("--task-id", "-t", default=None, help="Task ID")
     parser.add_argument("--recursive", "-r", action="store_true", help="Scan recursively")
     parser.add_argument("--preview", "-p", action="store_true", help="Preview folder only")
+    parser.add_argument("--results-dir", "-o", default=None, help="Directory to save results (default: auto-detect)")
     
     # Parse known args (Hydra handles the rest)
     args, _ = parser.parse_known_args()
@@ -235,10 +310,22 @@ def main(cfg: DictConfig) -> None:
         )
     )
     
+    # Save report to markdown file
+    folder_name = os.path.basename(os.path.abspath(args.folder))
+    results_dir = args.results_dir if args.results_dir else get_results_dir_for_folder(args.folder)
+    report_path = save_report_to_md(
+        results_dir=results_dir,
+        folder_name=folder_name,
+        final_answer=final_boxed_answer,
+        summary=final_summary,
+        query=args.query,
+    )
+    
     print("\n" + "=" * 60)
     print("TASK COMPLETED")
     print("=" * 60)
     print(f"\nLog file: {log_file_path}")
+    print(f"Report saved to: {report_path}")
     print(f"\nFinal Answer:\n{final_boxed_answer}")
     print("\n" + "=" * 60)
 
@@ -252,6 +339,7 @@ if __name__ == "__main__":
         parser.add_argument("--query", "-q", required=True, help="Query about folder contents")
         parser.add_argument("--preview", "-p", action="store_true", help="Preview folder only")
         parser.add_argument("--recursive", "-r", action="store_true", help="Scan recursively")
+        parser.add_argument("--results-dir", "-o", default=None, help="Directory to save results")
         
         args = parser.parse_args()
         
@@ -259,10 +347,28 @@ if __name__ == "__main__":
             preview_folder(args.folder, args.recursive)
         else:
             # Run with default config
-            result = asyncio.run(
+            final_summary, final_boxed_answer, log_file_path = asyncio.run(
                 run_folder_task_simple(args.folder, args.query)
             )
-            print(f"\nFinal Answer:\n{result[1]}")
+            
+            # Save report to markdown file
+            folder_name = os.path.basename(os.path.abspath(args.folder))
+            results_dir = args.results_dir if args.results_dir else get_results_dir_for_folder(args.folder)
+            report_path = save_report_to_md(
+                results_dir=results_dir,
+                folder_name=folder_name,
+                final_answer=final_boxed_answer,
+                summary=final_summary,
+                query=args.query,
+            )
+            
+            print("\n" + "=" * 60)
+            print("TASK COMPLETED")
+            print("=" * 60)
+            print(f"\nLog file: {log_file_path}")
+            print(f"Report saved to: {report_path}")
+            print(f"\nFinal Answer:\n{final_boxed_answer}")
+            print("\n" + "=" * 60)
     else:
         # Running with Hydra
         main()

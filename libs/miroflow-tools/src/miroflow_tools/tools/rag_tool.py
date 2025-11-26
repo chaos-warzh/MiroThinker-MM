@@ -19,6 +19,7 @@ This module provides RAG (Retrieval-Augmented Generation) functionality
 for searching and retrieving relevant passages from long context documents.
 
 Features:
+- Chunk-based document processing for handling long documents
 - SQLite-based embedding cache for fast subsequent queries
 - Semantic search using OpenAI embeddings
 - Support for long_context.json format
@@ -40,12 +41,25 @@ logger = logging.getLogger(__name__)
 
 
 @dataclass
+class ChunkInfo:
+    """Information about a document chunk."""
+    doc_index: int
+    chunk_index: int
+    title: str
+    content: str
+    url: str
+    start_char: int
+    end_char: int
+
+
+@dataclass
 class SearchResult:
     """A single search result from RAG."""
     title: str
     content: str
     score: float
     doc_index: int
+    chunk_index: int
     metadata: Dict[str, Any]
 
 
@@ -53,15 +67,22 @@ class RAGTool:
     """
     RAG Tool for semantic search over long context documents.
     
-    Uses SQLite to cache embeddings for fast subsequent queries.
+    Uses chunk-based processing to handle long documents and
+    SQLite to cache embeddings for fast subsequent queries.
     """
+    
+    # Default chunk configuration
+    DEFAULT_CHUNK_SIZE = 1500  # Characters per chunk (safe for ~750-1000 tokens)
+    DEFAULT_CHUNK_OVERLAP = 200  # Overlap between chunks for context continuity
     
     def __init__(
         self,
         api_key: str,
         base_url: str = "https://api.openai.com/v1",
         embedding_model: str = "text-embedding-3-small",
-        cache_dir: str = None
+        cache_dir: str = None,
+        chunk_size: int = None,
+        chunk_overlap: int = None
     ):
         """
         Initialize RAG Tool.
@@ -71,12 +92,17 @@ class RAGTool:
             base_url: OpenAI API base URL
             embedding_model: Model to use for embeddings
             cache_dir: Directory to store SQLite cache (default: same as document)
+            chunk_size: Maximum characters per chunk (default: 1500)
+            chunk_overlap: Overlap between chunks (default: 200)
         """
         self.client = OpenAI(api_key=api_key, base_url=base_url)
         self.embedding_model = embedding_model
         self.cache_dir = cache_dir
+        self.chunk_size = chunk_size or self.DEFAULT_CHUNK_SIZE
+        self.chunk_overlap = chunk_overlap or self.DEFAULT_CHUNK_OVERLAP
         
         self.documents: List[Dict[str, Any]] = []
+        self.chunks: List[ChunkInfo] = []
         self.embeddings: np.ndarray = None
         self.current_file: str = None
         self.db_path: str = None
@@ -92,9 +118,9 @@ class RAGTool:
         if self.cache_dir:
             os.makedirs(self.cache_dir, exist_ok=True)
             base_name = os.path.basename(file_path)
-            return os.path.join(self.cache_dir, f"{base_name}.embeddings.db")
+            return os.path.join(self.cache_dir, f"{base_name}.chunks.db")
         else:
-            return file_path + ".embeddings.db"
+            return file_path + ".chunks.db"
     
     def _init_db(self, db_path: str):
         """Initialize SQLite database for embedding cache."""
@@ -110,13 +136,23 @@ class RAGTool:
         ''')
         
         cursor.execute('''
-            CREATE TABLE IF NOT EXISTS documents (
-                doc_index INTEGER PRIMARY KEY,
+            CREATE TABLE IF NOT EXISTS chunks (
+                id INTEGER PRIMARY KEY AUTOINCREMENT,
+                doc_index INTEGER,
+                chunk_index INTEGER,
                 title TEXT,
                 content TEXT,
                 url TEXT,
+                start_char INTEGER,
+                end_char INTEGER,
                 embedding BLOB
             )
+        ''')
+        
+        # Create index for faster lookups
+        cursor.execute('''
+            CREATE INDEX IF NOT EXISTS idx_doc_chunk 
+            ON chunks(doc_index, chunk_index)
         ''')
         
         self.conn.commit()
@@ -134,7 +170,14 @@ class RAGTool:
             cursor.execute("SELECT value FROM metadata WHERE key = 'embedding_model'")
             model_result = cursor.fetchone()
             if model_result and model_result[0] == self.embedding_model:
-                return True
+                # Also check chunk configuration
+                cursor.execute("SELECT value FROM metadata WHERE key = 'chunk_size'")
+                chunk_size_result = cursor.fetchone()
+                cursor.execute("SELECT value FROM metadata WHERE key = 'chunk_overlap'")
+                chunk_overlap_result = cursor.fetchone()
+                if (chunk_size_result and int(chunk_size_result[0]) == self.chunk_size and
+                    chunk_overlap_result and int(chunk_overlap_result[0]) == self.chunk_overlap):
+                    return True
         
         return False
     
@@ -149,56 +192,158 @@ class RAGTool:
             "INSERT OR REPLACE INTO metadata (key, value) VALUES (?, ?)",
             ('embedding_model', self.embedding_model)
         )
+        cursor.execute(
+            "INSERT OR REPLACE INTO metadata (key, value) VALUES (?, ?)",
+            ('chunk_size', str(self.chunk_size))
+        )
+        cursor.execute(
+            "INSERT OR REPLACE INTO metadata (key, value) VALUES (?, ?)",
+            ('chunk_overlap', str(self.chunk_overlap))
+        )
         self.conn.commit()
     
+    def _split_into_chunks(self, text: str, doc_index: int, title: str, url: str) -> List[ChunkInfo]:
+        """
+        Split a document into chunks with overlap.
+        
+        Args:
+            text: The document text to split
+            doc_index: Index of the source document
+            title: Document title
+            url: Document URL
+            
+        Returns:
+            List of ChunkInfo objects
+        """
+        if not text or not text.strip():
+            # Return a single empty chunk for empty documents
+            return [ChunkInfo(
+                doc_index=doc_index,
+                chunk_index=0,
+                title=title,
+                content="[Empty Document]",
+                url=url,
+                start_char=0,
+                end_char=0
+            )]
+        
+        chunks = []
+        text_len = len(text)
+        start = 0
+        chunk_index = 0
+        
+        while start < text_len:
+            # Calculate end position
+            end = min(start + self.chunk_size, text_len)
+            
+            # Try to find a good break point (sentence or paragraph boundary)
+            if end < text_len:
+                # Look for paragraph break first
+                break_point = text.rfind('\n\n', start, end)
+                if break_point == -1 or break_point <= start:
+                    # Look for sentence break
+                    for sep in ['。', '！', '？', '. ', '! ', '? ', '\n']:
+                        break_point = text.rfind(sep, start, end)
+                        if break_point > start:
+                            end = break_point + len(sep)
+                            break
+                else:
+                    end = break_point + 2
+            
+            chunk_content = text[start:end].strip()
+            
+            if chunk_content:  # Only add non-empty chunks
+                chunks.append(ChunkInfo(
+                    doc_index=doc_index,
+                    chunk_index=chunk_index,
+                    title=title,
+                    content=chunk_content,
+                    url=url,
+                    start_char=start,
+                    end_char=end
+                ))
+                chunk_index += 1
+            
+            # Move start position with overlap
+            start = end - self.chunk_overlap
+            if start >= text_len:
+                break
+            # Ensure we make progress
+            if start <= chunks[-1].start_char if chunks else 0:
+                start = end
+        
+        return chunks if chunks else [ChunkInfo(
+            doc_index=doc_index,
+            chunk_index=0,
+            title=title,
+            content="[Empty Document]",
+            url=url,
+            start_char=0,
+            end_char=0
+        )]
+    
     def _load_from_cache(self) -> bool:
-        """Load documents and embeddings from cache."""
+        """Load chunks and embeddings from cache."""
         cursor = self.conn.cursor()
-        cursor.execute("SELECT doc_index, title, content, url, embedding FROM documents ORDER BY doc_index")
+        cursor.execute("""
+            SELECT doc_index, chunk_index, title, content, url, start_char, end_char, embedding 
+            FROM chunks ORDER BY doc_index, chunk_index
+        """)
         rows = cursor.fetchall()
         
         if not rows:
             return False
         
-        self.documents = []
+        self.chunks = []
         embeddings_list = []
         
         for row in rows:
-            doc_index, title, content, url, embedding_blob = row
-            self.documents.append({
-                'title': title,
-                'content': content,
-                'url': url
-            })
+            doc_index, chunk_index, title, content, url, start_char, end_char, embedding_blob = row
+            self.chunks.append(ChunkInfo(
+                doc_index=doc_index,
+                chunk_index=chunk_index,
+                title=title,
+                content=content,
+                url=url,
+                start_char=start_char,
+                end_char=end_char
+            ))
             embedding = np.frombuffer(embedding_blob, dtype=np.float32)
             embeddings_list.append(embedding)
         
         self.embeddings = np.array(embeddings_list)
-        logger.info(f"Loaded {len(self.documents)} documents from cache")
+        logger.info(f"Loaded {len(self.chunks)} chunks from cache")
         return True
     
     def _save_to_cache(self):
-        """Save documents and embeddings to cache."""
+        """Save chunks and embeddings to cache."""
         cursor = self.conn.cursor()
         
-        # Clear existing documents
-        cursor.execute("DELETE FROM documents")
+        # Clear existing chunks
+        cursor.execute("DELETE FROM chunks")
         
-        # Insert documents with embeddings
-        for i, (doc, embedding) in enumerate(zip(self.documents, self.embeddings)):
+        # Insert chunks with embeddings
+        for chunk, embedding in zip(self.chunks, self.embeddings):
             embedding_blob = embedding.astype(np.float32).tobytes()
             cursor.execute(
-                "INSERT INTO documents (doc_index, title, content, url, embedding) VALUES (?, ?, ?, ?, ?)",
-                (i, doc.get('title', ''), doc.get('content', ''), doc.get('url', ''), embedding_blob)
+                """INSERT INTO chunks 
+                   (doc_index, chunk_index, title, content, url, start_char, end_char, embedding) 
+                   VALUES (?, ?, ?, ?, ?, ?, ?, ?)""",
+                (chunk.doc_index, chunk.chunk_index, chunk.title, chunk.content, 
+                 chunk.url, chunk.start_char, chunk.end_char, embedding_blob)
             )
         
         self.conn.commit()
-        logger.info(f"Saved {len(self.documents)} documents to cache")
+        logger.info(f"Saved {len(self.chunks)} chunks to cache")
     
     def _get_embedding(self, text: str) -> np.ndarray:
         """Get embedding for a single text."""
-        # Truncate text if too long (max ~8000 tokens for embedding models)
-        max_chars = 30000
+        # Ensure text is a non-empty string with actual content
+        if not text or not isinstance(text, str) or not text.strip():
+            text = "[Empty]"
+        
+        # Truncate if still too long (shouldn't happen with proper chunking)
+        max_chars = 6000
         if len(text) > max_chars:
             text = text[:max_chars]
         
@@ -208,38 +353,58 @@ class RAGTool:
         )
         return np.array(response.data[0].embedding)
     
-    def _get_embeddings_batch(self, texts: List[str], batch_size: int = 100) -> np.ndarray:
-        """Get embeddings for multiple texts in batches."""
+    def _get_embeddings_for_chunks(self, chunks: List[ChunkInfo]) -> np.ndarray:
+        """Get embeddings for all chunks one by one."""
         all_embeddings = []
-        total = len(texts)
+        total = len(chunks)
         
-        for i in range(0, total, batch_size):
-            batch = texts[i:i + batch_size]
-            # Truncate each text
-            batch = [t[:30000] if len(t) > 30000 else t for t in batch]
+        for i, chunk in enumerate(chunks):
+            text = chunk.content
             
-            logger.info(f"Generating embeddings: {i + len(batch)}/{total}")
+            # Ensure text is valid
+            if not text or not isinstance(text, str) or not text.strip():
+                text = "[Empty]"
             
-            response = self.client.embeddings.create(
-                model=self.embedding_model,
-                input=batch
-            )
+            if (i + 1) % 10 == 0 or i == total - 1:
+                logger.info(f"Generating embeddings: {i + 1}/{total}")
             
-            batch_embeddings = [np.array(d.embedding) for d in response.data]
-            all_embeddings.extend(batch_embeddings)
+            try:
+                response = self.client.embeddings.create(
+                    model=self.embedding_model,
+                    input=text
+                )
+                embedding = np.array(response.data[0].embedding)
+                all_embeddings.append(embedding)
+            except Exception as e:
+                if "maximum context length" in str(e).lower() or "token" in str(e).lower():
+                    logger.warning(f"Chunk {i} too long, truncating...")
+                    text = text[:3000]
+                    try:
+                        response = self.client.embeddings.create(
+                            model=self.embedding_model,
+                            input=text
+                        )
+                        embedding = np.array(response.data[0].embedding)
+                        all_embeddings.append(embedding)
+                    except Exception as e2:
+                        logger.error(f"Failed to get embedding for chunk {i}: {e2}")
+                        all_embeddings.append(np.zeros(1536))
+                else:
+                    logger.error(f"Failed to get embedding for chunk {i}: {e}")
+                    all_embeddings.append(np.zeros(1536))
         
         return np.array(all_embeddings)
     
     def load_documents(self, file_path: str) -> int:
         """
-        Load documents from a long_context.json file.
+        Load documents from a long_context.json file and split into chunks.
         Uses SQLite cache if available and valid.
         
         Args:
             file_path: Path to the long_context.json file
             
         Returns:
-            Number of documents loaded
+            Number of chunks created
         """
         if not os.path.exists(file_path):
             raise FileNotFoundError(f"File not found: {file_path}")
@@ -255,7 +420,7 @@ class RAGTool:
         if self._check_cache_valid(file_hash):
             logger.info(f"Loading from cache: {self.db_path}")
             if self._load_from_cache():
-                return len(self.documents)
+                return len(self.chunks)
         
         # Load documents from JSON
         logger.info(f"Loading documents from: {file_path}")
@@ -269,25 +434,34 @@ class RAGTool:
         else:
             raise ValueError("Invalid long_context.json format")
         
-        logger.info(f"Loaded {len(self.documents)} documents, generating embeddings...")
+        logger.info(f"Loaded {len(self.documents)} documents, splitting into chunks...")
         
-        # Generate embeddings
-        texts = []
-        for doc in self.documents:
+        # Split documents into chunks
+        self.chunks = []
+        for doc_index, doc in enumerate(self.documents):
             title = doc.get('title', '')
+            url = doc.get('url', '')
             # Support both 'content' and 'page_body' field names
             content = doc.get('content', '') or doc.get('page_body', '')
-            text = f"{title}\n\n{content}" if title else content
-            texts.append(text)
+            
+            # Prepend title to content for better context
+            full_text = f"{title}\n\n{content}" if title else content
+            
+            doc_chunks = self._split_into_chunks(full_text, doc_index, title, url)
+            self.chunks.extend(doc_chunks)
         
-        self.embeddings = self._get_embeddings_batch(texts)
+        logger.info(f"Created {len(self.chunks)} chunks from {len(self.documents)} documents")
+        logger.info(f"Generating embeddings for chunks...")
+        
+        # Generate embeddings for all chunks
+        self.embeddings = self._get_embeddings_for_chunks(self.chunks)
         
         # Save to cache
         self._save_cache_metadata(file_hash)
         self._save_to_cache()
         
-        logger.info(f"Embeddings generated and cached for {len(self.documents)} documents")
-        return len(self.documents)
+        logger.info(f"Embeddings generated and cached for {len(self.chunks)} chunks")
+        return len(self.chunks)
     
     def search(
         self,
@@ -296,7 +470,7 @@ class RAGTool:
         min_score: float = 0.0
     ) -> List[SearchResult]:
         """
-        Search for relevant documents using semantic similarity.
+        Search for relevant chunks using semantic similarity.
         
         Args:
             query: Search query
@@ -306,7 +480,7 @@ class RAGTool:
         Returns:
             List of SearchResult objects
         """
-        if self.embeddings is None or len(self.documents) == 0:
+        if self.embeddings is None or len(self.chunks) == 0:
             raise ValueError("No documents loaded. Call load_documents first.")
         
         # Get query embedding
@@ -326,17 +500,17 @@ class RAGTool:
             if score < min_score:
                 continue
             
-            doc = self.documents[idx]
-            # Support both 'content' and 'page_body' field names
-            content = doc.get('content', '') or doc.get('page_body', '')
+            chunk = self.chunks[idx]
             results.append(SearchResult(
-                title=doc.get('title', ''),
-                content=content,
+                title=chunk.title,
+                content=chunk.content,
                 score=score,
-                doc_index=int(idx),
+                doc_index=chunk.doc_index,
+                chunk_index=chunk.chunk_index,
                 metadata={
-                    'url': doc.get('url', ''),
-                    'source': doc.get('source', '')
+                    'url': chunk.url,
+                    'start_char': chunk.start_char,
+                    'end_char': chunk.end_char
                 }
             ))
         
@@ -349,12 +523,12 @@ class RAGTool:
         top_k: int = 10
     ) -> str:
         """
-        Get concatenated context from top relevant documents.
+        Get concatenated context from top relevant chunks.
         
         Args:
             query: Search query
             max_tokens: Maximum approximate tokens in context
-            top_k: Number of documents to consider
+            top_k: Number of chunks to consider
             
         Returns:
             Concatenated context string
@@ -366,28 +540,38 @@ class RAGTool:
         max_chars = max_tokens * 4  # Approximate chars per token
         
         for result in results:
-            doc_text = f"## {result.title}\n\n{result.content}\n\n"
-            if total_chars + len(doc_text) > max_chars:
+            # Include title only for first chunk of each document
+            if result.chunk_index == 0:
+                chunk_text = f"## {result.title}\n\n{result.content}\n\n"
+            else:
+                chunk_text = f"{result.content}\n\n"
+            
+            if total_chars + len(chunk_text) > max_chars:
                 break
-            context_parts.append(doc_text)
-            total_chars += len(doc_text)
+            context_parts.append(chunk_text)
+            total_chars += len(chunk_text)
         
         return "\n".join(context_parts)
     
     def get_stats(self) -> Dict[str, Any]:
-        """Get statistics about loaded documents."""
-        if not self.documents:
+        """Get statistics about loaded documents and chunks."""
+        if not self.chunks:
             return {"status": "no_documents_loaded"}
         
-        total_chars = sum(len(d.get('content', '')) for d in self.documents)
+        # Count unique documents
+        unique_docs = set(chunk.doc_index for chunk in self.chunks)
+        total_chars = sum(len(chunk.content) for chunk in self.chunks)
         
         return {
-            "total_documents": len(self.documents),
+            "total_documents": len(unique_docs),
+            "total_chunks": len(self.chunks),
             "total_characters": total_chars,
-            "average_doc_length": total_chars // len(self.documents) if self.documents else 0,
+            "average_chunk_length": total_chars // len(self.chunks) if self.chunks else 0,
+            "chunk_size": self.chunk_size,
+            "chunk_overlap": self.chunk_overlap,
             "cache_path": self.db_path,
             "embedding_model": self.embedding_model,
-            "sample_titles": [d.get('title', '')[:50] for d in self.documents[:5]]
+            "sample_titles": list(set(chunk.title[:50] for chunk in self.chunks[:10]))
         }
     
     def close(self):

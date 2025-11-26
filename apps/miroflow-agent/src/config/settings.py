@@ -606,10 +606,19 @@ def expose_sub_agents_as_tools(sub_agents_cfg: DictConfig):
 
 def get_env_info(cfg: DictConfig) -> dict:
     """Collect current configuration environment variable information for logging"""
+    # Get LLM base_url with fallback to environment variable
+    provider = cfg.llm.provider.lower()
+    if provider in ("openai", "qwen"):
+        llm_base_url = cfg.llm.get("base_url") or OPENAI_BASE_URL
+    elif provider == "anthropic":
+        llm_base_url = cfg.llm.get("base_url") or ANTHROPIC_BASE_URL
+    else:
+        llm_base_url = cfg.llm.get("base_url")
+    
     return {
         # LLM Configuration
         "llm_provider": cfg.llm.provider,
-        "llm_base_url": cfg.llm.base_url,
+        "llm_base_url": llm_base_url,
         "llm_model_name": cfg.llm.model_name,
         "llm_temperature": cfg.llm.temperature,
         "llm_top_p": cfg.llm.top_p,

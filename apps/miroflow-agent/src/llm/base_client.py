@@ -15,6 +15,7 @@
 import asyncio
 import dataclasses
 import json
+import os
 from abc import ABC
 from typing import (
     Any,
@@ -72,8 +73,9 @@ class BaseClient(ABC):
         self.max_tokens: int = self.cfg.llm.max_tokens
         self.async_client: bool = self.cfg.llm.async_client
         self.keep_tool_result: int = self.cfg.llm.keep_tool_result
-        self.api_key: Optional[str] = self.cfg.llm.get("api_key")
-        self.base_url: Optional[str] = self.cfg.llm.get("base_url")
+        # Get API key and base URL from environment variables first, then fall back to config
+        self.api_key: Optional[str] = self._get_api_key()
+        self.base_url: Optional[str] = self._get_base_url()
         self.use_tool_calls: Optional[bool] = self.cfg.llm.get("use_tool_calls")
 
         self.token_usage = self._reset_token_usage()
@@ -84,6 +86,68 @@ class BaseClient(ABC):
             "LLM | Initialization",
             f"LLMClient {self.provider} {self.model_name} initialization completed.",
         )
+
+    def _get_api_key(self) -> Optional[str]:
+        """
+        Get API key with priority:
+        1. Environment variable based on provider (e.g., OPENAI_API_KEY, ANTHROPIC_API_KEY)
+        2. Config file value (cfg.llm.api_key)
+        """
+        provider = self.cfg.llm.provider.lower()
+        
+        # Map provider to environment variable name
+        env_var_map = {
+            "openai": "OPENAI_API_KEY",
+            "anthropic": "ANTHROPIC_API_KEY",
+            "qwen": "OPENAI_API_KEY",  # Qwen uses OpenAI-compatible API
+        }
+        
+        env_var_name = env_var_map.get(provider, f"{provider.upper()}_API_KEY")
+        
+        # Priority: environment variable > config file
+        api_key = os.environ.get(env_var_name)
+        if api_key:
+            return api_key
+        
+        # Fall back to config file value
+        config_api_key = self.cfg.llm.get("api_key")
+        if config_api_key:
+            return config_api_key
+        
+        return None
+
+    def _get_base_url(self) -> Optional[str]:
+        """
+        Get base URL with priority:
+        1. Environment variable based on provider (e.g., OPENAI_BASE_URL, ANTHROPIC_BASE_URL)
+        2. Config file value (cfg.llm.base_url)
+        3. Default value based on provider
+        """
+        provider = self.cfg.llm.provider.lower()
+        
+        # Map provider to environment variable name and default URL
+        env_var_map = {
+            "openai": ("OPENAI_BASE_URL", "https://api.openai.com/v1"),
+            "anthropic": ("ANTHROPIC_BASE_URL", "https://api.anthropic.com"),
+            "qwen": ("OPENAI_BASE_URL", "https://api.openai.com/v1"),  # Qwen uses OpenAI-compatible API
+        }
+        
+        env_var_name, default_url = env_var_map.get(
+            provider, (f"{provider.upper()}_BASE_URL", None)
+        )
+        
+        # Priority: environment variable > config file > default
+        base_url = os.environ.get(env_var_name)
+        if base_url:
+            return base_url
+        
+        # Fall back to config file value
+        config_base_url = self.cfg.llm.get("base_url")
+        if config_base_url:
+            return config_base_url
+        
+        # Fall back to default
+        return default_url
 
     def _reset_token_usage(self) -> TokenUsage:
         """Reset token usage counter - implemented by concrete classes"""

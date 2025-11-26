@@ -1,4 +1,13 @@
 # conf/llm/default.yaml - Default LLM configuration
+#
+# NOTE: Sensitive information (api_key, base_url) should be set in .env file
+# The system will automatically read from environment variables:
+#   - OPENAI_API_KEY / OPENAI_BASE_URL (for openai/qwen provider)
+#   - ANTHROPIC_API_KEY / ANTHROPIC_BASE_URL (for anthropic provider)
+#
+# You can still override these values here if needed, but it's NOT recommended
+# as it may lead to accidental exposure when pushing code to git.
+
 provider: "openai" # openai, anthropic, qwen
 model_name: "gpt-4.1"
 async_client: false
@@ -8,6 +17,8 @@ min_p: 0.0
 top_k: -1
 max_tokens: 4096
 max_context_length: 200000
-api_key: "f9730c76c39b4f70beb16572890a952d"
-base_url: https://idealab.alibaba-inc.com/api/openai/v1
 keep_tool_result: -1
+
+# API credentials - leave empty/null to use environment variables (recommended)
+api_key: null
+base_url: null

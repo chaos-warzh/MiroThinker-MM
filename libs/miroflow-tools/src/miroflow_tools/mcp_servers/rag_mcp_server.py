@@ -92,8 +92,11 @@ def _save_retrieval_result(query: str, results: List[Any], tool_name: str, json_
             "citation_id": f"[RAG-{i}]" if tool_name == "rag_search" else f"[Context-{i}]",
             "score": round(r.score, 4),
             "doc_index": r.doc_index,
+            "chunk_index": r.chunk_index,
             "title": r.title,
             "url": r.metadata.get('url', ''),
+            "start_char": r.metadata.get('start_char', 0),
+            "end_char": r.metadata.get('end_char', 0),
             "content_length": len(r.content),
             "content": r.content  # Full content for reference
         })
@@ -128,8 +131,10 @@ def _get_rag_instance(json_path: str) -> RAGTool:
         
         print(f"[RAG] Initializing RAG tool for: {json_path}")
         _rag_instance = RAGTool(api_key=api_key, base_url=base_url)
-        doc_count = _rag_instance.load_documents(json_path)
-        print(f"[RAG] Loaded {doc_count} documents from {json_path}")
+        chunk_count = _rag_instance.load_documents(json_path)
+        stats = _rag_instance.get_stats()
+        print(f"[RAG] Loaded {stats.get('total_documents', 0)} documents, {chunk_count} chunks from {json_path}")
+        print(f"[RAG] Chunk size: {stats.get('chunk_size', 0)}, Overlap: {stats.get('chunk_overlap', 0)}")
         print(f"[RAG] Cache path: {_rag_instance.db_path}")
         _current_json_path = json_path
     else:
@@ -345,7 +350,7 @@ def rag_document_stats(json_path: str) -> str:
         json_path: Path to the long_context.json file
         
     Returns:
-        Statistics about the document collection (number of documents, cache info, etc.)
+        Statistics about the document collection (number of documents, chunks, cache info, etc.)
     """
     try:
         if not os.path.exists(json_path):
@@ -358,8 +363,11 @@ def rag_document_stats(json_path: str) -> str:
             "Document Collection Statistics:",
             f"- Source file: {json_path}",
             f"- Total documents: {stats.get('total_documents', 0)}",
+            f"- Total chunks: {stats.get('total_chunks', 0)}",
+            f"- Chunk size: {stats.get('chunk_size', 0)} chars",
+            f"- Chunk overlap: {stats.get('chunk_overlap', 0)} chars",
             f"- Total characters: {stats.get('total_characters', 0):,}",
-            f"- Average document length: {stats.get('average_doc_length', 0)} chars",
+            f"- Average chunk length: {stats.get('average_chunk_length', 0)} chars",
             f"- Embedding model: {stats.get('embedding_model', 'unknown')}",
             f"- Cache path: {stats.get('cache_path', 'none')}",
             f"\nSample titles:",
