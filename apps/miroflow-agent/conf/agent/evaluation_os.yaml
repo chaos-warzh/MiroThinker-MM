@@ -15,7 +15,8 @@ main_agent:
     - tool-video-enhanced  # Enhanced video understanding with temporal analysis
     - tool-reasoning-os
     - tool-reader
-    - tool-rag           # RAG for long context document search (long_context.json)
+    - tool-rag                    # RAG for specific chunk retrieval from long_context.json
+    - tool-long-context-reader    # Full document comprehension (reads ALL content, synthesizes understanding)
   max_turns: 50  # Maximum number of turns for main agent execution
 
 sub_agents:
