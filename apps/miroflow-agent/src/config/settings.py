@@ -571,6 +571,28 @@ def create_mcp_server_parameters(cfg: DictConfig, agent_cfg: DictConfig):
             }
         )
 
+    # Long Context Reader tool for full document comprehension
+    # Unlike RAG which retrieves specific chunks, this tool reads and comprehends
+    # the entire document collection, extracting and synthesizing key information.
+    if (
+        agent_cfg.get("tools", None) is not None
+        and "tool-long-context-reader" in agent_cfg["tools"]
+    ):
+        configs.append(
+            {
+                "name": "tool-long-context-reader",
+                "params": StdioServerParameters(
+                    command=sys.executable,
+                    args=["-m", "miroflow_tools.mcp_servers.long_context_reader_mcp_server"],
+                    env={
+                        "OPENAI_API_KEY": OPENAI_API_KEY,
+                        "OPENAI_BASE_URL": OPENAI_BASE_URL,
+                        "READER_MODEL": os.environ.get("READER_MODEL", "gpt-4o-mini"),
+                    },
+                ),
+            }
+        )
+
     blacklist = set()
     for black_list_item in agent_cfg.get("tool_blacklist", []):
         blacklist.add((black_list_item[0], black_list_item[1]))

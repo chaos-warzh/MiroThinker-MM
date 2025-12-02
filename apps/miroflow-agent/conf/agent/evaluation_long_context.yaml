@@ -1,0 +1,23 @@
+# Agent configuration for Long Context evaluation
+# This configuration includes the Long Context Reader tool for full document comprehension
+# alongside the existing RAG tool for specific information retrieval.
+
+main_agent:
+  max_turns: 30
+  tools:
+    - tool-google-search
+    - tool-python
+    - tool-rag                    # RAG for specific chunk retrieval
+    - tool-long-context-reader    # Full document comprehension (NEW)
+    - tool-vqa-enhanced
+    - tool-audio-enhanced
+    - tool-video-enhanced
+  tool_blacklist: []
+
+sub_agents:
+  agent-browsing:
+    max_turns: 10
+    tools:
+      - tool-google-search
+      - tool-python
+    tool_blacklist: []

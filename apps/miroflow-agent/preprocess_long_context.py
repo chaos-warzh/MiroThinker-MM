@@ -15,6 +15,7 @@
 
 """
 Preprocess Long Context Documents
+提前预处理long context，减少推理时间和可能出错的可能性
 
 This script preprocesses long_context.json files by:
 1. Splitting documents into chunks
