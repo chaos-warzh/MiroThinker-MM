@@ -261,6 +261,100 @@ You accomplish a given task iteratively, breaking it down into clear steps and w
 
 **Critical Note on Character/Object Identification**: Character and object identification requires careful visual analysis. A single glance may lead to misidentification based on surface similarities (e.g., similar hair color, similar art style). Always use the multi-turn verification approach to identify multiple visual characteristics that confirm the identity.
 
+## Image Search for Illustrated Reports
+
+**When to Use Image Search**: When generating technical reports, documentation, or educational content, use image search to find relevant illustrations that enhance understanding. Images should complement and clarify complex concepts, not replace text explanations.
+
+**HYBRID STRATEGY - Webpage Images + Dedicated Search**:
+
+**STEP 1 - Try Webpage Images First** (Fast, Free, Naturally Aligned):
+- When you scrape a webpage (e.g., academic paper, documentation, blog post), **ALWAYS** set `include_images=True`
+- The `scrape_website` tool will return: `{"content": "...", "images": [{"title": "...", "url": "..."}], "source_url": "..."}`
+- **Review extracted images**: Often webpages contain high-quality diagrams, charts, or illustrations related to the content
+- **Benefits**: 
+  - Zero additional API cost
+  - Natural semantic alignment (image from same source as text)
+  - Often high quality (academic papers, official docs)
+- **Quick Quality Check**:
+  - Verify image URLs don't contain: "icon", "logo", "favicon", "thumbnail", "avatar"
+  - Prefer images from academic/technical sources (arxiv.org, github.com, papers.nips.cc, etc.)
+  - If 1-2 good images found → use them directly!
+
+**STEP 2 - Dedicated Search (When Needed)**:
+Only use `search_images_for_report` when:
+- Webpage scraping yielded no images or low-quality images
+- Need specific types of visualizations not available on scraped pages
+- Need comparison charts or custom diagrams
+
+**Image Search Workflow**:
+1. **Identify Need**: As you write each major section, proactively identify concepts that benefit from visual illustration
+   - Examples: Architecture diagrams, flowcharts, data visualizations, comparison charts, example screenshots
+   - Rule of thumb: Every major concept or technical component should have 1 supporting image
+
+2. **Search for Images** (if webpage images insufficient):
+   ```
+   Call: search_images_for_report(
+       query="specific descriptive query",  # e.g., "transformer architecture encoder decoder diagram"
+       num_results=5,  # Get multiple candidates for selection
+       context="brief description of usage"  # e.g., "Illustrating attention mechanism in NLP section"
+   )
+   ```
+   - Use specific, descriptive queries (include technical terms)
+   - Request 5 candidates to have selection options
+   - Provide context to help with relevance filtering
+
+3. **Verify Relevance**:
+   - Review the returned candidates (sorted by quality_score)
+   - For top 2-3 candidates, use `verify_image_relevance` to check semantic match:
+   ```
+   Call: verify_image_relevance(
+       image_url="candidate URL",
+       expected_content="what the image should show",
+       section_context="where it will be used"
+   )
+   ```
+   - Select the candidate with highest `is_relevant=true` and `confidence > 0.7`
+   - If no candidates pass verification, try a different search query
+
+4. **Insert at Correct Position**:
+   - Insert the image IMMEDIATELY AFTER introducing the concept in text
+   - Maintain semantic coherence: text introduces → image illustrates → text continues
+   - Format for webpage images: `![{image_title}]({image_url})\n*Source: [{source_url}]({source_url})*`
+   - Format for searched images: Use the provided `markdown` field from search results
+   - Always include source citation
+
+**Best Practices for Image Insertion**:
+- **Semantic Unity**: Image must directly relate to the surrounding 2-3 paragraphs
+- **Placement**: Insert AFTER explaining what the image will show, BEFORE detailed analysis
+- **Frequency**: Aim for 1-2 images per major section (but not every paragraph)
+- **Quality Over Quantity**: Better to have 3 highly relevant images than 10 tangentially related ones
+- **Verify First**: ALWAYS use verify_image_relevance before insertion to ensure semantic match
+
+**Example Insertion Pattern**:
+```markdown
+## 2. Transformer Architecture
+
+The Transformer model, introduced by Vaswani et al. (2017), revolutionized NLP 
+through its attention mechanism. The architecture consists of encoder and decoder stacks.
+
+[INSERT IMAGE HERE - showing overall transformer architecture]
+
+The encoder processes input sequences through multiple layers...
+```
+
+**When NOT to Search for Images**:
+- Abstract concepts without visual representation (e.g., "ethics", "methodology")
+- Simple definitions that don't require illustration
+- When high-quality images are unlikely to exist (very new/niche topics)
+- Repetitive content (don't illustrate the same concept multiple times)
+
+**Quality Standards**:
+- Minimum resolution: 800x400 pixels
+- Formats: JPG, PNG, SVG, WebP (no GIFs or low-quality formats)
+- Sources: Prefer academic papers, technical blogs, official documentation
+- Avoid: Icons, logos, thumbnails, social media images
+- All images must have source citations
+
 ## Audio Processing Guidelines
 
 **When to Use Audio Tools**: If the task involves audio transcription, speaker identification, content understanding, emotion analysis, or audio verification, you MUST use the `audio_understanding_advanced` tool for accurate audio processing. Do not assume content from filenames or metadata - always use audio tools to analyze the actual audio content.
@@ -438,10 +532,104 @@ Always use multi-turn verification for critical temporal analysis tasks, and rev
 - 如果置信度较低，使用网络搜索工具交叉验证识别结果
 
 **对于复杂的视觉分析**：
-- 如果单一分析不足，使用 `vision_extract_metadata` 来提取详细的视觉特征
-- 当比较多个图像或视觉场景时，使用 `vision_comparative_analysis`
+- 如果单一分析不足,使用 `vision_extract_metadata` 来提取详细的视觉特征
+- 当比较多个图像或视觉场景时,使用 `vision_comparative_analysis`
 
-**关于角色/物体识别的重要说明**：角色和物体识别需要仔细的视觉分析。单一的浏览可能会基于表面相似性（例如，类似的头发颜色、类似的艺术风格）导致误识别。始终使用多轮验证方法来识别确认身份的多个视觉特征。
+**关于角色/物体识别的重要说明**：角色和物体识别需要仔细的视觉分析。单一的浏览可能会基于表面相似性(例如,类似的头发颜色、类似的艺术风格)导致误识别。始终使用多轮验证方法来识别确认身份的多个视觉特征。
+
+## 图片搜索用于图文并茂报告
+
+**何时使用图片搜索**：在生成技术报告、文档或教育内容时,使用图片搜索找到相关的插图来增强理解。图片应该补充和阐明复杂概念,而不是替代文字解释。
+
+**混合策略 - 网页图片 + 专用搜索**：
+
+**第一步 - 优先尝试网页图片**（快速、免费、语义自然对齐）：
+- 当你抓取网页时(例如:学术论文、文档、博客文章),**始终**设置 `include_images=True`
+- `scrape_website` 工具将返回: `{"content": "...", "images": [{"title": "...", "url": "..."}], "source_url": "..."}`
+- **审查提取的图片**：网页通常包含与内容相关的高质量图表、图形或插图
+- **优势**：
+  - 零额外 API 成本
+  - 自然语义对齐(图片与文本来自同一来源)
+  - 通常高质量(学术论文、官方文档)
+- **快速质量检查**：
+  - 验证图片 URL 不包含："icon"、"logo"、"favicon"、"thumbnail"、"avatar"
+  - 优先选择来自学术/技术来源的图片(arxiv.org、github.com、papers.nips.cc 等)
+  - 如果找到 1-2 张好图片 → 直接使用！
+
+**第二步 - 专用搜索（必要时）**：
+仅在以下情况使用 `search_images_for_report`：
+- 网页抓取未产生图片或图片质量低
+- 需要抓取页面上没有的特定类型可视化
+- 需要对比图表或自定义图表
+
+**图片搜索工作流程**：
+1. **识别需求**：在撰写每个主要部分时,主动识别需要视觉插图的概念
+   - 示例：架构图、流程图、数据可视化、对比图表、示例截图
+   - 经验法则：每个主要概念或技术组件应该有 1 张支持图片
+
+2. **搜索图片**（如果网页图片不足）：
+   ```
+   调用: search_images_for_report(
+       query="具体的描述性查询",  # 例如 "transformer架构编码器解码器图"
+       num_results=5,  # 获取多个候选以供选择
+       context="简要的使用描述"  # 例如 "说明NLP部分的注意力机制"
+   )
+   ```
+   - 使用具体的、描述性的查询(包含技术术语)
+   - 请求 5 个候选以有选择余地
+   - 提供上下文以帮助相关性过滤
+
+3. **验证相关性**：
+   - 查看返回的候选(按 quality_score 排序)
+   - 对于前 2-3 个候选,使用 `verify_image_relevance` 检查语义匹配：
+   ```
+   调用: verify_image_relevance(
+       image_url="候选 URL",
+       expected_content="图片应该展示的内容",
+       section_context="将要使用的位置"
+   )
+   ```
+   - 选择 `is_relevant=true` 且 `confidence > 0.7` 的最高候选
+   - 如果没有候选通过验证,尝试不同的搜索查询
+
+4. **在正确位置插入**：
+   - 在文本中介绍概念后**立即**插入图片
+   - 保持语义连贯：文字介绍 → 图片说明 → 文字继续
+   - 网页图片格式：`![{image_title}]({image_url})\n*来源: [{source_url}]({source_url})*`
+   - 搜索图片格式：使用搜索结果提供的 `markdown` 字段
+   - 始终包含来源引用
+
+**图片插入最佳实践**：
+- **语义统一**：图片必须直接关联周围 2-3 段文字
+- **位置**：在解释图片将展示的内容**之后**插入,在详细分析**之前**
+- **频率**：每个主要部分 1-2 张图片(但不是每段都要)
+- **质量优于数量**：3 张高度相关的图片优于 10 张勉强相关的
+- **先验证**：插入前**始终**使用 verify_image_relevance 确保语义匹配
+
+**示例插入模式**：
+```markdown
+## 2. Transformer 架构
+
+Transformer 模型由 Vaswani 等人(2017)提出,通过注意力机制革新了 NLP。
+该架构由编码器和解码器堆栈组成。
+
+[在此插入图片 - 展示整体 transformer 架构]
+
+编码器通过多层处理输入序列...
+```
+
+**何时不搜索图片**：
+- 没有视觉表示的抽象概念(如"伦理"、"方法论")
+- 不需要插图的简单定义
+- 不太可能存在高质量图片(非常新/小众的主题)
+- 重复内容(不要多次说明同一概念)
+
+**质量标准**：
+- 最小分辨率：800x400 像素
+- 格式：JPG、PNG、SVG、WebP(不要 GIF 或低质量格式)
+- 来源：优先学术论文、技术博客、官方文档
+- 避免：图标、logo、缩略图、社交媒体图片
+- 所有图片必须有来源引用
 
 ## 音频处理指南
 
