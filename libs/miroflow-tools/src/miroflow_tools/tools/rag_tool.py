@@ -395,10 +395,41 @@ class RAGTool:
         
         return np.array(all_embeddings)
     
+    def load_from_db(self, db_path: str) -> int:
+        """
+        Load documents directly from a pre-built SQLite database.
+        This skips the JSON file entirely and loads embeddings from the db.
+        
+        Args:
+            db_path: Path to the .chunks.db file
+            
+        Returns:
+            Number of chunks loaded
+        """
+        if not os.path.exists(db_path):
+            raise FileNotFoundError(f"Database file not found: {db_path}")
+        
+        self.db_path = db_path
+        self.current_file = db_path  # Use db path as current file
+        
+        # Initialize database connection
+        self._init_db(db_path)
+        
+        # Load directly from cache without validation
+        logger.info(f"Loading directly from database: {db_path}")
+        if self._load_from_cache():
+            logger.info(f"Successfully loaded {len(self.chunks)} chunks from database")
+            return len(self.chunks)
+        else:
+            raise ValueError(f"Failed to load chunks from database: {db_path}")
+    
     def load_documents(self, file_path: str) -> int:
         """
         Load documents from a long_context.json file and split into chunks.
         Uses SQLite cache if available and valid.
+        
+        If a .chunks.db file exists alongside the JSON file, it will be used
+        as a cache to avoid regenerating embeddings.
         
         Args:
             file_path: Path to the long_context.json file
@@ -406,17 +437,39 @@ class RAGTool:
         Returns:
             Number of chunks created
         """
+        # Check if this is actually a .db file path
+        if file_path.endswith('.db') or file_path.endswith('.chunks.db'):
+            return self.load_from_db(file_path)
+        
         if not os.path.exists(file_path):
             raise FileNotFoundError(f"File not found: {file_path}")
         
         self.current_file = file_path
         self.db_path = self._get_db_path(file_path)
+        
+        # Check if db file exists and try to load from it directly
+        # This allows using pre-built db files without needing to validate hash
+        if os.path.exists(self.db_path):
+            try:
+                self._init_db(self.db_path)
+                # Try to load from cache - if it has data, use it
+                cursor = self.conn.cursor()
+                cursor.execute("SELECT COUNT(*) FROM chunks")
+                count = cursor.fetchone()[0]
+                if count > 0:
+                    logger.info(f"Found existing database with {count} chunks, loading from cache: {self.db_path}")
+                    if self._load_from_cache():
+                        return len(self.chunks)
+            except Exception as e:
+                logger.warning(f"Failed to load from existing db, will regenerate: {e}")
+        
+        # If we get here, we need to generate embeddings from JSON
         file_hash = self._get_file_hash(file_path)
         
         # Initialize database
         self._init_db(self.db_path)
         
-        # Check if cache is valid
+        # Check if cache is valid (for backward compatibility)
         if self._check_cache_valid(file_hash):
             logger.info(f"Loading from cache: {self.db_path}")
             if self._load_from_cache():
@@ -467,7 +520,9 @@ class RAGTool:
         self,
         query: str,
         top_k: int = 5,
-        min_score: float = 0.0
+        min_score: float = 0.0,
+        diverse: bool = False,
+        max_per_doc: int = 2
     ) -> List[SearchResult]:
         """
         Search for relevant chunks using semantic similarity.
@@ -476,6 +531,8 @@ class RAGTool:
             query: Search query
             top_k: Number of top results to return
             min_score: Minimum similarity score threshold
+            diverse: If True, ensure results come from different documents
+            max_per_doc: Maximum chunks per document when diverse=True
             
         Returns:
             List of SearchResult objects
@@ -491,16 +548,31 @@ class RAGTool:
             np.linalg.norm(self.embeddings, axis=1) * np.linalg.norm(query_embedding)
         )
         
-        # Get top-k indices
-        top_indices = np.argsort(similarities)[::-1][:top_k]
+        # Get all indices sorted by similarity
+        sorted_indices = np.argsort(similarities)[::-1]
         
         results = []
-        for idx in top_indices:
+        doc_counts = {}  # Track how many chunks per document
+        
+        for idx in sorted_indices:
+            if len(results) >= top_k:
+                break
+                
             score = float(similarities[idx])
             if score < min_score:
                 continue
             
             chunk = self.chunks[idx]
+            
+            # Apply diversity constraint
+            if diverse:
+                doc_idx = chunk.doc_index
+                if doc_idx not in doc_counts:
+                    doc_counts[doc_idx] = 0
+                if doc_counts[doc_idx] >= max_per_doc:
+                    continue
+                doc_counts[doc_idx] += 1
+            
             results.append(SearchResult(
                 title=chunk.title,
                 content=chunk.content,
@@ -514,6 +586,120 @@ class RAGTool:
                 }
             ))
         
+        return results
+    
+    def diverse_search(
+        self,
+        query: str,
+        top_k: int = 10,
+        min_docs: int = 5,
+        max_per_doc: int = 2,
+        min_score: float = 0.0
+    ) -> List[SearchResult]:
+        """
+        Search with document diversity - ensures results come from multiple documents.
+        
+        This method prioritizes getting results from different documents first,
+        then fills remaining slots with additional chunks from the same documents.
+        
+        Args:
+            query: Search query
+            top_k: Total number of results to return
+            min_docs: Minimum number of different documents to include
+            max_per_doc: Maximum chunks per document
+            min_score: Minimum similarity score threshold
+            
+        Returns:
+            List of SearchResult objects from diverse documents
+        """
+        if self.embeddings is None or len(self.chunks) == 0:
+            raise ValueError("No documents loaded. Call load_documents first.")
+        
+        # Get query embedding
+        query_embedding = self._get_embedding(query)
+        
+        # Calculate cosine similarity
+        similarities = np.dot(self.embeddings, query_embedding) / (
+            np.linalg.norm(self.embeddings, axis=1) * np.linalg.norm(query_embedding)
+        )
+        
+        # Get all indices sorted by similarity
+        sorted_indices = np.argsort(similarities)[::-1]
+        
+        # Phase 1: Get best chunk from each document (up to min_docs)
+        results = []
+        seen_docs = set()
+        doc_best_chunks = {}  # doc_index -> list of (idx, score)
+        
+        for idx in sorted_indices:
+            score = float(similarities[idx])
+            if score < min_score:
+                continue
+            
+            chunk = self.chunks[idx]
+            doc_idx = chunk.doc_index
+            
+            if doc_idx not in doc_best_chunks:
+                doc_best_chunks[doc_idx] = []
+            doc_best_chunks[doc_idx].append((idx, score))
+        
+        # Sort documents by their best chunk score
+        doc_scores = [(doc_idx, chunks[0][1]) for doc_idx, chunks in doc_best_chunks.items()]
+        doc_scores.sort(key=lambda x: x[1], reverse=True)
+        
+        # Phase 1: Add best chunk from top documents
+        for doc_idx, _ in doc_scores:
+            if len(results) >= top_k:
+                break
+            if len(seen_docs) >= min_docs and len(results) >= min_docs:
+                break
+            
+            idx, score = doc_best_chunks[doc_idx][0]
+            chunk = self.chunks[idx]
+            
+            results.append(SearchResult(
+                title=chunk.title,
+                content=chunk.content,
+                score=score,
+                doc_index=chunk.doc_index,
+                chunk_index=chunk.chunk_index,
+                metadata={
+                    'url': chunk.url,
+                    'start_char': chunk.start_char,
+                    'end_char': chunk.end_char
+                }
+            ))
+            seen_docs.add(doc_idx)
+        
+        # Phase 2: Fill remaining slots with additional chunks (respecting max_per_doc)
+        doc_counts = {doc_idx: 1 for doc_idx in seen_docs}
+        
+        for doc_idx, _ in doc_scores:
+            if len(results) >= top_k:
+                break
+            
+            for idx, score in doc_best_chunks[doc_idx][1:]:  # Skip first (already added)
+                if len(results) >= top_k:
+                    break
+                if doc_counts.get(doc_idx, 0) >= max_per_doc:
+                    break
+                
+                chunk = self.chunks[idx]
+                results.append(SearchResult(
+                    title=chunk.title,
+                    content=chunk.content,
+                    score=score,
+                    doc_index=chunk.doc_index,
+                    chunk_index=chunk.chunk_index,
+                    metadata={
+                        'url': chunk.url,
+                        'start_char': chunk.start_char,
+                        'end_char': chunk.end_char
+                    }
+                ))
+                doc_counts[doc_idx] = doc_counts.get(doc_idx, 0) + 1
+        
+        logger.info(f"Diverse search returned {len(results)} results from {len(seen_docs)} documents")
         return results
     
     def get_context(

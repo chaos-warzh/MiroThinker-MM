@@ -20,9 +20,14 @@ This script demonstrates how to process a folder containing multiple files
 (images, PDFs, videos, etc.) and run a task using the MiroFlow agent.
 
 Usage:
+    # Normal mode (with web search)
     uv run python run_folder_task.py --folder data/000 --query "请根据图片的重要属性，整理pdf中提到的重要文献，按照图片表格的形式整合，输出1000字左右的文献综述分析。"
-    uv run python run_folder_task.py --folder data/001 --query "请根据图片的重要属性，以及pdf的文献，同时参考long context里面的内容，输出1000字左右的文献综述分析。"
-    uv run python run_folder_task.py --folder data/bench_case1104/001 --query "Assume you are a cultural travel researcher preparing a comprehensive tourism report for an international travel magazine. Based on the materials I provide, please write a report titled 'Exploring Cambodia: A Cultural and Culinary Journey'. The report should analyze Cambodia’s major tourist attractions, recommend representative local cuisines, and provide practical travel tips for international visitors.\n\nRequirements:\n1. The report must integrate information from the provided documents and, where necessary, additional verified online sources.\n2. All factual statements must be accurate, verifiable, and properly cited with clear references to both the source document and specific location.\n3. The writing style should be formal, engaging, and suitable for publication in an academic travel review.\n4. The report should be between 500 and 600 words."
+    
+    # Offline mode (no web search, only use long context as information source)
+    uv run python run_folder_task.py --folder data/bench_case1104/005 --query "..." --offline
+    
+    # With Hydra config override
+    uv run python run_folder_task.py agent=evaluation_offline --folder data/bench_case1104/005 --query "..."
 """
 
 import argparse
@@ -51,6 +56,157 @@ logger = bootstrap_logger()
 
 # Default results directory
 DEFAULT_RESULTS_DIR = "results"
+
+
+def generate_turn_by_turn_log(log_file_path: str, output_path: str) -> str:
+    """
+    Parse the JSON log file and generate a human-readable turn-by-turn log.
+    
+    Args:
+        log_file_path: Path to the JSON log file
+        output_path: Path to save the turn-by-turn log
+        
+    Returns:
+        Path to the generated log file
+    """
+    import json
+    
+    with open(log_file_path, 'r', encoding='utf-8') as f:
+        log_data = json.load(f)
+    
+    lines = []
+    lines.append("=" * 80)
+    lines.append("TURN-BY-TURN EXECUTION LOG")
+    lines.append("=" * 80)
+    lines.append(f"Task ID: {log_data.get('task_id', 'N/A')}")
+    lines.append(f"Status: {log_data.get('status', 'N/A')}")
+    lines.append(f"Start Time: {log_data.get('start_time', 'N/A')}")
+    lines.append(f"End Time: {log_data.get('end_time', 'N/A')}")
+    lines.append("")
+    
+    # Parse step logs
+    step_logs = log_data.get('step_logs', [])
+    current_turn = 0
+    current_agent = "Main Agent"
+    
+    for step in step_logs:
+        step_name = step.get('step_name', '')
+        message = step.get('message', '')
+        timestamp = step.get('timestamp', '')
+        info_level = step.get('info_level', 'info')
+        
+        # Detect turn changes
+        if "Turn:" in step_name:
+            import re
+            turn_match = re.search(r'Turn:\s*(\d+)', step_name)
+            if turn_match:
+                new_turn = int(turn_match.group(1))
+                if new_turn != current_turn:
+                    current_turn = new_turn
+                    lines.append("")
+                    lines.append("-" * 80)
+                    lines.append(f"TURN {current_turn}")
+                    lines.append("-" * 80)
+        
+        # Detect agent changes
+        if "agent-" in step_name.lower():
+            agent_match = step_name.split("|")[0].strip()
+            if agent_match != current_agent:
+                current_agent = agent_match
+                lines.append(f"\n>>> Agent: {current_agent}")
+        
+        # Format the step
+        level_prefix = {
+            'info': '[INFO]',
+            'warning': '[WARN]',
+            'error': '[ERROR]',
+            'debug': '[DEBUG]'
+        }.get(info_level, '[INFO]')
+        
+        lines.append(f"  {timestamp} {level_prefix} {step_name}")
+        
+        # Add message details for important steps
+        if any(keyword in step_name.lower() for keyword in ['tool call', 'llm call', 'final answer', 'task description']):
+            # Truncate very long messages
+            if len(message) > 2000:
+                message = message[:2000] + "... [truncated]"
+            lines.append(f"    Message: {message}")
+    
+    # Add main agent message history
+    main_history = log_data.get('main_agent_message_history', {})
+    if main_history:
+        lines.append("")
+        lines.append("=" * 80)
+        lines.append("MAIN AGENT MESSAGE HISTORY")
+        lines.append("=" * 80)
+        
+        messages = main_history.get('message_history', [])
+        for i, msg in enumerate(messages):
+            role = msg.get('role', 'unknown')
+            content = msg.get('content', '')
+            
+            lines.append(f"\n--- Message {i+1} ({role}) ---")
+            
+            # Handle different content types
+            if isinstance(content, str):
+                if len(content) > 3000:
+                    content = content[:3000] + "... [truncated]"
+                lines.append(content)
+            elif isinstance(content, list):
+                for item in content:
+                    if isinstance(item, dict):
+                        item_type = item.get('type', 'unknown')
+                        if item_type == 'text':
+                            text = item.get('text', '')
+                            if len(text) > 3000:
+                                text = text[:3000] + "... [truncated]"
+                            lines.append(f"[TEXT] {text}")
+                        elif item_type == 'tool_use':
+                            lines.append(f"[TOOL_USE] {item.get('name', 'unknown')}")
+                            lines.append(f"  Input: {json.dumps(item.get('input', {}), ensure_ascii=False)[:1000]}")
+                        elif item_type == 'tool_result':
+                            result = str(item.get('content', ''))
+                            if len(result) > 1000:
+                                result = result[:1000] + "... [truncated]"
+                            lines.append(f"[TOOL_RESULT] {result}")
+                        else:
+                            lines.append(f"[{item_type.upper()}] {str(item)[:500]}")
+    
+    # Add sub-agent sessions
+    sub_sessions = log_data.get('sub_agent_message_history_sessions', {})
+    if sub_sessions:
+        lines.append("")
+        lines.append("=" * 80)
+        lines.append("SUB-AGENT SESSIONS")
+        lines.append("=" * 80)
+        
+        for session_id, session_data in sub_sessions.items():
+            lines.append(f"\n### Session: {session_id} ###")
+            messages = session_data.get('message_history', [])
+            for i, msg in enumerate(messages):
+                role = msg.get('role', 'unknown')
+                content = msg.get('content', '')
+                
+                lines.append(f"\n--- Message {i+1} ({role}) ---")
+                if isinstance(content, str):
+                    if len(content) > 2000:
+                        content = content[:2000] + "... [truncated]"
+                    lines.append(content)
+    
+    # Add final answer
+    final_answer = log_data.get('final_boxed_answer', '')
+    if final_answer:
+        lines.append("")
+        lines.append("=" * 80)
+        lines.append("FINAL ANSWER")
+        lines.append("=" * 80)
+        lines.append(final_answer)
+    
+    # Write to file
+    with open(output_path, 'w', encoding='utf-8') as f:
+        f.write('\n'.join(lines))
+    
+    return output_path
 
 
 def save_report_to_md(
@@ -323,11 +479,20 @@ def main(cfg: DictConfig) -> None:
         query=args.query,
     )
     
+    # Generate turn-by-turn log
+    turn_log_path = report_path.replace('.md', '_turns.txt')
+    try:
+        generate_turn_by_turn_log(log_file_path, turn_log_path)
+        print(f"Turn-by-turn log saved to: {turn_log_path}")
+    except Exception as e:
+        print(f"Warning: Failed to generate turn-by-turn log: {e}")
+    
     print("\n" + "=" * 60)
     print("TASK COMPLETED")
     print("=" * 60)
     print(f"\nLog file: {log_file_path}")
     print(f"Report saved to: {report_path}")
+    print(f"Turn-by-turn log: {turn_log_path}")
     print(f"\nFinal Answer:\n{final_boxed_answer}")
     print("\n" + "=" * 60)
 
@@ -342,15 +507,23 @@ if __name__ == "__main__":
         parser.add_argument("--preview", "-p", action="store_true", help="Preview folder only")
         parser.add_argument("--recursive", "-r", action="store_true", help="Scan recursively")
         parser.add_argument("--results-dir", "-o", default=None, help="Directory to save results")
+        parser.add_argument("--offline", action="store_true", 
+                          help="Offline mode: no web search, only use long context (RAG) as information source")
         
         args = parser.parse_args()
         
         if args.preview:
             preview_folder(args.folder, args.recursive)
         else:
-            # Run with default config
+            # Prepare config overrides
+            config_overrides = []
+            if args.offline:
+                config_overrides.append("agent=evaluation_offline")
+                print("🔒 Running in OFFLINE mode: No web search, using long context (RAG) only")
+            
+            # Run with config
             final_summary, final_boxed_answer, log_file_path = asyncio.run(
-                run_folder_task_simple(args.folder, args.query)
+                run_folder_task_simple(args.folder, args.query, config_overrides=config_overrides)
             )
             
             # Save report to markdown file
@@ -364,11 +537,20 @@ if __name__ == "__main__":
                 query=args.query,
             )
             
+            # Generate turn-by-turn log
+            turn_log_path = report_path.replace('.md', '_turns.txt')
+            try:
+                generate_turn_by_turn_log(log_file_path, turn_log_path)
+                print(f"Turn-by-turn log saved to: {turn_log_path}")
+            except Exception as e:
+                print(f"Warning: Failed to generate turn-by-turn log: {e}")
+            
             print("\n" + "=" * 60)
             print("TASK COMPLETED")
             print("=" * 60)
             print(f"\nLog file: {log_file_path}")
             print(f"Report saved to: {report_path}")
+            print(f"Turn-by-turn log: {turn_log_path}")
             print(f"\nFinal Answer:\n{final_boxed_answer}")
             print("\n" + "=" * 60)
     else:

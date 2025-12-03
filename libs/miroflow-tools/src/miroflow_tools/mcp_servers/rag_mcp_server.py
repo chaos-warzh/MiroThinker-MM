@@ -147,7 +147,10 @@ def _get_rag_instance(json_path: str) -> RAGTool:
 def rag_search(
     query: str,
     json_path: str,
-    top_k: int = 3
+    top_k: int = 10,
+    diverse: bool = True,
+    min_docs: int = 5,
+    max_per_doc: int = 2
 ) -> str:
     """
     Search for relevant information in a long context document using semantic search.
@@ -156,10 +159,16 @@ def rag_search(
     to find the most relevant passages from a large document collection.
     Embeddings are cached in SQLite for fast subsequent queries.
     
+    By default, uses diverse search to ensure results come from multiple different
+    documents, not just the most similar chunks from a few documents.
+    
     Args:
         query: The search query - what information you're looking for
         json_path: Path to the long_context.json file containing the documents
-        top_k: Number of top results to return (default: 5)
+        top_k: Number of top results to return (default: 10)
+        diverse: If True, ensure results come from different documents (default: True)
+        min_docs: Minimum number of different documents to include when diverse=True (default: 5)
+        max_per_doc: Maximum chunks per document when diverse=True (default: 2)
         
     Returns:
         Formatted search results with relevant passages and their sources
@@ -173,14 +182,19 @@ def rag_search(
         print(f"\n{'='*60}")
         print(f"[RAG] Turn {_turn_counter} | Query #{_query_counter} (Turn Query #{_last_turn_query_count})")
         print(f"[RAG] Search Query: '{query}'")
-        print(f"[RAG] top_k={top_k}")
+        print(f"[RAG] top_k={top_k}, diverse={diverse}, min_docs={min_docs}, max_per_doc={max_per_doc}")
         print(f"{'='*60}")
         
         if not os.path.exists(json_path):
             return f"Error: File not found: {json_path}"
         
         rag = _get_rag_instance(json_path)
-        results = rag.search(query, top_k=top_k)
+        
+        # Use diverse search by default to ensure results from multiple documents
+        if diverse:
+            results = rag.diverse_search(query, top_k=top_k, min_docs=min_docs, max_per_doc=max_per_doc)
+        else:
+            results = rag.search(query, top_k=top_k)
         
         print(f"[RAG] Found {len(results)} results")
         for i, r in enumerate(results[:3]):
@@ -252,7 +266,10 @@ def rag_get_context(
     query: str,
     json_path: str,
     max_tokens: int = 4000,
-    top_k: int = 10
+    top_k: int = 10,
+    diverse: bool = True,
+    min_docs: int = 5,
+    max_per_doc: int = 2
 ) -> str:
     """
     Get relevant context from a long document for answering a specific question.
@@ -261,25 +278,34 @@ def rag_get_context(
     formatted as context that can be used for further analysis.
     Each passage includes source information for proper citation.
     
+    By default, uses diverse search to ensure context comes from multiple different
+    documents, not just the most similar chunks from a few documents.
+    
     Args:
         query: The question or topic to find context for
         json_path: Path to the long_context.json file
         max_tokens: Maximum approximate tokens of context to return (default: 4000)
         top_k: Number of documents to consider (default: 10)
+        diverse: If True, ensure results come from different documents (default: True)
+        min_docs: Minimum number of different documents to include when diverse=True (default: 5)
+        max_per_doc: Maximum chunks per document when diverse=True (default: 2)
         
     Returns:
         Concatenated relevant context passages with source information
     """
     try:
-        print(f"[RAG] rag_get_context called with query: '{query[:50]}...' max_tokens={max_tokens}")
+        print(f"[RAG] rag_get_context called with query: '{query[:50]}...' max_tokens={max_tokens}, diverse={diverse}")
         
         if not os.path.exists(json_path):
             return f"Error: File not found: {json_path}"
         
         rag = _get_rag_instance(json_path)
         
-        # Get search results with full metadata
-        results = rag.search(query, top_k=top_k)
+        # Get search results with full metadata, using diverse search by default
+        if diverse:
+            results = rag.diverse_search(query, top_k=top_k, min_docs=min_docs, max_per_doc=max_per_doc)
+        else:
+            results = rag.search(query, top_k=top_k)
         
         if not results:
             return "No relevant context found for the query."

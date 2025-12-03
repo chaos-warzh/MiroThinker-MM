@@ -523,21 +523,46 @@ def process_folder_for_task(
         task_parts.append("- To answer specific questions about the audio, use 'audio_question_answering_enhanced'\n")
     
     # Long context files (RAG)
+    # Check for both .json files and pre-built .db files
     long_context_files = [f for f in contents.data_files if "long_context" in f.name.lower()]
-    if long_context_files:
+    
+    # Also check for .db files (pre-built embedding databases)
+    db_files = [f for f in contents.other_files if f.name.endswith('.chunks.db') or f.name.endswith('.db')]
+    
+    if long_context_files or db_files:
         task_parts.append("\n## Long Context Documents (RAG)\n")
         task_parts.append("\nThe following long context document files are available for semantic search:\n")
         
         for file_info in long_context_files:
-            task_parts.append(f"\n### {file_info.name}\n")
-            task_parts.append(f"Path: {file_info.path}\n")
-            task_parts.append(f"Size: {file_info.size_bytes / 1024:.1f} KB\n")
+            # Check if there's a corresponding .db file (pre-built embeddings)
+            db_path = file_info.path + ".chunks.db"
+            if os.path.exists(db_path):
+                db_size = os.path.getsize(db_path)
+                task_parts.append(f"\n### {file_info.name}\n")
+                task_parts.append(f"Path: {file_info.path}\n")
+                task_parts.append(f"Size: {file_info.size_bytes / 1024:.1f} KB\n")
+                task_parts.append(f"**Pre-built embedding database available**: {db_path} ({db_size / 1024:.1f} KB)\n")
+            else:
+                task_parts.append(f"\n### {file_info.name}\n")
+                task_parts.append(f"Path: {file_info.path}\n")
+                task_parts.append(f"Size: {file_info.size_bytes / 1024:.1f} KB\n")
+        
+        # List standalone .db files (without corresponding .json)
+        for file_info in db_files:
+            # Check if this db file has a corresponding json file already listed
+            json_path = file_info.path.replace('.chunks.db', '').replace('.db', '')
+            if not any(f.path == json_path or f.path == json_path + '.json' for f in long_context_files):
+                task_parts.append(f"\n### {file_info.name} (Pre-built Database)\n")
+                task_parts.append(f"Path: {file_info.path}\n")
+                task_parts.append(f"Size: {file_info.size_bytes / 1024:.1f} KB\n")
+                task_parts.append("**This is a pre-built embedding database that can be loaded directly.**\n")
         
         task_parts.append("\n**IMPORTANT**: Use RAG tools to search these long context documents:")
         task_parts.append("- `rag_search`: Semantic search to find relevant passages (use 1-3 times with different keywords)")
         task_parts.append("- `rag_get_context`: Get concatenated context for answering questions")
         task_parts.append("- `rag_document_stats`: Get document collection statistics")
-        task_parts.append("\nDo NOT attempt to read these files directly - they are too large. Use RAG tools instead.\n")
+        task_parts.append("\nDo NOT attempt to read these files directly - they are too large. Use RAG tools instead.")
+        task_parts.append("If a pre-built .db file exists, the RAG tool will automatically use it for faster loading.\n")
     
     # Other files
     other_files = [f for f in contents.other_files if "long_context" not in f.name.lower()]
