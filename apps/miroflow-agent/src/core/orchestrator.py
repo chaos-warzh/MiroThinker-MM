@@ -198,12 +198,13 @@ class Orchestrator:
             "The structure should follow standard academic or professional report conventions.\n"
             "Guidelines:\n"
             "- **Language**: Detect the language of the task description. The outline (titles and summaries) MUST be in the SAME language (Chinese or English).\n"
-            "- **Word Count Planning**: Check if the task specifies a total word count (e.g., '1500-2000 words'). If so, you MUST plan the word count for EACH section to ensure the total meets the requirement. Even if not specified, aim for a comprehensive length (~1500 words) and allocate accordingly.\n"
+            "- **Word Count Planning**: CAREFULLY CHECK if the task specifies a total word count (e.g., '12000-15000 words'). If so, you MUST plan the word count for EACH section to ensure the total meets the requirement. This is CRITICAL. If the task requires a long report, ensure you create enough detailed sections to justify the length.\n"
             "- **Structure**: Each section object MUST include a 'word_count' field specifying the target length. The value must be in the SAME language as the outline (e.g., '~300字' for Chinese, '~300 words' for English).\n"
             "- The outline must include 'Introduction' (or '引言'), 'Conclusion' (or '结论'), and 'References' (or '参考资料') sections, translated appropriately.\n"
             "- Organize the main body into logical sections and subsections based on the research findings.\n"
             "- Do NOT use generic section titles like 'Main Report Body' or 'Body'. Use descriptive titles.\n"
-            "- Output STRICTLY in JSON format with the following structure:\n"
+            "- Output STRICTLY in valid JSON format. Do NOT include any conversational text or markdown formatting (like ```json) outside the JSON object. Just the raw JSON.\n"
+            "- Structure:\n"
             "{\n"
             "  \"title\": \"Proposed Report Title\",\n"
             "  \"sections\": [\n"
@@ -252,47 +253,106 @@ class Orchestrator:
                 response, message_history, agent_type="main"
             )
 
-        # Try to parse JSON; fall back to a minimal outline structure
-        outline: Dict[str, Any]
+        # Try to parse JSON; with retry and fallback
+        outline: Dict[str, Any] = {}
+
+        def parse_json_loose(text):
+            # 1. Try direct
+            try:
+                return json.loads(text)
+            except:
+                pass
+            # 2. Try extracting code block
+            if "```" in text:
+                parts = text.split("```")
+                for p in parts:
+                    p = p.strip()
+                    if p.startswith("json"):
+                        p = p[4:].strip()
+                    if p.startswith("{") and p.endswith("}"):
+                        try:
+                            return json.loads(p)
+                        except:
+                            continue
+            # 3. Try finding outer braces
+            start = text.find("{")
+            end = text.rfind("}")
+            if start != -1 and end != -1:
+                try:
+                    return json.loads(text[start : end + 1])
+                except:
+                    pass
+            raise ValueError("Could not parse JSON")
+
         try:
-            outline = json.loads(outline_text)
+            outline = parse_json_loose(outline_text)
             if not isinstance(outline, dict):
-                raise ValueError("Outline root is not a JSON object")
+                raise ValueError("Parsed JSON is not a dictionary")
         except Exception as e:
             self.task_log.log_step(
                 "warning",
                 "Report | Outline",
-                f"Failed to parse outline JSON, using fallback outline: {e}",
+                f"First JSON parse failed: {e}. Retrying generation...",
             )
-            outline = {
-                "title": task_description[:80],
-                "sections": [
-                    {
-                        "id": "1",
-                        "title": "Introduction",
-                        "summary": "Introduction to the topic.",
-                        "word_count": "~200 words",
-                    },
-                    {
-                        "id": "2",
-                        "title": "Analysis",
-                        "summary": "Detailed analysis based on research.",
-                        "word_count": "~800 words",
-                    },
-                    {
-                        "id": "3",
-                        "title": "Conclusion",
-                        "summary": "Summary of findings.",
-                        "word_count": "~300 words",
-                    },
-                    {
-                        "id": "4",
-                        "title": "References",
-                        "summary": "List of sources.",
-                        "word_count": "~100 words",
-                    },
-                ],
-            }
+            
+            # Retry once
+            retry_msg = "The previous output was not valid JSON. Please output ONLY the raw JSON object for the outline."
+            message_history.append({"role": "user", "content": retry_msg})
+            
+            response, message_history = await self.llm_client.create_message(
+                system_prompt=system_prompt,
+                message_history=message_history,
+                tool_definitions=None,
+                keep_tool_result=-1,
+                step_id=0,
+                task_log=self.task_log,
+                agent_type="main",
+            )
+            
+            if response:
+                outline_text, _, _ = self.llm_client.process_llm_response(
+                    response, message_history, agent_type="main"
+                )
+            
+            try:
+                outline = parse_json_loose(outline_text)
+                if not isinstance(outline, dict):
+                     raise ValueError("Retry JSON is not a dictionary")
+            except Exception as final_e:
+                self.task_log.log_step(
+                    "error",
+                    "Report | Outline",
+                    f"Retry failed: {final_e}. Using fallback.",
+                )
+                outline = {
+                    "title": task_description[:80],
+                    "sections": [
+                        {
+                            "id": "1",
+                            "title": "Introduction",
+                            "summary": "Introduction to the topic.",
+                            "word_count": "~200 words",
+                        },
+                        {
+                            "id": "2",
+                            "title": "Analysis",
+                            "summary": "Detailed analysis based on research.",
+                            "word_count": "~800 words",
+                        },
+                        {
+                            "id": "3",
+                            "title": "Conclusion",
+                            "summary": "Summary of findings.",
+                            "word_count": "~300 words",
+                        },
+                        {
+                            "id": "4",
+                            "title": "References",
+                            "summary": "List of sources.",
+                            "word_count": "~100 words",
+                        },
+                    ],
+                }
 
         # Log outline JSON (truncated if very long)
         try:
