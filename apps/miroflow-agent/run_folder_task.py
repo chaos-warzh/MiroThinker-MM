@@ -252,6 +252,75 @@ def save_report_to_md(
     return result_path
 
 
+def save_report_comparison(
+    results_dir: str,
+    folder_name: str,
+    original_report: str,
+    final_report: str,
+    query: str = None,
+) -> str:
+    """
+    Save both original and final reports to a comparison file.
+    
+    Args:
+        results_dir: Directory to save results
+        folder_name: Name of the task folder (used as filename)
+        original_report: The original report before validation
+        final_report: The final report after validation
+        query: Optional original query
+        
+    Returns:
+        Path to the saved comparison file
+    """
+    os.makedirs(results_dir, exist_ok=True)
+    timestamp = datetime.now().strftime('%Y-%m-%d_%H-%M-%S')
+    comparison_path = os.path.join(results_dir, f"{folder_name}_{timestamp}_comparison.txt")
+    
+    with open(comparison_path, 'w', encoding='utf-8') as f:
+        f.write("=" * 80 + "\n")
+        f.write("REPORT COMPARISON: ORIGINAL vs FINAL (After Validation)\n")
+        f.write("=" * 80 + "\n\n")
+        f.write(f"Task: {folder_name}\n")
+        f.write(f"Generated at: {datetime.now().strftime('%Y-%m-%d %H:%M:%S')}\n\n")
+        
+        if query:
+            f.write("-" * 80 + "\n")
+            f.write("QUERY\n")
+            f.write("-" * 80 + "\n")
+            f.write(f"{query}\n\n")
+        
+        f.write("=" * 80 + "\n")
+        f.write("ORIGINAL REPORT (Before Validation)\n")
+        f.write("=" * 80 + "\n\n")
+        f.write(original_report if original_report else "No original report generated.")
+        f.write("\n\n")
+        
+        f.write("=" * 80 + "\n")
+        f.write("FINAL REPORT (After Validation)\n")
+        f.write("=" * 80 + "\n\n")
+        f.write(final_report if final_report else "No final report generated.")
+        f.write("\n\n")
+        
+        # Add comparison summary
+        f.write("=" * 80 + "\n")
+        f.write("COMPARISON SUMMARY\n")
+        f.write("=" * 80 + "\n\n")
+        
+        original_len = len(original_report) if original_report else 0
+        final_len = len(final_report) if final_report else 0
+        
+        f.write(f"Original report length: {original_len} characters\n")
+        f.write(f"Final report length: {final_len} characters\n")
+        f.write(f"Length difference: {final_len - original_len} characters\n")
+        
+        if original_report == final_report:
+            f.write("\n✅ Reports are IDENTICAL (no changes made during validation)\n")
+        else:
+            f.write("\n⚠️ Reports are DIFFERENT (changes were made during validation)\n")
+    
+    return comparison_path
+
+
 async def run_folder_task(
     cfg: DictConfig,
     folder_path: str,
@@ -309,7 +378,7 @@ async def run_folder_task(
     task_file_name = multimodal_files[0] if multimodal_files else ""
     
     # Execute task
-    final_summary, final_boxed_answer, log_file_path = await execute_task_pipeline(
+    result = await execute_task_pipeline(
         cfg=cfg,
         task_id=task_id,
         task_file_name=task_file_name,
@@ -320,7 +389,14 @@ async def run_folder_task(
         log_dir=cfg.debug_dir,
     )
     
-    return final_summary, final_boxed_answer, log_file_path
+    # Handle both old (3-tuple) and new (4-tuple) return formats
+    if len(result) == 4:
+        final_summary, final_boxed_answer, original_boxed_answer, log_file_path = result
+    else:
+        final_summary, final_boxed_answer, log_file_path = result
+        original_boxed_answer = final_boxed_answer  # No validation was done
+    
+    return final_summary, final_boxed_answer, original_boxed_answer, log_file_path
 
 
 async def run_folder_task_simple(
@@ -458,7 +534,7 @@ def main(cfg: DictConfig) -> None:
         return
     
     # Run task
-    final_summary, final_boxed_answer, log_file_path = asyncio.run(
+    final_summary, final_boxed_answer, original_boxed_answer, log_file_path = asyncio.run(
         run_folder_task(
             cfg=cfg,
             folder_path=args.folder,
@@ -479,6 +555,15 @@ def main(cfg: DictConfig) -> None:
         query=args.query,
     )
     
+    # Save report comparison file
+    comparison_path = save_report_comparison(
+        results_dir=results_dir,
+        folder_name=folder_name,
+        original_report=original_boxed_answer,
+        final_report=final_boxed_answer,
+        query=args.query,
+    )
+    
     # Generate turn-by-turn log
     turn_log_path = report_path.replace('.md', '_turns.txt')
     try:
@@ -492,6 +577,7 @@ def main(cfg: DictConfig) -> None:
     print("=" * 60)
     print(f"\nLog file: {log_file_path}")
     print(f"Report saved to: {report_path}")
+    print(f"Report comparison saved to: {comparison_path}")
     print(f"Turn-by-turn log: {turn_log_path}")
     print(f"\nFinal Answer:\n{final_boxed_answer}")
     print("\n" + "=" * 60)
@@ -522,7 +608,7 @@ if __name__ == "__main__":
                 print("🔒 Running in OFFLINE mode: No web search, using long context (RAG) only")
             
             # Run with config
-            final_summary, final_boxed_answer, log_file_path = asyncio.run(
+            final_summary, final_boxed_answer, original_boxed_answer, log_file_path = asyncio.run(
                 run_folder_task_simple(args.folder, args.query, config_overrides=config_overrides)
             )
             
@@ -534,6 +620,15 @@ if __name__ == "__main__":
                 folder_name=folder_name,
                 final_answer=final_boxed_answer,
                 summary=final_summary,
+                query=args.query,
+            )
+            
+            # Save report comparison file
+            comparison_path = save_report_comparison(
+                results_dir=results_dir,
+                folder_name=folder_name,
+                original_report=original_boxed_answer,
+                final_report=final_boxed_answer,
                 query=args.query,
             )
             
@@ -550,6 +645,7 @@ if __name__ == "__main__":
             print("=" * 60)
             print(f"\nLog file: {log_file_path}")
             print(f"Report saved to: {report_path}")
+            print(f"Report comparison saved to: {comparison_path}")
             print(f"Turn-by-turn log: {turn_log_path}")
             print(f"\nFinal Answer:\n{final_boxed_answer}")
             print("\n" + "=" * 60)

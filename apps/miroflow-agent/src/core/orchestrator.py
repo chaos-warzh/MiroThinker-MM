@@ -36,6 +36,7 @@ from ..utils.parsing_utils import extract_llm_response_text
 from ..utils.prompt_utils import (
     generate_agent_specific_system_prompt,
     generate_agent_summarize_prompt,
+    generate_report_validation_prompt,
 )
 from ..utils.wrapper_utils import ErrorBox, ResponseBox
 
@@ -1111,9 +1112,170 @@ class Orchestrator:
                 "Unable to generate final answer",
             )
 
+        # ========== Report Validation and Revision Loop ==========
+        # Check if report validation is enabled (default: enabled)
+        enable_report_validation = os.environ.get("ENABLE_REPORT_VALIDATION", "1") == "1"
+        max_validation_turns = int(os.environ.get("MAX_VALIDATION_TURNS", "3"))
+        
+        # Store original report for comparison
+        original_report = final_answer_text
+        
+        if enable_report_validation and final_answer_text and final_answer_text != "No final answer generated.":
+            self.task_log.log_step(
+                "info",
+                "Main Agent | Report Validation",
+                "Starting report validation loop",
+            )
+            
+            # Log original report for comparison
+            self.task_log.log_step(
+                "info",
+                "Main Agent | Original Report (Before Validation)",
+                f"Original report content:\n\n{original_report}",
+            )
+            
+            validation_turn = 0
+            current_report = final_answer_text
+            
+            while validation_turn < max_validation_turns:
+                validation_turn += 1
+                self.task_log.log_step(
+                    "info",
+                    f"Main Agent | Validation Turn: {validation_turn}",
+                    f"Validating report against query requirements",
+                )
+                
+                # Generate validation prompt
+                validation_prompt = generate_report_validation_prompt(
+                    task_description=task_description,
+                    report_text=current_report,
+                    agent_type="main",
+                )
+                
+                # Add validation prompt to message history
+                validation_message_history = message_history.copy()
+                validation_message_history.append({"role": "user", "content": validation_prompt})
+                
+                # Call LLM for validation
+                (
+                    validation_response,
+                    should_break,
+                    tool_calls_info,
+                    validation_message_history,
+                ) = await self._handle_llm_call(
+                    system_prompt,
+                    validation_message_history,
+                    tool_definitions,
+                    turn_count + 1 + validation_turn,
+                    f"Main agent | Validation Turn: {validation_turn}",
+                    keep_tool_result=keep_tool_result,
+                    agent_type="main",
+                )
+                
+                if not validation_response:
+                    self.task_log.log_step(
+                        "warning",
+                        f"Main Agent | Validation Turn: {validation_turn}",
+                        "Validation LLM call failed, using current report",
+                    )
+                    break
+                
+                # Check if validation passed
+                if "✅" in validation_response or "验证通过" in validation_response or "Validation Passed" in validation_response:
+                    self.task_log.log_step(
+                        "info",
+                        f"Main Agent | Validation Turn: {validation_turn}",
+                        "Report validation passed - all requirements met",
+                    )
+                    # Keep the current report as final
+                    final_answer_text = current_report
+                    break
+                
+                # Check if revision is needed
+                elif "❌" in validation_response or "需要修改" in validation_response or "Needs Revision" in validation_response:
+                    self.task_log.log_step(
+                        "info",
+                        f"Main Agent | Validation Turn: {validation_turn}",
+                        "Report needs revision - extracting revised report",
+                    )
+                    
+                    # Extract revised report from validation response
+                    # Look for the revised report section
+                    revised_report = None
+                    
+                    # Try to find revised report in different formats
+                    markers = [
+                        "**修改后的完整报告**:",
+                        "**Revised Complete Report**:",
+                        "修改后的完整报告:",
+                        "Revised Complete Report:",
+                    ]
+                    
+                    for marker in markers:
+                        if marker in validation_response:
+                            parts = validation_response.split(marker, 1)
+                            if len(parts) > 1:
+                                revised_report = parts[1].strip()
+                                # Clean up any trailing markers or formatting
+                                if revised_report.startswith("```"):
+                                    # Remove code block markers
+                                    lines = revised_report.split("\n")
+                                    if lines[0].startswith("```"):
+                                        lines = lines[1:]
+                                    if lines and lines[-1].strip() == "```":
+                                        lines = lines[:-1]
+                                    revised_report = "\n".join(lines)
+                                break
+                    
+                    if revised_report:
+                        current_report = revised_report
+                        final_answer_text = revised_report
+                        self.task_log.log_step(
+                            "info",
+                            f"Main Agent | Validation Turn: {validation_turn}",
+                            f"Revised report extracted, length: {len(revised_report)} chars",
+                        )
+                    else:
+                        self.task_log.log_step(
+                            "warning",
+                            f"Main Agent | Validation Turn: {validation_turn}",
+                            "Could not extract revised report from validation response",
+                        )
+                        break
+                else:
+                    # Unclear validation result, log and continue
+                    self.task_log.log_step(
+                        "warning",
+                        f"Main Agent | Validation Turn: {validation_turn}",
+                        "Unclear validation result, treating as passed",
+                    )
+                    break
+            
+            # Update message history with validation results
+            message_history = validation_message_history
+            self.task_log.main_agent_message_history = {
+                "system_prompt": system_prompt,
+                "message_history": message_history,
+            }
+            self.task_log.save()
+            
+            self.task_log.log_step(
+                "info",
+                "Main Agent | Report Validation Complete",
+                f"Validation completed after {validation_turn} turn(s)",
+            )
+        # ========== End of Report Validation Loop ==========
+
         final_summary, final_boxed_answer, usage_log = (
             self.output_formatter.format_final_summary_and_log(
                 final_answer_text, self.llm_client
+            )
+        )
+        
+        # Also format original report for comparison
+        original_summary, original_boxed_answer, _ = (
+            self.output_formatter.format_final_summary_and_log(
+                original_report, self.llm_client
             )
         )
 
@@ -1138,4 +1300,5 @@ class Orchestrator:
             f"Main agent task {task_id} completed successfully",
         )
 
-        return final_summary, final_boxed_answer
+        # Return both original and final reports for comparison
+        return final_summary, final_boxed_answer, original_boxed_answer

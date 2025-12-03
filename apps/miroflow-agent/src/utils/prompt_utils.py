@@ -1006,6 +1006,102 @@ Be cautious and transparent in your output:
     return system_prompt
 
 
+def generate_report_validation_prompt(task_description, report_text, agent_type="main"):
+    """Generate a prompt to validate if the report meets all query requirements."""
+    use_cn_prompt = os.getenv("USE_CN_PROMPT", "0")
+    
+    if use_cn_prompt == "1":
+        validation_prompt = f"""请仔细检查以下报告是否完全符合原始query的所有要求。
+
+**原始Query**:
+{task_description}
+
+**当前报告**:
+{report_text}
+
+**请逐项检查以下内容**:
+
+1. **字数要求**: 如果query中指定了字数范围（如2000-3000字），请统计当前报告的字数，判断是否符合要求。
+2. **结构完整性**: 检查query要求的所有部分/章节是否都已包含在报告中。
+3. **内容覆盖**: 检查是否充分使用了提供的所有资料（文档、视频、图片等）。
+4. **引用规范**: 检查引用格式是否正确（应使用完整格式如 [long_context: "文档标题", chunk N]，而非简化格式如 [RAG-1]）。
+5. **格式要求**: 检查是否符合query中的其他格式要求。
+
+**输出格式**:
+如果报告完全符合所有要求，请回复：
+```
+✅ 验证通过
+
+报告已通过全部检查，符合query的所有要求：
+- 字数: [实际字数] 字，符合要求
+- 结构: 包含所有必需部分
+- 内容: 充分使用了提供的资料
+- 引用: 格式规范
+```
+
+如果报告存在问题，请回复：
+```
+❌ 需要修改
+
+发现以下问题需要修改：
+1. [问题1描述]
+2. [问题2描述]
+...
+
+**修改后的完整报告**:
+[在此处提供修改后的完整报告内容]
+```
+
+请注意：如果需要修改，必须提供修改后的完整报告，而不仅仅是指出问题。
+"""
+    else:
+        validation_prompt = f"""Please carefully check if the following report fully meets all requirements of the original query.
+
+**Original Query**:
+{task_description}
+
+**Current Report**:
+{report_text}
+
+**Please check the following items**:
+
+1. **Word Count**: If the query specifies a word count range (e.g., 2000-3000 words), count the current report's words and determine if it meets the requirement.
+2. **Structure Completeness**: Check if all required sections/parts specified in the query are included in the report.
+3. **Content Coverage**: Check if all provided materials (documents, videos, images, etc.) have been adequately used.
+4. **Citation Format**: Check if citation format is correct (should use full format like [long_context: "Document Title", chunk N], not simplified format like [RAG-1]).
+5. **Format Requirements**: Check if other format requirements in the query are met.
+
+**Output Format**:
+If the report fully meets all requirements, reply:
+```
+✅ Validation Passed
+
+The report has passed all checks and meets all query requirements:
+- Word count: [actual count] words, meets requirement
+- Structure: Contains all required sections
+- Content: Adequately uses provided materials
+- Citations: Format is correct
+```
+
+If the report has issues, reply:
+```
+❌ Needs Revision
+
+The following issues need to be addressed:
+1. [Issue 1 description]
+2. [Issue 2 description]
+...
+
+**Revised Complete Report**:
+[Provide the complete revised report here]
+```
+
+Note: If revision is needed, you must provide the complete revised report, not just point out the issues.
+"""
+    
+    return validation_prompt
+
+
 def generate_agent_summarize_prompt(task_description, task_failed=False, agent_type=""):
     if agent_type == "main":
         summarize_prompt = (

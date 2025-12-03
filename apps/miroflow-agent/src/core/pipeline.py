@@ -105,7 +105,7 @@ async def execute_task_pipeline(
             sub_agent_tool_definitions=sub_agent_tool_definitions,
         )
 
-        final_summary, final_boxed_answer = await orchestrator.run_main_agent(
+        final_summary, final_boxed_answer, original_boxed_answer = await orchestrator.run_main_agent(
             task_description=task_description,
             task_file_name=task_file_name,
             task_id=task_id,
@@ -117,7 +117,7 @@ async def execute_task_pipeline(
         task_log.status = "success"
 
         log_file_path = task_log.save()
-        return final_summary, final_boxed_answer, log_file_path
+        return final_summary, final_boxed_answer, original_boxed_answer, log_file_path
 
     except Exception as e:
         error_details = traceback.format_exc()
