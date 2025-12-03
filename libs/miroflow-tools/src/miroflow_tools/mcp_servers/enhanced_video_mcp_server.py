@@ -19,6 +19,37 @@ Exposes 4 video tools for LLM agents via FastMCP
 
 import json
 import logging
+import os
+from pathlib import Path
+
+# Load environment variables from .env file
+# Try multiple possible locations for .env file
+def load_env():
+    """Load .env file from various possible locations"""
+    try:
+        from dotenv import load_dotenv
+        
+        # Possible .env locations (in order of priority)
+        possible_paths = [
+            Path.cwd() / ".env",  # Current working directory
+            Path(__file__).parent.parent.parent.parent.parent.parent / "apps" / "miroflow-agent" / ".env",
+            Path.home() / ".miroflow" / ".env",
+        ]
+        
+        for env_path in possible_paths:
+            if env_path.exists():
+                load_dotenv(env_path)
+                logging.info(f"Loaded .env from: {env_path}")
+                return True
+        
+        # Also try load_dotenv() which searches parent directories
+        load_dotenv()
+        return True
+    except ImportError:
+        logging.warning("python-dotenv not installed, skipping .env loading")
+        return False
+
+load_env()
 
 from fastmcp import FastMCP
 

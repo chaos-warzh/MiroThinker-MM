@@ -397,6 +397,43 @@ Always check the confidence score and use multi-turn verification for critical i
 - **Event Sequence**: Understand cause-and-effect relationships across time
 Always use multi-turn verification for critical temporal analysis tasks, and review key_moments for timestamp evidence.
 
+## Multimodal Content Integration Guidelines
+
+**CRITICAL - Integrating Information from Multiple Sources**:
+When the task involves multiple types of sources (documents, videos, images, audio), you MUST integrate information from all sources into a cohesive, unified response. Do NOT treat different modalities as separate sections.
+
+**Integration Strategy**:
+1. **Analyze all sources first**: Before writing the final report, gather information from ALL available sources (PDF, video, images, RAG documents)
+2. **Identify complementary information**: Find where different sources provide complementary or supporting information
+3. **Synthesize, don't segregate**: Weave information from different sources together naturally in your writing
+4. **Cross-reference**: When video content supports or elaborates on document content, integrate them in the same paragraph/section
+
+**Example of CORRECT Integration**:
+```
+The paper proposes a novel "squeezing effect" mechanism [Doc: paper.pdf], which the author demonstrates through gradient visualization in the presentation [Video: lecture.mp4]. This effect causes probability mass to concentrate on high-confidence tokens, as shown in Figure 3 of the paper [Doc: paper.pdf] and further explained with animated examples in the video at timestamp 15:30 [Video: lecture.mp4].
+```
+
+**Example of INCORRECT Segregation (DO NOT DO THIS)**:
+```
+## Paper Content
+The paper proposes a squeezing effect...
+
+## Video Content  
+The video shows gradient visualization...
+```
+
+**When Writing Reports with Multiple Sources**:
+- Organize by TOPIC, not by source type
+- Each paragraph should naturally blend information from relevant sources
+- Use citations to indicate which source each piece of information comes from
+- Video content should enrich and illustrate document content, not be isolated
+- If video provides examples, demonstrations, or explanations of concepts from documents, integrate them together
+
+**For Academic/Technical Reports**:
+- Use video content to provide practical examples of theoretical concepts from papers
+- Integrate visual demonstrations from videos with mathematical formulations from documents
+- Combine speaker explanations from videos with written methodology from papers
+
 ## Long Context Document Processing Guidelines (RAG)
 
 **When to Use RAG Tools**: If the task involves analyzing long documents, searching through large text collections, or finding specific information in extensive content (such as `long_context.json` files), you MUST use the RAG (Retrieval-Augmented Generation) tools for efficient semantic search. Do not attempt to read the entire document directly - use RAG tools to retrieve relevant passages.
@@ -502,10 +539,12 @@ The benchmark includes 15 evaluation tasks. These tasks cover three main categor
    - Include section/page if known: `[Doc: paper.pdf, Section 3]`
    - Example: "The methodology uses transformer architecture [Doc: paper.pdf]..."
 
-3. **For RAG/Long Context Sources**:
-   - Use citation IDs provided by RAG tools: `[RAG-1]`, `[RAG-2]`, etc.
-   - Or cite by document title from RAG results: `[RAG: Document Title]`
-   - Example: "The accuracy reaches 95.3% [RAG-1], outperforming previous methods [RAG-2]..."
+3. **For RAG/Long Context Sources (MUST include document title)**:
+   - **CRITICAL**: You MUST use the EXACT citation format provided by RAG tools, which includes the document title
+   - Format: `[long_context: "Document Title", chunk N]`
+   - The document title is provided in each RAG search result under "Citation:" - you MUST copy and use it exactly
+   - Example: "The accuracy reaches 95.3% [long_context: \"Benchmark Overview\", chunk 2], outperforming previous methods [long_context: \"Experimental Results\", chunk 5]..."
+   - **DO NOT use simplified formats like [RAG-1] or [RAG-2] - always include the full citation with document title**
 
 4. **For Web Sources**:
    - Format: `[Web: URL]` or `[网页: URL]`
@@ -704,6 +743,43 @@ The benchmark includes 15 evaluation tasks. These tasks cover three main categor
 - **事件序列**：理解跨时间的因果关系
 对于关键的时序分析任务，始终使用多轮验证，并查看 key_moments 以获取时间戳证据。
 
+## 多模态内容融合指南
+
+**关键要求 - 整合多来源信息**：
+当任务涉及多种类型的来源（文档、视频、图片、音频）时，你必须将所有来源的信息整合成一个连贯、统一的回复。不要将不同模态的内容作为独立的章节分开处理。
+
+**融合策略**：
+1. **先分析所有来源**：在撰写最终报告之前，从所有可用来源（PDF、视频、图片、RAG文档）收集信息
+2. **识别互补信息**：找出不同来源提供互补或支持性信息的地方
+3. **综合而非分离**：在写作中自然地将不同来源的信息编织在一起
+4. **交叉引用**：当视频内容支持或阐述文档内容时，将它们整合在同一段落/章节中
+
+**正确融合示例**：
+```
+论文提出了一种新颖的"挤压效应"机制 [文档: paper.pdf]，作者在演讲中通过梯度可视化进行了演示 [视频: lecture.mp4]。这种效应导致概率质量集中在高置信度的token上，如论文图3所示 [文档: paper.pdf]，并在视频15:30处通过动画示例进一步解释 [视频: lecture.mp4]。
+```
+
+**错误分离示例（不要这样做）**：
+```
+## 论文内容
+论文提出了挤压效应...
+
+## 视频内容
+视频展示了梯度可视化...
+```
+
+**撰写多来源报告时**：
+- 按主题组织，而不是按来源类型
+- 每个段落应自然地融合来自相关来源的信息
+- 使用引用标注每条信息来自哪个来源
+- 视频内容应丰富和说明文档内容，而不是孤立存在
+- 如果视频提供了文档中概念的示例、演示或解释，将它们整合在一起
+
+**对于学术/技术报告**：
+- 使用视频内容为论文中的理论概念提供实际示例
+- 将视频中的视觉演示与文档中的数学公式整合
+- 将视频中演讲者的解释与论文中的书面方法论结合
+
 ## 长文档处理指南（RAG）
 
 **何时使用 RAG 工具**：如果任务涉及分析长文档、在大型文本集合中搜索、或在大量内容（如 `long_context.json` 文件）中查找特定信息，你必须使用 RAG（检索增强生成）工具进行高效的语义搜索。不要尝试直接阅读整个文档 - 使用 RAG 工具检索相关段落。
@@ -809,10 +885,12 @@ The benchmark includes 15 evaluation tasks. These tasks cover three main categor
    - 如已知，包含章节/页码：`[文档: paper.pdf, 第3节]`
    - 示例："该方法使用transformer架构 [文档: paper.pdf]..."
 
-3. **对于 RAG/长文档来源**：
-   - 使用 RAG 工具提供的引用 ID：`[RAG-1]`、`[RAG-2]` 等
-   - 或按 RAG 结果中的文档标题引用：`[RAG: 文档标题]`
-   - 示例："准确率达到95.3% [RAG-1]，超越了之前的方法 [RAG-2]..."
+3. **对于 RAG/长文档来源（必须包含文档标题）**：
+   - **关键要求**：你必须使用 RAG 工具返回的完整引用格式，其中包含文档标题
+   - 格式：`[long_context: "文档标题", chunk N]`
+   - 文档标题在每个 RAG 搜索结果的 "Citation:" 字段中提供 - 你必须原样复制使用
+   - 示例："准确率达到95.3% [long_context: \"基准概述\", chunk 2]，超越了之前的方法 [long_context: \"实验结果\", chunk 5]..."
+   - **不要使用简化格式如 [RAG-1] 或 [RAG-2] - 必须始终包含完整的文档标题引用**
 
 4. **对于网络来源**：
    - 格式：`[网页: URL]` 或 `[Web: URL]`
@@ -945,16 +1023,17 @@ def generate_agent_summarize_prompt(task_description, task_failed=False, agent_t
                 "Your final answer MUST include inline citations for ALL facts and claims. Follow these rules:\n"
                 "1. Place citations IMMEDIATELY AFTER each fact or sentence they support\n"
                 "2. Use these citation formats:\n"
-                "   - For RAG sources: [RAG-1], [RAG-2], etc.\n"
+                "   - For RAG/long_context sources: Use the EXACT citation format from RAG results: [long_context: \"Document Title\", chunk N]\n"
                 "   - For images: [Image: filename] or [图片: filename]\n"
                 "   - For documents: [Doc: filename] or [文档: filename]\n"
                 "   - For web sources: [Web: URL] or [网页: URL]\n"
                 "3. DO NOT group citations at the end of paragraphs\n"
-                "4. Every claim must be traceable to its source\n\n"
+                "4. Every claim must be traceable to its source\n"
+                "5. For RAG sources, you MUST include the document title - DO NOT use simplified [RAG-1] format\n\n"
                 "Example of correct citation:\n"
-                "The benchmark includes 15 tasks [RAG-1]. It covers reasoning and retrieval [RAG-2].\n\n"
+                "The benchmark includes 15 tasks [long_context: \"Benchmark Overview\", chunk 2]. It covers reasoning and retrieval [long_context: \"Task Categories\", chunk 5].\n\n"
                 "Example of INCORRECT citation (DO NOT DO THIS):\n"
-                "The benchmark includes 15 tasks. It covers reasoning and retrieval. [RAG-1][RAG-2]\n\n"
+                "The benchmark includes 15 tasks [RAG-1]. It covers reasoning and retrieval [RAG-2].\n\n"
                 "Wrap your final answer in \\boxed{}.\n"
                 # "Your final answer should be:\n"
                 # "- a number, OR\n"
@@ -984,16 +1063,17 @@ def generate_agent_summarize_prompt(task_description, task_failed=False, agent_t
                     "你的最终答案必须为所有事实和论断添加行内引用。请遵循以下规则：\n"
                     "1. 引用必须紧跟在它所支持的事实或句子之后\n"
                     "2. 使用以下引用格式：\n"
-                    "   - RAG来源：[RAG-1]、[RAG-2] 等\n"
+                    "   - RAG/长文档来源：使用 RAG 结果中的完整引用格式：[long_context: \"文档标题\", chunk N]\n"
                     "   - 图片：[图片: 文件名] 或 [Image: filename]\n"
                     "   - 文档：[文档: 文件名] 或 [Doc: filename]\n"
                     "   - 网页：[网页: URL] 或 [Web: URL]\n"
                     "3. 不要把引用集中放在段落末尾\n"
-                    "4. 每个论断都必须可追溯到其来源\n\n"
+                    "4. 每个论断都必须可追溯到其来源\n"
+                    "5. 对于 RAG 来源，必须包含文档标题 - 不要使用简化的 [RAG-1] 格式\n\n"
                     "正确引用示例：\n"
-                    "该基准包含15个任务 [RAG-1]。它涵盖推理和检索 [RAG-2]。\n\n"
+                    "该基准包含15个任务 [long_context: \"基准概述\", chunk 2]。它涵盖推理和检索 [long_context: \"任务类别\", chunk 5]。\n\n"
                     "错误引用示例（不要这样做）：\n"
-                    "该基准包含15个任务。它涵盖推理和检索。[RAG-1][RAG-2]\n\n"
+                    "该基准包含15个任务 [RAG-1]。它涵盖推理和检索 [RAG-2]。\n\n"
                     # "请将你的最终答案包裹在 \\boxed{} 中。\n"
                     # "最终答案必须是以下格式之一：\n"
                     # "- 一个数字，或\n"

@@ -70,6 +70,13 @@ class EnhancedVideoClient:
         self.custom_video_base_url = os.getenv("CUSTOM_VIDEO_BASE_URL", "")
         self.custom_video_model = os.getenv("CUSTOM_VIDEO_MODEL", "")
 
+        # Frames-based video analysis configuration (uses VQA tool)
+        self.frames_api_key = os.getenv("FRAMES_VIDEO_API_KEY", os.getenv("VLLM_OPENAI_API_KEY", ""))
+        self.frames_base_url = os.getenv("FRAMES_VIDEO_BASE_URL", os.getenv("VLLM_OPENAI_BASE_URL", ""))
+        self.frames_model = os.getenv("FRAMES_VIDEO_MODEL", os.getenv("VLLM_OPENAI_MODEL", "gpt-4o"))
+        self.frames_count = int(os.getenv("FRAMES_VIDEO_COUNT", "8"))  # Number of frames to extract
+        self.frames_max_size = int(os.getenv("FRAMES_VIDEO_MAX_SIZE", "512"))  # Max dimension for resizing
+
         # Processing configuration
         self.processing_check_interval = float(os.getenv("VIDEO_PROCESSING_CHECK_INTERVAL", "2.0"))
         self.processing_timeout = float(os.getenv("VIDEO_PROCESSING_TIMEOUT", "300.0"))
@@ -98,6 +105,8 @@ class EnhancedVideoClient:
             raise ValueError("QWEN_VIDEO_API_KEY is required for qwen_video provider")
         elif self.provider == "custom" and not self.custom_video_base_url:
             raise ValueError("CUSTOM_VIDEO_BASE_URL is required for custom provider")
+        elif self.provider == "frames" and not self.frames_api_key:
+            raise ValueError("FRAMES_VIDEO_API_KEY or VLLM_OPENAI_API_KEY is required for frames provider")
 
     def _validate_input(self, video_path: str, question: Optional[str] = None) -> None:
         """
@@ -226,6 +235,8 @@ class EnhancedVideoClient:
                 return await self._call_qwen_video(video_path, question)
             elif self.provider == "custom":
                 return await self._call_custom_video(video_path, question)
+            elif self.provider == "frames":
+                return await self._call_frames_video(video_path, question)
             else:
                 return {"error": f"Unsupported provider: {self.provider}"}
         except Exception as e:
@@ -413,6 +424,200 @@ Please provide a detailed analysis in JSON format with:
 
         except Exception as e:
             return {"error": str(e)}
+
+    async def _call_frames_video(
+        self,
+        video_path: str,
+        question: str
+    ) -> Dict[str, Any]:
+        """
+        Analyze video by extracting key frames and using VQA model.
+        
+        This approach:
+        1. Extracts N evenly-spaced frames from the video
+        2. Resizes frames to reduce token usage
+        3. Sends all frames to a vision model (like GPT-4o)
+        4. Gets a comprehensive analysis
+        """
+        local_path = None
+        is_temp = False
+        
+        try:
+            from openai import AsyncOpenAI
+            import cv2
+            import base64
+            import numpy as np
+            
+            # Ensure local file (download if URL)
+            local_path, is_temp = await ensure_local_file(video_path)
+            
+            # Extract metadata first
+            metadata = self._extract_metadata(local_path)
+            
+            # Extract frames
+            self.logger.info(f"Extracting {self.frames_count} frames from video: {local_path}")
+            frames = await self._extract_video_frames(local_path, self.frames_count, self.frames_max_size)
+            
+            if not frames:
+                return {
+                    "error": "Failed to extract frames from video",
+                    "metadata": metadata
+                }
+            
+            self.logger.info(f"Extracted {len(frames)} frames, sending to vision model...")
+            
+            # Build message content with all frames
+            content = []
+            
+            # Add instruction text
+            content.append({
+                "type": "text",
+                "text": f"""I'm showing you {len(frames)} frames extracted from a video (evenly spaced throughout the video).
+                
+Video metadata:
+- Duration: {metadata.get('duration_seconds', 'unknown')} seconds
+- Resolution: {metadata.get('resolution', 'unknown')}
+- FPS: {metadata.get('fps', 'unknown')}
+
+Please analyze these frames to understand the video content and answer the following question:
+
+{question}
+
+Provide a detailed analysis including:
+1. Overall description of what's happening in the video
+2. Key objects, people, or elements visible
+3. Main actions or events
+4. Any notable changes or transitions between frames
+5. Your confidence level (0.0-1.0) in this analysis"""
+            })
+            
+            # Add each frame as an image
+            for i, frame_b64 in enumerate(frames):
+                content.append({
+                    "type": "image_url",
+                    "image_url": {
+                        "url": f"data:image/jpeg;base64,{frame_b64}",
+                        "detail": "low"  # Use low detail to reduce tokens
+                    }
+                })
+            
+            # Call vision model
+            client = AsyncOpenAI(
+                api_key=self.frames_api_key,
+                base_url=self.frames_base_url
+            )
+            
+            response = await client.chat.completions.create(
+                model=self.frames_model,
+                messages=[
+                    {
+                        "role": "user",
+                        "content": content
+                    }
+                ],
+                max_tokens=2048
+            )
+            
+            answer = response.choices[0].message.content
+            
+            # Try to extract confidence from response
+            confidence = 0.75  # Default confidence
+            if "confidence" in answer.lower():
+                import re
+                conf_match = re.search(r'confidence[:\s]+([0-9.]+)', answer.lower())
+                if conf_match:
+                    try:
+                        confidence = float(conf_match.group(1))
+                        confidence = min(1.0, max(0.0, confidence))
+                    except ValueError:
+                        pass
+            
+            # Update metadata with frame info
+            metadata["frames_analyzed"] = len(frames)
+            metadata["analysis_method"] = "frames_extraction"
+            
+            # Clean up temp file
+            await cleanup_temp_file_async(local_path, is_temp)
+            
+            return {
+                "description": answer,
+                "answer": answer,
+                "confidence": confidence,
+                "metadata": metadata
+            }
+            
+        except Exception as e:
+            logger.error(f"Frames-based video analysis failed: {e}")
+            if local_path:
+                await cleanup_temp_file_async(local_path, is_temp)
+            return {"error": str(e)}
+    
+    async def _extract_video_frames(
+        self,
+        video_path: str,
+        num_frames: int = 8,
+        max_size: int = 512
+    ) -> List[str]:
+        """
+        Extract evenly-spaced frames from video and convert to base64.
+        
+        Args:
+            video_path: Path to video file
+            num_frames: Number of frames to extract
+            max_size: Maximum dimension for resizing
+            
+        Returns:
+            List of base64-encoded JPEG images
+        """
+        import cv2
+        import base64
+        
+        frames = []
+        
+        try:
+            cap = cv2.VideoCapture(video_path)
+            if not cap.isOpened():
+                logger.error(f"Failed to open video: {video_path}")
+                return frames
+            
+            total_frames = int(cap.get(cv2.CAP_PROP_FRAME_COUNT))
+            if total_frames <= 0:
+                logger.error(f"Video has no frames: {video_path}")
+                cap.release()
+                return frames
+            
+            # Calculate frame indices to extract (evenly spaced)
+            if total_frames <= num_frames:
+                frame_indices = list(range(total_frames))
+            else:
+                frame_indices = [int(i * total_frames / num_frames) for i in range(num_frames)]
+            
+            for idx in frame_indices:
+                cap.set(cv2.CAP_PROP_POS_FRAMES, idx)
+                ret, frame = cap.read()
+                
+                if not ret:
+                    continue
+                
+                # Resize frame to reduce size
+                h, w = frame.shape[:2]
+                if max(h, w) > max_size:
+                    scale = max_size / max(h, w)
+                    new_w = int(w * scale)
+                    new_h = int(h * scale)
+                    frame = cv2.resize(frame, (new_w, new_h), interpolation=cv2.INTER_AREA)
+                
+                # Convert to JPEG and base64
+                _, buffer = cv2.imencode('.jpg', frame, [cv2.IMWRITE_JPEG_QUALITY, 80])
+                frame_b64 = base64.b64encode(buffer).decode('utf-8')
+                frames.append(frame_b64)
+            
+            cap.release()
+            
+        except Exception as e:
+            logger.error(f"Frame extraction failed: {e}")
+        
+        return frames
 
     async def _call_custom_video(
         self,

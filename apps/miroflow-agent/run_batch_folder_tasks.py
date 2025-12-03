@@ -68,10 +68,13 @@ def load_tasks_from_jsonl(jsonl_path: str) -> List[Dict]:
                 continue
             try:
                 task = json.loads(line)
+                # Support both 'number' and 'task' field names
+                if 'task' in task and 'number' not in task:
+                    task['number'] = task['task']
                 if 'number' in task and 'query' in task:
                     tasks.append(task)
                 else:
-                    print(f"Warning: Line {line_num} missing 'number' or 'query' field, skipping")
+                    print(f"Warning: Line {line_num} missing 'number'/'task' or 'query' field, skipping")
             except json.JSONDecodeError as e:
                 print(f"Warning: Line {line_num} is not valid JSON: {e}, skipping")
     return tasks
@@ -307,6 +310,11 @@ Examples:
         action="store_true",
         help="Preview tasks without running them"
     )
+    parser.add_argument(
+        "--offline",
+        action="store_true",
+        help="Offline mode: no web search, only use long context (RAG) as information source"
+    )
     
     args = parser.parse_args()
     
@@ -338,6 +346,12 @@ Examples:
         print("No tasks to process")
         sys.exit(0)
     
+    # Prepare config overrides for offline mode
+    config_overrides = []
+    if args.offline:
+        config_overrides.append("agent=evaluation_offline")
+        print("🔒 Running in OFFLINE mode: No web search, using long context (RAG) only")
+    
     # Preview or run
     if args.preview:
         preview_tasks(data_dir, tasks, results_dir)
@@ -352,7 +366,8 @@ Examples:
                 data_dir=data_dir,
                 tasks=tasks,
                 results_dir=results_dir,
-                skip_completed=args.skip_completed
+                skip_completed=args.skip_completed,
+                config_overrides=config_overrides if config_overrides else None
             )
         )
         
