@@ -39,6 +39,7 @@ from ..utils.prompt_utils import (
     generate_report_validation_prompt,
 )
 from ..utils.wrapper_utils import ErrorBox, ResponseBox
+from .progressive_memory import ContentPriority, MemoryCompressor, ProgressiveMemory
 
 logger = logging.getLogger(__name__)
 
@@ -93,6 +94,21 @@ class Orchestrator:
 
         # Record used subtask / q / Query
         self.used_queries = {}
+
+        # Initialize Progressive Memory (optional feature)
+        self.use_progressive_memory = os.environ.get("USE_PROGRESSIVE_MEMORY", "0") == "1"
+        self.progressive_memory: Optional[ProgressiveMemory] = None
+        if self.use_progressive_memory:
+            max_tokens = getattr(cfg.llm, "max_context_length", 100000)
+            reserved_tokens = int(os.environ.get("MEMORY_RESERVED_TOKENS", "20000"))
+            self.progressive_memory = ProgressiveMemory(
+                max_tokens=max_tokens,
+                reserved_tokens=reserved_tokens,
+            )
+            logger.info(
+                f"Progressive Memory enabled: max_tokens={max_tokens}, "
+                f"reserved_tokens={reserved_tokens}"
+            )
 
     async def _stream_update(self, event_type: str, data: dict):
         """Send streaming update in new SSE protocol format"""
@@ -275,6 +291,120 @@ class Orchestrator:
         elif tool_name == "scrape_website":
             return arguments.get("url")
         return None
+
+    def _get_content_priority_for_tool(self, tool_name: str) -> ContentPriority:
+        """
+        Determine the content priority based on tool name.
+        """
+        # RAG and document search tools have higher priority
+        rag_tools = ["rag_search", "search_documents", "read_file", "read_document"]
+        if tool_name in rag_tools:
+            return ContentPriority.RAG_RESULT
+        
+        # Sub-agent results are treated as tool results
+        if tool_name.startswith("agent-") or tool_name == "search_and_browse":
+            return ContentPriority.TOOL_RESULT
+        
+        # Default to tool result
+        return ContentPriority.TOOL_RESULT
+
+    async def _compress_content(self, content: str, level: int) -> str:
+        """
+        Compress content using LLM.
+        
+        Args:
+            content: Content to compress
+            level: Compression level (1=light, 2=heavy)
+            
+        Returns:
+            Compressed content
+        """
+        if level == 1:
+            prompt = f"""请将以下内容压缩为原来的1/3长度，保留所有关键信息、数据和引用：
+
+{content}
+
+压缩后的内容（保留关键信息）："""
+        else:
+            prompt = f"""请将以下内容压缩为3-5个核心要点，只保留最重要的信息：
+
+{content}
+
+核心要点："""
+        
+        try:
+            compressed = await self.llm_client.quick_complete(prompt)
+            if compressed:
+                self.task_log.log_step(
+                    "info",
+                    "Memory | Compression",
+                    f"Compressed content from {len(content)} to {len(compressed)} chars (level {level})",
+                )
+                return compressed
+        except Exception as e:
+            self.task_log.log_step(
+                "warning",
+                "Memory | Compression",
+                f"LLM compression failed: {e}, using fallback",
+            )
+        
+        # Fallback: simple truncation
+        if level == 1:
+            target_len = len(content) // 3
+            return content[:target_len] + "\n... [Content compressed]"
+        else:
+            target_len = len(content) // 6
+            return content[:target_len] + "\n... [Content heavily compressed]"
+
+    async def _ensure_memory_capacity(self, incoming_content: str, priority: ContentPriority) -> bool:
+        """
+        Ensure there's enough memory capacity for incoming content.
+        Compresses existing content if needed.
+        
+        Args:
+            incoming_content: The content to be added
+            priority: Priority of the incoming content
+            
+        Returns:
+            True if capacity is available, False otherwise
+        """
+        if not self.progressive_memory:
+            return True
+        
+        incoming_tokens = self.progressive_memory.estimate_tokens(incoming_content)
+        
+        if not self.progressive_memory.needs_compression(incoming_tokens):
+            return True
+        
+        self.task_log.log_step(
+            "info",
+            "Memory | Compression Needed",
+            f"Memory needs compression for {incoming_tokens} incoming tokens. "
+            f"Current: {self.progressive_memory.current_tokens}/{self.progressive_memory.max_tokens}",
+        )
+        
+        # Compress existing content
+        success, tokens_freed = await self.progressive_memory.compress_if_needed(
+            incoming_tokens,
+            self._compress_content,
+        )
+        
+        if success:
+            self.task_log.log_step(
+                "info",
+                "Memory | Compression Complete",
+                f"Freed {tokens_freed} tokens. "
+                f"Current: {self.progressive_memory.current_tokens}/{self.progressive_memory.max_tokens}",
+            )
+        else:
+            self.task_log.log_step(
+                "warning",
+                "Memory | Compression Failed",
+                f"Could not free enough space. "
+                f"Current: {self.progressive_memory.current_tokens}/{self.progressive_memory.max_tokens}",
+            )
+        
+        return success
 
     async def _handle_llm_call(
         self,
