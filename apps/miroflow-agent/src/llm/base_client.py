@@ -316,6 +316,50 @@ class BaseClient(ABC):
             return message_history[-keep_tool_result:]
         return message_history
 
+    async def quick_complete(self, prompt: str, max_tokens: int = 2000) -> str:
+        """
+        Quick completion for simple tasks like compression.
+        Uses minimal parameters for fast response.
+        
+        Args:
+            prompt: The prompt to complete
+            max_tokens: Maximum tokens for response (default 2000)
+            
+        Returns:
+            The completion text
+        """
+        try:
+            # Create a simple message history with just the prompt
+            message_history = [{"role": "user", "content": prompt}]
+            
+            # Call the underlying _create_message with minimal parameters
+            response, _ = await self._create_message(
+                system_prompt="You are a helpful assistant that compresses and summarizes content.",
+                messages_history=message_history,
+                tools_definitions=[],
+                keep_tool_result=-1,
+            )
+            
+            # Extract text from response
+            if response:
+                if hasattr(response, "choices") and response.choices:
+                    # OpenAI format
+                    return response.choices[0].message.content or ""
+                elif hasattr(response, "content") and response.content:
+                    # Anthropic format
+                    for block in response.content:
+                        if hasattr(block, "text"):
+                            return block.text
+            
+            return ""
+        except Exception as e:
+            self.task_log.log_step(
+                "warning",
+                "LLM | Quick Complete",
+                f"Quick complete failed: {str(e)}",
+            )
+            return ""
+
     def _format_response_for_log(self, response) -> Dict:
         """Format response for logging"""
         if not response:
