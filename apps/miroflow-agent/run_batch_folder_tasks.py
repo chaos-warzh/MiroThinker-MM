@@ -47,7 +47,7 @@ from typing import List, Dict, Optional
 # Add src to path for imports
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 
-from run_folder_task import run_folder_task_simple, save_report_to_md, get_results_dir_for_folder
+from run_folder_task import run_folder_task_simple, save_report_to_md, save_report_comparison, get_results_dir_for_folder
 
 
 def load_tasks_from_jsonl(jsonl_path: str) -> List[Dict]:
@@ -134,11 +134,17 @@ async def run_single_task(
     try:
         start_time = time.time()
         
-        final_summary, final_boxed_answer, log_file_path = await run_folder_task_simple(
+        result = await run_folder_task_simple(
             folder_path=folder_path,
             query=query,
             config_overrides=config_overrides
         )
+        
+        # Handle both old (3-tuple) and new (4-tuple) return formats
+        if len(result) == 4:
+            final_summary, final_boxed_answer, original_boxed_answer, log_file_path = result
+        else:
+            final_summary, final_boxed_answer, log_file_path = result
         
         elapsed_time = time.time() - start_time
         
@@ -151,6 +157,17 @@ async def run_single_task(
             query=query,
         )
         print(f"Report saved to: {report_path}")
+        
+        # Save report comparison (original vs final after validation)
+        if len(result) == 4:
+            comparison_path = save_report_comparison(
+                results_dir=results_dir,
+                folder_name=task_number,
+                original_report=original_boxed_answer,
+                final_report=final_boxed_answer,
+                query=query,
+            )
+            print(f"Report comparison saved to: {comparison_path}")
         
         print(f"\n✓ Task {task_number} completed in {elapsed_time:.1f}s")
         print(f"  Log file: {log_file_path}")
