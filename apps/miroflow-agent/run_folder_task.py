@@ -32,6 +32,7 @@ Usage:
 
 import argparse
 import asyncio
+import json
 import os
 import sys
 from datetime import datetime
@@ -56,6 +57,62 @@ logger = bootstrap_logger()
 
 # Default results directory
 DEFAULT_RESULTS_DIR = "results"
+
+
+def resolve_query_from_jsonl(query: str, folder_path: str) -> str:
+    """
+    Resolve query from a jsonl file if the query is a file path.
+    
+    If query ends with .jsonl, it reads the file and finds the matching query
+    based on the folder number (e.g., folder '001' matches {"number": "001", ...}).
+    
+    Args:
+        query: Either a direct query string or a path to a jsonl file
+        folder_path: Path to the task folder (used to extract folder number)
+        
+    Returns:
+        The resolved query string
+    """
+    # Check if query is a jsonl file path
+    if not query.endswith('.jsonl'):
+        return query
+    
+    # Check if the file exists
+    if not os.path.exists(query):
+        # Try relative to current directory
+        if not os.path.isabs(query):
+            # Query might be relative, return as-is if file doesn't exist
+            return query
+    
+    # Extract folder number from folder_path
+    folder_name = os.path.basename(os.path.abspath(folder_path))
+    
+    # Read jsonl file and find matching query
+    try:
+        with open(query, 'r', encoding='utf-8') as f:
+            for line in f:
+                line = line.strip()
+                if not line:
+                    continue
+                try:
+                    entry = json.loads(line)
+                    # Match by 'number' or 'task' field (different jsonl formats)
+                    entry_id = entry.get('number') or entry.get('task')
+                    if entry_id == folder_name:
+                        resolved_query = entry.get('query', '')
+                        if resolved_query:
+                            logger.info(f"Resolved query from jsonl for folder '{folder_name}'")
+                            return resolved_query
+                except json.JSONDecodeError:
+                    continue
+        
+        # If no match found, log warning and return original
+        logger.warning(f"No matching query found in {query} for folder '{folder_name}'")
+        return query
+        
+    except Exception as e:
+        logger.warning(f"Failed to read jsonl file {query}: {e}")
+        return query
 
 
 def generate_turn_by_turn_log(log_file_path: str, output_path: str) -> str:
@@ -334,7 +391,7 @@ async def run_folder_task(
     Args:
         cfg: Hydra configuration object
         folder_path: Path to the folder to process
-        query: The user's query about the folder contents
+        query: The user's query about the folder contents (can be a jsonl file path)
         task_id: Optional task ID (auto-generated if not provided)
         recursive: Whether to scan subdirectories recursively
         
@@ -345,6 +402,9 @@ async def run_folder_task(
     if task_id is None:
         folder_name = os.path.basename(os.path.abspath(folder_path))
         task_id = f"folder_task_{folder_name}"
+    
+    # Resolve query from jsonl file if needed
+    query = resolve_query_from_jsonl(query, folder_path)
     
     logger.info(f"Processing folder: {folder_path}")
     logger.info(f"Query: {query}")
@@ -409,12 +469,15 @@ async def run_folder_task_simple(
     
     Args:
         folder_path: Path to the folder to process
-        query: The user's query about the folder contents
+        query: The user's query about the folder contents (can be a jsonl file path)
         config_overrides: Optional list of Hydra config overrides
         
     Returns:
         Tuple of (final_summary, final_boxed_answer, log_file_path)
     """
+    # Resolve query from jsonl file if needed
+    query = resolve_query_from_jsonl(query, folder_path)
+    
     # Initialize Hydra
     from hydra import compose, initialize_config_dir
     from hydra.core.global_hydra import GlobalHydra

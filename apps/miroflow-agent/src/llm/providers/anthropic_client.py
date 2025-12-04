@@ -285,7 +285,9 @@ class AnthropicClient(BaseClient):
                 self.encoding = tiktoken.get_encoding("cl100k_base")
 
         try:
-            return len(self.encoding.encode(text))
+            # Use disallowed_special=() to allow all special tokens to be encoded as normal text
+            # This prevents errors when encountering tokens like <|endofprompt|>
+            return len(self.encoding.encode(text, disallowed_special=()))
         except Exception as e:
             # If encoding fails, use simple estimation: approximately 1 token per 4 characters
             self.task_log.log_step(

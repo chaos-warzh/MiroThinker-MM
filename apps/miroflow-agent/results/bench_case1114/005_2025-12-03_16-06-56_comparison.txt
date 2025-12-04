@@ -1,0 +1,49 @@
+================================================================================
+REPORT COMPARISON: ORIGINAL vs FINAL (After Validation)
+================================================================================
+
+Task: 005
+Generated at: 2025-12-03 16:06:56
+
+--------------------------------------------------------------------------------
+QUERY
+--------------------------------------------------------------------------------
+Transformer123420003000
+
+================================================================================
+ORIGINAL REPORT (Before Validation)
+================================================================================
+
+The folder contains a technical conference paper and a video presentation both centered on the learning dynamics of large language model (LLM) finetuning, specifically focused on the emergence of the "squeezing effect" during preference optimization. The main result of the ICLR 2025 paper "LEARNING DYNAMICS OF LLM FINETUNING" (Yi Ren et al.) is a mathematical and empirical analysis of how gradients during LLM finetuning (especially in Direct Preference Optimization, DPO) can cause a probability mass "squeezing effect", where negative gradients imposed on low-likelihood (valley) predictions lead to *all* responses (even the desired ones) becoming less likely, as the model's confidence gets concentrated in the highest-probability outputs. This effect is shown via new theoretical derivations, rigorous experiments, and visualizations ([文档: pdf.pdf], see Section 3.3 and Appendix E).
+
+The video (video.mp4) is a lecture by Yi Ren at ICLR 2025, thoroughly explaining and illustrating the phenomenon described in the paper: it begins with the intuition from simple MNIST cases, then generalizes to LLMs, showing that naive DPO finetuning—even with positive and negative preference signals—can degrade overall model confidence in all plausible responses, leading to degeneration phenomena such as repetitive outputs and increased hallucination risk ([文档: pdf.pdf], Sections 3.3–4.2; [long_context: "刚刚，OpenAI发长篇论文：大模型幻觉的原因找到了~-今日头条", chunk 1]).
+
+Empirically, the authors verify this squeezing effect on several LLMs (Pythia-410M/1B, Qwen1.5-1.8B) and show that as DPO proceeds—if negative gradients are imposed on unlikely responses—almost all response probabilities decline except for the single most likely, leading to undesirable peaky distributions ([文档: pdf.pdf], Figure 4, Appendix E). They provide both a theoretical proof (the effect exists for any softmax system under a negative gradient on rare events) and concrete learning curves showing this empirically.
+
+Finally, the paper proposes (and tests) a practical mitigation: during SFT, explicitly add [prompt, negative response] data to "raise the floor" of negative responses, so that DPO's negative gradients operate in a "peaky" region, reducing degeneration and improving final model alignment quality ([文档: pdf.pdf], Section 4.3, F.2).
+
+In summary, the core finding is that the "squeezing effect"—where negative gradients reduce all but the highest-confidence token probabilities during DPO—is both theoretically inevitable in softmax/CE systems and empirically observed in LLM finetuning. Understanding (and mitigating) this effect is critical for robust preference optimization and LLM alignment ([文档: pdf.pdf], Section 3.3–4.3, Appendix E; [long_context: "刚刚，OpenAI发长篇论文：大模型幻觉的原因找到了~-今日头条", chunk 1]).
+
+================================================================================
+FINAL REPORT (After Validation)
+================================================================================
+
+The folder contains a technical conference paper and a video presentation both centered on the learning dynamics of large language model (LLM) finetuning, specifically focused on the emergence of the "squeezing effect" during preference optimization. The main result of the ICLR 2025 paper "LEARNING DYNAMICS OF LLM FINETUNING" (Yi Ren et al.) is a mathematical and empirical analysis of how gradients during LLM finetuning (especially in Direct Preference Optimization, DPO) can cause a probability mass "squeezing effect", where negative gradients imposed on low-likelihood (valley) predictions lead to *all* responses (even the desired ones) becoming less likely, as the model's confidence gets concentrated in the highest-probability outputs. This effect is shown via new theoretical derivations, rigorous experiments, and visualizations ([文档: pdf.pdf], see Section 3.3 and Appendix E).
+
+The video (video.mp4) is a lecture by Yi Ren at ICLR 2025, thoroughly explaining and illustrating the phenomenon described in the paper: it begins with the intuition from simple MNIST cases, then generalizes to LLMs, showing that naive DPO finetuning—even with positive and negative preference signals—can degrade overall model confidence in all plausible responses, leading to degeneration phenomena such as repetitive outputs and increased hallucination risk ([文档: pdf.pdf], Sections 3.3–4.2; [long_context: "刚刚，OpenAI发长篇论文：大模型幻觉的原因找到了~-今日头条", chunk 1]).
+
+Empirically, the authors verify this squeezing effect on several LLMs (Pythia-410M/1B, Qwen1.5-1.8B) and show that as DPO proceeds—if negative gradients are imposed on unlikely responses—almost all response probabilities decline except for the single most likely, leading to undesirable peaky distributions ([文档: pdf.pdf], Figure 4, Appendix E). They provide both a theoretical proof (the effect exists for any softmax system under a negative gradient on rare events) and concrete learning curves showing this empirically.
+
+Finally, the paper proposes (and tests) a practical mitigation: during SFT, explicitly add [prompt, negative response] data to "raise the floor" of negative responses, so that DPO's negative gradients operate in a "peaky" region, reducing degeneration and improving final model alignment quality ([文档: pdf.pdf], Section 4.3, F.2).
+
+In summary, the core finding is that the "squeezing effect"—where negative gradients reduce all but the highest-confidence token probabilities during DPO—is both theoretically inevitable in softmax/CE systems and empirically observed in LLM finetuning. Understanding (and mitigating) this effect is critical for robust preference optimization and LLM alignment ([文档: pdf.pdf], Section 3.3–4.3, Appendix E; [long_context: "刚刚，OpenAI发长篇论文：大模型幻觉的原因找到了~-今日头条", chunk 1]).
+
+================================================================================
+COMPARISON SUMMARY
+================================================================================
+
+Original report length: 2773 characters
+Final report length: 2773 characters
+Length difference: 0 characters
+
+✅ Reports are IDENTICAL (no changes made during validation)

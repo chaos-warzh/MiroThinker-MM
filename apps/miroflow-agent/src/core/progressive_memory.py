@@ -115,7 +115,9 @@ class ProgressiveMemory:
     def estimate_tokens(self, text: str) -> int:
         """Estimate token count for text"""
         try:
-            return len(self.encoding.encode(text))
+            # Use disallowed_special=() to allow all special tokens to be encoded as normal text
+            # This prevents errors when encountering tokens like <|endofprompt|>
+            return len(self.encoding.encode(text, disallowed_special=()))
         except Exception:
             # Fallback: ~4 chars per token
             return len(text) // 4
