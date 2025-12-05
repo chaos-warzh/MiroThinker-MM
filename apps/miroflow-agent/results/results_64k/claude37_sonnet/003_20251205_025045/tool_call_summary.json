@@ -1,0 +1,38 @@
+{
+  "task_id": "folder_task_003",
+  "execution_info": {
+    "status": "success",
+    "start_time": "2025-12-05 18:50:47",
+    "end_time": "2025-12-05 18:57:36",
+    "total_turns": 3
+  },
+  "tool_calls_by_turn": {
+    "1": {
+      "tools_used": [],
+      "rag_queries": []
+    },
+    "2": {
+      "tools_used": [
+        {
+          "tool_name": "rag"
+        }
+      ],
+      "rag_queries": []
+    },
+    "50": {
+      "tools_used": [],
+      "rag_queries": []
+    }
+  },
+  "rag_retrieval": {
+    "total_queries": 1,
+    "queries": [
+      {
+        "query": "GPT-4 OpenAI technical report capabilities features",
+        "tool": "rag_search",
+        "num_results": 0,
+        "retrieved_documents": []
+      }
+    ]
+  }
+}

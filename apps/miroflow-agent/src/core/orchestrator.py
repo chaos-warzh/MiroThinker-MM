@@ -1136,6 +1136,7 @@ class Orchestrator:
             
             validation_turn = 0
             current_report = final_answer_text
+            max_validation_sub_turns = 5  # Max sub-turns for tool calls within each validation turn
             
             while validation_turn < max_validation_turns:
                 validation_turn += 1
@@ -1156,32 +1157,102 @@ class Orchestrator:
                 validation_message_history = message_history.copy()
                 validation_message_history.append({"role": "user", "content": validation_prompt})
                 
-                # Call LLM for validation
-                (
-                    validation_response,
-                    should_break,
-                    tool_calls_info,
-                    validation_message_history,
-                ) = await self._handle_llm_call(
-                    system_prompt,
-                    validation_message_history,
-                    tool_definitions,
-                    turn_count + 1 + validation_turn,
-                    f"Main agent | Validation Turn: {validation_turn}",
-                    keep_tool_result=keep_tool_result,
-                    agent_type="main",
-                )
+                # Validation sub-loop to handle tool calls (e.g., Python code execution for word count)
+                validation_sub_turn = 0
+                validation_complete = False
+                final_validation_response = None
                 
-                if not validation_response:
+                while validation_sub_turn < max_validation_sub_turns and not validation_complete:
+                    validation_sub_turn += 1
+                    
+                    # Call LLM for validation
+                    (
+                        validation_response,
+                        should_break,
+                        tool_calls_info,
+                        validation_message_history,
+                    ) = await self._handle_llm_call(
+                        system_prompt,
+                        validation_message_history,
+                        tool_definitions,
+                        turn_count + 1 + validation_turn * 10 + validation_sub_turn,
+                        f"Main agent | Validation Turn: {validation_turn} Sub-turn: {validation_sub_turn}",
+                        keep_tool_result=keep_tool_result,
+                        agent_type="main",
+                    )
+                    
+                    if not validation_response:
+                        self.task_log.log_step(
+                            "warning",
+                            f"Main Agent | Validation Turn: {validation_turn}",
+                            "Validation LLM call failed, using current report",
+                        )
+                        validation_complete = True
+                        break
+                    
+                    # Check if there are tool calls to execute
+                    if tool_calls_info:
+                        self.task_log.log_step(
+                            "info",
+                            f"Main Agent | Validation Turn: {validation_turn} Sub-turn: {validation_sub_turn}",
+                            f"Executing {len(tool_calls_info)} tool call(s) for validation",
+                        )
+                        
+                        # Execute tool calls
+                        all_tool_results_content_with_id = []
+                        for call in tool_calls_info:
+                            server_name = call["server_name"]
+                            tool_name = call["tool_name"]
+                            arguments = call["arguments"]
+                            call_id = call["id"]
+                            
+                            try:
+                                tool_result = await self.main_agent_tool_manager.execute_tool_call(
+                                    server_name=server_name,
+                                    tool_name=tool_name,
+                                    arguments=arguments,
+                                )
+                                self.task_log.log_step(
+                                    "info",
+                                    f"Main Agent | Validation Turn: {validation_turn}",
+                                    f"Tool {tool_name} executed successfully",
+                                )
+                            except Exception as e:
+                                tool_result = {
+                                    "server_name": server_name,
+                                    "tool_name": tool_name,
+                                    "error": str(e),
+                                }
+                                self.task_log.log_step(
+                                    "error",
+                                    f"Main Agent | Validation Turn: {validation_turn}",
+                                    f"Tool {tool_name} failed: {str(e)}",
+                                )
+                            
+                            tool_result_for_llm = self.output_formatter.format_tool_result_for_user(tool_result)
+                            all_tool_results_content_with_id.append((call_id, tool_result_for_llm))
+                        
+                        # Update message history with tool results
+                        validation_message_history = self.llm_client.update_message_history(
+                            validation_message_history, all_tool_results_content_with_id
+                        )
+                        # Continue to next sub-turn to get LLM's response after tool execution
+                        continue
+                    
+                    # No tool calls, this is the final validation response
+                    final_validation_response = validation_response
+                    validation_complete = True
+                
+                if not final_validation_response:
                     self.task_log.log_step(
                         "warning",
                         f"Main Agent | Validation Turn: {validation_turn}",
-                        "Validation LLM call failed, using current report",
+                        "No final validation response, using current report",
                     )
                     break
                 
                 # Check if validation passed
-                if "✅" in validation_response or "验证通过" in validation_response or "Validation Passed" in validation_response:
+                if "✅" in final_validation_response or "验证通过" in final_validation_response or "Validation Passed" in final_validation_response:
                     self.task_log.log_step(
                         "info",
                         f"Main Agent | Validation Turn: {validation_turn}",
@@ -1192,7 +1263,7 @@ class Orchestrator:
                     break
                 
                 # Check if revision is needed
-                elif "❌" in validation_response or "需要修改" in validation_response or "Needs Revision" in validation_response:
+                elif "❌" in final_validation_response or "需要修改" in final_validation_response or "Needs Revision" in final_validation_response:
                     self.task_log.log_step(
                         "info",
                         f"Main Agent | Validation Turn: {validation_turn}",
@@ -1212,8 +1283,8 @@ class Orchestrator:
                     ]
                     
                     for marker in markers:
-                        if marker in validation_response:
-                            parts = validation_response.split(marker, 1)
+                        if marker in final_validation_response:
+                            parts = final_validation_response.split(marker, 1)
                             if len(parts) > 1:
                                 revised_report = parts[1].strip()
                                 # Clean up any trailing markers or formatting
@@ -1247,7 +1318,7 @@ class Orchestrator:
                     self.task_log.log_step(
                         "warning",
                         f"Main Agent | Validation Turn: {validation_turn}",
-                        "Unclear validation result, treating as passed",
+                        f"Unclear validation result: {final_validation_response[:200]}..., treating as passed",
                     )
                     break
             

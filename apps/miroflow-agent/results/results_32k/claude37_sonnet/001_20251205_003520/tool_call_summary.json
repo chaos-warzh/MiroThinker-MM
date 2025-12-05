@@ -1,0 +1,39 @@
+{
+  "task_id": "folder_task_001",
+  "execution_info": {
+    "status": "success",
+    "start_time": "2025-12-05 16:35:22",
+    "end_time": "2025-12-05 16:38:10",
+    "total_turns": 4
+  },
+  "tool_calls_by_turn": {
+    "1": {
+      "tools_used": [],
+      "rag_queries": []
+    },
+    "2": {
+      "tools_used": [
+        {
+          "tool_name": "python"
+        }
+      ],
+      "rag_queries": []
+    },
+    "3": {
+      "tools_used": [
+        {
+          "tool_name": "python"
+        }
+      ],
+      "rag_queries": []
+    },
+    "4": {
+      "tools_used": [],
+      "rag_queries": []
+    }
+  },
+  "rag_retrieval": {
+    "total_queries": 0,
+    "queries": []
+  }
+}

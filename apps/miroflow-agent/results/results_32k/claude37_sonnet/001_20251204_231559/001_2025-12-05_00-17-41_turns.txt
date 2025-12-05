@@ -1,0 +1,1314 @@
+================================================================================
+TURN-BY-TURN EXECUTION LOG
+================================================================================
+Task ID: folder_task_001
+Status: success
+Start Time: 2025-12-05 16:10:01
+End Time: 2025-12-05 16:17:41
+
+  2025-12-05 16:10:01 [INFO] Main | Task Start
+  2025-12-05 16:10:01 [INFO] 🔧 ToolManager | Initialization
+  2025-12-05 16:10:01 [INFO] 🔧 ToolManager | Initialization
+  2025-12-05 16:10:01 [INFO] 🔧 ToolManager | Initialization
+  2025-12-05 16:10:01 [INFO] 🧠 LLM | Initialization
+  2025-12-05 16:10:01 [INFO] 👑 Main Agent
+  2025-12-05 16:10:01 [INFO] 👑 Main Agent
+  2025-12-05 16:10:01 [INFO] 👑 Main Agent
+  2025-12-05 16:10:01 [INFO] 🔧 ToolManager | Get Tool Definitions
+  2025-12-05 16:10:02 [INFO] 🔧 ToolManager | Tool Definitions Success
+  2025-12-05 16:10:02 [INFO] 🔧 ToolManager | Get Tool Definitions
+  2025-12-05 16:10:03 [INFO] 🔧 ToolManager | Tool Definitions Success
+  2025-12-05 16:10:03 [INFO] 🔧 ToolManager | Get Tool Definitions
+  2025-12-05 16:10:05 [INFO] 🔧 ToolManager | Tool Definitions Success
+  2025-12-05 16:10:05 [INFO] 🔧 ToolManager | Get Tool Definitions
+  2025-12-05 16:10:07 [INFO] 🔧 ToolManager | Tool Definitions Success
+  2025-12-05 16:10:07 [INFO] 🔧 ToolManager | Get Tool Definitions
+  2025-12-05 16:10:09 [INFO] 🔧 ToolManager | Tool Definitions Success
+  2025-12-05 16:10:09 [INFO] 🔧 ToolManager | Get Tool Definitions
+  2025-12-05 16:10:11 [INFO] 🔧 ToolManager | Tool Definitions Success
+  2025-12-05 16:10:11 [INFO] 🔧 ToolManager | Get Tool Definitions
+  2025-12-05 16:10:12 [INFO] 🔧 ToolManager | Tool Definitions Success
+  2025-12-05 16:10:12 [INFO] 🔧 ToolManager | Get Tool Definitions
+  2025-12-05 16:10:14 [INFO] 🔧 ToolManager | Tool Definitions Success
+  2025-12-05 16:10:14 [INFO] 🔧 ToolManager | Get Tool Definitions
+  2025-12-05 16:10:15 [INFO] 🔧 ToolManager | Tool Definitions Success
+  2025-12-05 16:10:15 [INFO] 👑 Main Agent
+
+--------------------------------------------------------------------------------
+TURN 1
+--------------------------------------------------------------------------------
+  2025-12-05 16:10:15 [INFO] 👑 Main Agent | Turn: 1
+  2025-12-05 16:10:30 [INFO] 🧠 LLM | Token Usage
+  2025-12-05 16:10:30 [INFO] 🧠 LLM | Response Status
+  2025-12-05 16:10:30 [INFO] 🧠 Main agent | Turn: 1 | LLM Call
+    Message: completed successfully
+  2025-12-05 16:10:30 [INFO] 👑 Main Agent | Turn: 1 | Tool Calls
+    Message: Number of tool calls detected: 1
+  2025-12-05 16:10:30 [INFO] ▶️ ToolManager | Tool Call Start
+    Message: Connecting to server 'tool-vqa-enhanced' to call tool 'vision_understanding_advanced'
+  2025-12-05 16:10:58 [INFO] ✅ ToolManager | Tool Call Success
+    Message: Tool 'vision_understanding_advanced' (server: 'tool-vqa-enhanced') called successfully.
+  2025-12-05 16:10:58 [INFO] 👑 Main Agent | Turn: 1 | Tool Call
+    Message: Tool vision_understanding_advanced completed in 28819ms
+  2025-12-05 16:10:59 [INFO] 🧠 LLM | Context Limit Not Reached
+
+--------------------------------------------------------------------------------
+TURN 2
+--------------------------------------------------------------------------------
+  2025-12-05 16:10:59 [INFO] 👑 Main Agent | Turn: 2
+  2025-12-05 16:11:13 [INFO] 🧠 LLM | Token Usage
+  2025-12-05 16:11:13 [INFO] 🧠 LLM | Response Status
+  2025-12-05 16:11:13 [INFO] 🧠 Main agent | Turn: 2 | LLM Call
+    Message: completed successfully
+  2025-12-05 16:11:13 [INFO] 👑 Main Agent | Turn: 2 | Tool Calls
+    Message: Number of tool calls detected: 1
+  2025-12-05 16:11:13 [INFO] ▶️ ToolManager | Tool Call Start
+    Message: Connecting to server 'tool-rag' to call tool 'rag_get_context'
+  2025-12-05 16:11:16 [INFO] ✅ ToolManager | Tool Call Success
+    Message: Tool 'rag_get_context' (server: 'tool-rag') called successfully.
+  2025-12-05 16:11:16 [INFO] 👑 Main Agent | Turn: 2 | Tool Call
+    Message: Tool rag_get_context completed in 3061ms
+  2025-12-05 16:11:16 [INFO] 🧠 LLM | Context Limit Not Reached
+
+--------------------------------------------------------------------------------
+TURN 3
+--------------------------------------------------------------------------------
+  2025-12-05 16:11:16 [INFO] 👑 Main Agent | Turn: 3
+  2025-12-05 16:11:30 [INFO] 🧠 LLM | Token Usage
+  2025-12-05 16:11:30 [INFO] 🧠 LLM | Response Status
+  2025-12-05 16:11:30 [INFO] 🧠 Main agent | Turn: 3 | LLM Call
+    Message: completed successfully
+  2025-12-05 16:11:30 [INFO] 👑 Main Agent | Turn: 3 | Tool Calls
+    Message: Number of tool calls detected: 1
+  2025-12-05 16:11:30 [INFO] ▶️ ToolManager | Tool Call Start
+    Message: Connecting to server 'tool-rag' to call tool 'rag_search'
+  2025-12-05 16:11:32 [INFO] ✅ ToolManager | Tool Call Success
+    Message: Tool 'rag_search' (server: 'tool-rag') called successfully.
+  2025-12-05 16:11:32 [INFO] 👑 Main Agent | Turn: 3 | Tool Call
+    Message: Tool rag_search completed in 1764ms
+  2025-12-05 16:11:32 [INFO] 🧠 LLM | Context Limit Not Reached
+
+--------------------------------------------------------------------------------
+TURN 4
+--------------------------------------------------------------------------------
+  2025-12-05 16:11:32 [INFO] 👑 Main Agent | Turn: 4
+  2025-12-05 16:11:45 [INFO] 🧠 LLM | Token Usage
+  2025-12-05 16:11:45 [INFO] 🧠 LLM | Response Status
+  2025-12-05 16:11:45 [INFO] 🧠 Main agent | Turn: 4 | LLM Call
+    Message: completed successfully
+  2025-12-05 16:11:45 [INFO] 👑 Main Agent | Turn: 4 | Tool Calls
+    Message: Number of tool calls detected: 1
+  2025-12-05 16:11:45 [INFO] ▶️ ToolManager | Tool Call Start
+    Message: Connecting to server 'tool-python' to call tool 'create_sandbox'
+  2025-12-05 16:11:47 [INFO] ✅ ToolManager | Tool Call Success
+    Message: Tool 'create_sandbox' (server: 'tool-python') called successfully.
+  2025-12-05 16:11:47 [INFO] 👑 Main Agent | Turn: 4 | Tool Call
+    Message: Tool create_sandbox completed in 2255ms
+  2025-12-05 16:11:47 [INFO] 🧠 LLM | Context Limit Not Reached
+
+--------------------------------------------------------------------------------
+TURN 5
+--------------------------------------------------------------------------------
+  2025-12-05 16:11:47 [INFO] 👑 Main Agent | Turn: 5
+  2025-12-05 16:11:58 [INFO] 🧠 LLM | Token Usage
+  2025-12-05 16:11:58 [INFO] 🧠 LLM | Response Status
+  2025-12-05 16:11:58 [INFO] 🧠 Main agent | Turn: 5 | LLM Call
+    Message: completed successfully
+  2025-12-05 16:11:58 [INFO] 👑 Main Agent | Turn: 5 | Tool Calls
+    Message: Number of tool calls detected: 1
+  2025-12-05 16:11:58 [INFO] ▶️ ToolManager | Tool Call Start
+    Message: Connecting to server 'tool-python' to call tool 'run_command'
+  2025-12-05 16:12:01 [INFO] ✅ ToolManager | Tool Call Success
+    Message: Tool 'run_command' (server: 'tool-python') called successfully.
+  2025-12-05 16:12:01 [INFO] 👑 Main Agent | Turn: 5 | Tool Call
+    Message: Tool run_command completed in 2401ms
+  2025-12-05 16:12:01 [INFO] 🧠 LLM | Context Limit Not Reached
+
+--------------------------------------------------------------------------------
+TURN 6
+--------------------------------------------------------------------------------
+  2025-12-05 16:12:01 [INFO] 👑 Main Agent | Turn: 6
+  2025-12-05 16:12:13 [INFO] 🧠 LLM | Token Usage
+  2025-12-05 16:12:13 [INFO] 🧠 LLM | Response Status
+  2025-12-05 16:12:13 [INFO] 🧠 Main agent | Turn: 6 | LLM Call
+    Message: completed successfully
+  2025-12-05 16:12:13 [INFO] 👑 Main Agent | Turn: 6 | Tool Calls
+    Message: Number of tool calls detected: 1
+  2025-12-05 16:12:13 [INFO] ▶️ ToolManager | Tool Call Start
+    Message: Connecting to server 'tool-python' to call tool 'upload_file_from_local_to_sandbox'
+  2025-12-05 16:12:17 [INFO] ✅ ToolManager | Tool Call Success
+    Message: Tool 'upload_file_from_local_to_sandbox' (server: 'tool-python') called successfully.
+  2025-12-05 16:12:17 [INFO] 👑 Main Agent | Turn: 6 | Tool Call
+    Message: Tool upload_file_from_local_to_sandbox completed in 3802ms
+  2025-12-05 16:12:17 [INFO] 🧠 LLM | Context Limit Not Reached
+
+--------------------------------------------------------------------------------
+TURN 7
+--------------------------------------------------------------------------------
+  2025-12-05 16:12:17 [INFO] 👑 Main Agent | Turn: 7
+  2025-12-05 16:12:36 [INFO] 🧠 LLM | Token Usage
+  2025-12-05 16:12:36 [INFO] 🧠 LLM | Response Status
+  2025-12-05 16:12:36 [INFO] 🧠 Main agent | Turn: 7 | LLM Call
+    Message: completed successfully
+  2025-12-05 16:12:36 [INFO] 👑 Main Agent | Turn: 7 | Tool Calls
+    Message: Number of tool calls detected: 1
+  2025-12-05 16:12:36 [INFO] ▶️ ToolManager | Tool Call Start
+    Message: Connecting to server 'tool-python' to call tool 'run_python_code'
+  2025-12-05 16:12:42 [INFO] ✅ ToolManager | Tool Call Success
+    Message: Tool 'run_python_code' (server: 'tool-python') called successfully.
+  2025-12-05 16:12:42 [INFO] 👑 Main Agent | Turn: 7 | Tool Call
+    Message: Tool run_python_code completed in 5793ms
+  2025-12-05 16:12:42 [INFO] 🧠 LLM | Context Limit Not Reached
+
+--------------------------------------------------------------------------------
+TURN 8
+--------------------------------------------------------------------------------
+  2025-12-05 16:12:42 [INFO] 👑 Main Agent | Turn: 8
+  2025-12-05 16:12:57 [INFO] 🧠 LLM | Token Usage
+  2025-12-05 16:12:57 [INFO] 🧠 LLM | Response Status
+  2025-12-05 16:12:57 [INFO] 🧠 Main agent | Turn: 8 | LLM Call
+    Message: completed successfully
+  2025-12-05 16:12:57 [INFO] 👑 Main Agent | Turn: 8 | Tool Calls
+    Message: Number of tool calls detected: 1
+  2025-12-05 16:12:57 [INFO] ▶️ ToolManager | Tool Call Start
+    Message: Connecting to server 'tool-python' to call tool 'run_python_code'
+  2025-12-05 16:13:02 [INFO] ✅ ToolManager | Tool Call Success
+    Message: Tool 'run_python_code' (server: 'tool-python') called successfully.
+  2025-12-05 16:13:02 [INFO] 👑 Main Agent | Turn: 8 | Tool Call
+    Message: Tool run_python_code completed in 5171ms
+  2025-12-05 16:13:02 [INFO] 🧠 LLM | Context Limit Not Reached
+
+--------------------------------------------------------------------------------
+TURN 9
+--------------------------------------------------------------------------------
+  2025-12-05 16:13:02 [INFO] 👑 Main Agent | Turn: 9
+  2025-12-05 16:13:22 [INFO] 🧠 LLM | Token Usage
+  2025-12-05 16:13:22 [INFO] 🧠 LLM | Response Status
+  2025-12-05 16:13:22 [INFO] 🧠 Main agent | Turn: 9 | LLM Call
+    Message: completed successfully
+  2025-12-05 16:13:22 [INFO] 👑 Main Agent | Turn: 9 | Tool Calls
+    Message: Number of tool calls detected: 1
+  2025-12-05 16:13:22 [INFO] ▶️ ToolManager | Tool Call Start
+    Message: Connecting to server 'tool-python' to call tool 'run_python_code'
+  2025-12-05 16:13:27 [INFO] ✅ ToolManager | Tool Call Success
+    Message: Tool 'run_python_code' (server: 'tool-python') called successfully.
+  2025-12-05 16:13:27 [INFO] 👑 Main Agent | Turn: 9 | Tool Call
+    Message: Tool run_python_code completed in 5179ms
+  2025-12-05 16:13:27 [INFO] 🧠 LLM | Context Limit Not Reached
+
+--------------------------------------------------------------------------------
+TURN 10
+--------------------------------------------------------------------------------
+  2025-12-05 16:13:27 [INFO] 👑 Main Agent | Turn: 10
+  2025-12-05 16:13:45 [INFO] 🧠 LLM | Token Usage
+  2025-12-05 16:13:45 [INFO] 🧠 LLM | Response Status
+  2025-12-05 16:13:45 [INFO] 🧠 Main agent | Turn: 10 | LLM Call
+    Message: completed successfully
+  2025-12-05 16:13:45 [INFO] 👑 Main Agent | Turn: 10 | Tool Calls
+    Message: Number of tool calls detected: 1
+  2025-12-05 16:13:45 [INFO] ▶️ ToolManager | Tool Call Start
+    Message: Connecting to server 'tool-python' to call tool 'run_python_code'
+  2025-12-05 16:13:48 [INFO] ✅ ToolManager | Tool Call Success
+    Message: Tool 'run_python_code' (server: 'tool-python') called successfully.
+  2025-12-05 16:13:48 [INFO] 👑 Main Agent | Turn: 10 | Tool Call
+    Message: Tool run_python_code completed in 3183ms
+  2025-12-05 16:13:48 [INFO] 🧠 LLM | Context Limit Not Reached
+
+--------------------------------------------------------------------------------
+TURN 11
+--------------------------------------------------------------------------------
+  2025-12-05 16:13:48 [INFO] 👑 Main Agent | Turn: 11
+  2025-12-05 16:14:22 [INFO] 🧠 LLM | Token Usage
+  2025-12-05 16:14:22 [INFO] 🧠 LLM | Response Status
+  2025-12-05 16:14:22 [INFO] 🧠 Main agent | Turn: 11 | LLM Call
+    Message: completed successfully
+  2025-12-05 16:14:22 [INFO] 👑 Main Agent | Turn: 11 | Tool Calls
+    Message: Number of tool calls detected: 1
+  2025-12-05 16:14:22 [INFO] ▶️ ToolManager | Tool Call Start
+    Message: Connecting to server 'tool-python' to call tool 'run_python_code'
+  2025-12-05 16:14:26 [INFO] ✅ ToolManager | Tool Call Success
+    Message: Tool 'run_python_code' (server: 'tool-python') called successfully.
+  2025-12-05 16:14:26 [INFO] 👑 Main Agent | Turn: 11 | Tool Call
+    Message: Tool run_python_code completed in 3303ms
+  2025-12-05 16:14:26 [INFO] 🧠 LLM | Context Limit Not Reached
+
+--------------------------------------------------------------------------------
+TURN 12
+--------------------------------------------------------------------------------
+  2025-12-05 16:14:26 [INFO] 👑 Main Agent | Turn: 12
+  2025-12-05 16:15:00 [INFO] 🧠 LLM | Token Usage
+  2025-12-05 16:15:00 [INFO] 🧠 LLM | Response Status
+  2025-12-05 16:15:00 [INFO] 🧠 Main agent | Turn: 12 | LLM Call
+    Message: completed successfully
+  2025-12-05 16:15:00 [INFO] 👑 Main Agent | Turn: 12 | Tool Calls
+    Message: Number of tool calls detected: 1
+  2025-12-05 16:15:00 [INFO] ▶️ ToolManager | Tool Call Start
+    Message: Connecting to server 'tool-python' to call tool 'run_python_code'
+  2025-12-05 16:15:03 [INFO] ✅ ToolManager | Tool Call Success
+    Message: Tool 'run_python_code' (server: 'tool-python') called successfully.
+  2025-12-05 16:15:03 [INFO] 👑 Main Agent | Turn: 12 | Tool Call
+    Message: Tool run_python_code completed in 2454ms
+  2025-12-05 16:15:03 [INFO] 🧠 LLM | Context Limit Not Reached
+
+--------------------------------------------------------------------------------
+TURN 13
+--------------------------------------------------------------------------------
+  2025-12-05 16:15:03 [INFO] 👑 Main Agent | Turn: 13
+  2025-12-05 16:15:45 [INFO] 🧠 LLM | Token Usage
+  2025-12-05 16:15:45 [INFO] 🧠 LLM | Response Status
+  2025-12-05 16:15:45 [INFO] 🧠 Main agent | Turn: 13 | LLM Call
+    Message: completed successfully
+  2025-12-05 16:15:45 [INFO] 👑 Main Agent | Turn: 13 | LLM Call
+    Message: LLM did not request tool usage, ending process.
+  2025-12-05 16:15:45 [INFO] 👑 Main Agent | Main Loop Completed
+  2025-12-05 16:15:45 [INFO] 👑 Main Agent | Final Summary
+  2025-12-05 16:16:45 [INFO] 🧠 LLM | Token Usage
+  2025-12-05 16:16:45 [INFO] 🧠 LLM | Response Status
+  2025-12-05 16:16:45 [INFO] 🧠 Main agent | Final Summary | LLM Call
+    Message: completed successfully
+  2025-12-05 16:16:45 [INFO] 👑 Main Agent | Final Answer
+    Message: Final answer generated successfully
+  2025-12-05 16:16:45 [INFO] 👑 Main Agent | Final Answer
+    Message: Final answer content:
+
+In this conversation, I was asked to create a comprehensive research report on Deep Research benchmarks based on the provided materials. I first analyzed the image to understand the required fields for the benchmark dataset, which included: paper name, domain/scenario, query count, task, input, type, evaluation metrics, and other information (excluding "dataset example" as instructed).
+
+I then examined the paper to identify benchmarks mentioned in the related work section. From the PDF, I extracted information about 12 different benchmarks: Deep Research Bench, DeepResearch Bench, DeepResearchGym, ResearcherBench, LiveDRBench, BrowseComp-Plus, Mind2Web 2, GAIA, GAIA2, TheAgentCompany, OSWorld, and DRBench itself.
+
+I organized this information into a structured table and analyzed the statistics, finding that most benchmarks focus on generic domains, web research tasks, and use only public data. DRBench stands out as the only benchmark that combines both public and local data in an enterprise context.
+
+The final report includes an introduction, methodology, benchmark information summary table, detailed analysis of the benchmarks' characteristics, key findings, conclusions, and recommendations for future research directions.
+
+\boxed{
+# Deep Research相关Benchmark数据集调研报告
+
+## 引言
+
+随着大型语言模型（LLM）技术的快速发展，评估这些模型在复杂、开放式深度研究任务中的能力变得越来越重要。本报告旨在系统性地梳理当前主要的大模型评测基准（Benchmark），特别关注那些用于评估深度研究（Deep Research）能力的数据集。通过对DRBench论文中提及的相关工作进行分析，我们提取并结构化了12个主要的评测基准的特征，以帮助研究团队更好地理解现有评测工具的优缺点，为未来的研究方向提供参考。
+
+## 调研方法
+
+本报告基于ServiceNow Research等机构发表的DRBench论文中的相关工作部分，提取并分析了论文中提到的各个评测基准的关键特征 [paper.pdf, page 3]。我们按照以下字段对每个基准进行了结构化整理：
+- 论文名称：基准的官方名称
+- 领域/场景：基准适用的主要领域或场景
+- query数量：基准包含的查询或任务数量
+- 任务：基准评估的主要任务类型
+- 输入：基准使用的输入数据类型
+- 类型：基准评估的输出或生成类型
+- 评价指标：用于评估模型性能的主要指标
+- 其他：额外的重要特性，如是否提供环境、是否使用公共和私有数据等
+
+## 各论文Benchmark信息汇总表
+
+| 论文名称 | 领域/场景 | query数量 | 任务 | 输入 | 类型 | 评价指标 | 其他 |
+|---------|----------|----------|------|-----|------|---------|------|
+| Deep Research Bench | Generic | 89 ... [truncated]
+  2025-12-05 16:16:45 [INFO] 👑 Main Agent | Report Validation
+  2025-12-05 16:16:45 [INFO] 👑 Main Agent | Original Report (Before Validation)
+
+--------------------------------------------------------------------------------
+TURN 1
+--------------------------------------------------------------------------------
+  2025-12-05 16:16:45 [INFO] 👑 Main Agent | Validation Turn: 1
+  2025-12-05 16:17:41 [INFO] 🧠 LLM | Token Usage
+  2025-12-05 16:17:41 [INFO] 🧠 LLM | Response Status
+  2025-12-05 16:17:41 [INFO] 🧠 Main agent | Validation Turn: 1 | LLM Call
+    Message: completed successfully
+  2025-12-05 16:17:41 [INFO] 👑 Main Agent | Validation Turn: 1
+  2025-12-05 16:17:41 [INFO] 👑 Main Agent | Report Validation Complete
+  2025-12-05 16:17:41 [INFO] 👑 Main Agent | Usage Calculation
+  2025-12-05 16:17:41 [INFO] 👑 Main Agent | Final boxed answer
+  2025-12-05 16:17:41 [INFO] 👑 Main Agent | Task Completed
+  2025-12-05 16:17:41 [INFO] task_execution_finished
+
+================================================================================
+MAIN AGENT MESSAGE HISTORY
+================================================================================
+
+--- Message 1 (system) ---
+In this environment you have access to a set of tools you can use to answer the user's question. 
+
+You only have access to the tools provided below. You can only use one tool per message, and will receive the result of that tool in the user's next response. You use tools step-by-step to accomplish a given task, with each tool-use informed by the result of the previous tool-use. Today is: 2025-12-05
+
+# Tool-Use Formatting Instructions 
+
+Tool-use is formatted using XML-style tags. The tool-use is enclosed in <use_mcp_tool></use_mcp_tool> and each parameter is similarly enclosed within its own set of tags.
+
+The Model Context Protocol (MCP) connects to servers that provide additional tools and resources to extend your capabilities. You can use the server's tools via the `use_mcp_tool`.
+
+Description: 
+Request to use a tool provided by a MCP server. Each MCP server can provide multiple tools with different capabilities. Tools have defined input schemas that specify required and optional parameters.
+
+Parameters:
+- server_name: (required) The name of the MCP server providing the tool
+- tool_name: (required) The name of the tool to execute
+- arguments: (required) A JSON object containing the tool's input parameters, following the tool's input schema, quotes within string must be properly escaped, ensure it's valid JSON
+
+Usage:
+<use_mcp_tool>
+<server_name>server name here</server_name>
+<tool_name>tool name here</tool_name>
+<arguments>
+{
+"param1": "value1",
+"param2": "value2 \"escaped string\""
+}
+</arguments>
+</use_mcp_tool>
+
+Important Notes:
+- Tool-use must be placed **at the end** of your response, **top-level**, and not nested within other tags.
+- Always adhere to this format for the tool use to ensure proper parsing and execution.
+
+String and scalar parameters should be specified as is, while lists and objects should use JSON format. Note that spaces for string values are not stripped. The output is not expected to be valid XML and is parsed with regular expressions.
+Here are the functions available in JSONSchema format:
+
+## Server name: tool-python
+### Tool name: create_sandbox
+Description: Create a linux sandbox.
+
+Args:
+    timeout: Time in seconds before the sandbox is automatically shutdown. The default is 600 seconds.
+
+Returns:
+    The id of the newly created sandbox. You should use this sandbox_id to run other tools in the sandbox.
+Input JSON schema: {'properties': {'timeout': {'default': 600, 'title': 'Timeout'}}, 'type': 'object'}
+### Tool name: run_command
+Description: Execute a command in the linux sandbox.
+
+Args:
+    command: The command to execute.
+    sandbox_id: The id of the sandbox to execute the command in. To create a new sandbox, use tool `create_sandbox`.
+
+Returns:
+    A CommandResult object containing the result of the command execution, format like CommandResult(stderr=..., stdout=..., exit_code=..., error=...)
+Input JSON schema: {'properties': {'command': {'title': 'Command', 'type': 'string'}, 'sandbox_id': {'title': 'Sandbox Id'... [truncated]
+
+--- Message 2 (user) ---
+# Task
+
+假设你是一名科研工作者，正在为某人工智能研究团队开展大模型评测基准的系统性梳理工作。请根据提供的材料，撰写一份《Deep Research相关Benchmark数据集调研报告》。
+具体而言，依据图片image0中所示的字段要求，提取并结构化提供的pdf论文在相关工作部分提到的每篇论文对应的Benchmark特征，其中请忽略“数据集example”指标。
+报告需整合文献内容与公开可查的权威技术资料（如论文原文、官方GitHub仓库、学术数据库或评测平台），
+确保所有信息真实、准确、可验证，并在文中注明数据来源。
+报告语言应采用正式书面语，结构清晰，包含引言、调研方法、各论文Benchmark信息汇总表、分析与观察、参考资料等部分，
+最终形成一份可用于团队技术决策的标准化调研文档，字数在1500至2000之间。
+
+
+## Folder Contents Summary
+
+Folder: /Users/apple/Documents/code/MiroThinker-MM/apps/miroflow-agent/datasets/001
+Total files: 12
+  - data: 5
+  - document: 1
+  - image: 1
+  - other: 5
+
+
+## Document Contents
+
+
+### paper.pdf
+
+<file path="/Users/apple/Documents/code/MiroThinker-MM/apps/miroflow-agent/datasets/001/paper.pdf">
+5
+2
+0
+2
+
+p
+e
+S
+0
+3
+
+]
+L
+C
+.
+s
+c
+[
+
+1
+v
+2
+7
+1
+0
+0
+.
+0
+1
+5
+2
+:
+v
+i
+X
+r
+a
+
+DRBench: A REALISTIC
+
+BENCHMARK FOR ENTERPRISE DEEP RESEARCH
+
+Amirhossein Abaskohi1,2 Tianyi Chen1 Miguel Mu˜noz-M´armol1 Curtis Fox1,2
+Amrutha Varshini Ramesh1,2 ´Etienne Marcotte1 Xing Han L`u3,4 Nicolas Chapados1
+
+Spandana Gella1,3 Christopher Pal1,3,5 Alexandre Drouin1,3
+
+Issam H. Laradji1,2
+
+1ServiceNow Research
+
+2University of British Columbia
+
+3Mila – Quebec AI Institute
+
+4McGill University
+
+5Canada CIFAR AI Chair
+
+ABSTRACT
+
+We introduce DRBench, a benchmark for evaluating AI agents on complex, open-ended
+deep research tasks in enterprise settings. Unlike prior benchmarks that focus on simple
+questions or web-only queries, DRBench evaluates agents on multi-step queries (for
+example, “What changes should we make to our product roadmap to ensure compliance
+with this standard?”) that require identifying supporting facts from both the public web
+and private company knowledge base. Each task is grounded in realistic user personas
+and enterprise context, spanning a heterogeneous search space that includes productivity
+software, cloud file systems, emails, chat conversations, and the open web. Tasks
+are generated through a carefully designed synthesis pipeline with human-in-the-loop
+verification, and agents are evaluated on their ability to recall relevant insights, maintain
+factual accuracy, and produce coherent, well-structured reports. We release 15 deep
+research tasks across 10 domains, such as Sales, Cybersecurity, and Compliance. We
+demonstrate the effectiveness of DRBench by evaluating diverse DR agents across open-
+and closed-source models (such as GPT, Llama, and Qwen) and DR strategies, high-
+lighting their strengths, weaknesses, and the critical path for advancing enterprise deep
+research. Code is available at https://github.com/ServiceNow/drbench.
+
+1
+
+INTRODUCTION
+
+Organizations today face a strong need to find useful insights in a world full of overwhelming information.
+Valuable insights are often hidden in noisy data, which can contain many distracting or irrelevant details that
+obscure the insights that really matter. This challenge is present in enterprise settings, where data is spread
+across many applications and stored in different formats (e.g., PDFs, spreadsheets, emails, and i... [truncated]
+
+--- Message 3 (assistant) ---
+I'll help you create a comprehensive research report on Deep Research benchmarks based on the provided materials. Let me break this down into a step-by-step approach:
+
+1. First, I'll analyze the image to understand the required fields for the benchmark dataset
+2. Then I'll examine the paper to identify the benchmarks mentioned in the related work section
+3. I'll use RAG tools to find additional information about these benchmarks
+4. I'll structure the information according to the required fields
+5. Finally, I'll compile everything into a well-organized report
+
+Let's start by analyzing the image to understand what fields we need to extract:
+
+<use_mcp_tool>
+<server_name>tool-vqa-enhanced</server_name>
+<tool_name>vision_understanding_advanced</tool_name>
+<arguments>
+{
+"image_path_or_url": "/Users/apple/Documents/code/MiroThinker-MM/apps/miroflow-agent/datasets/001/image0.png",
+"question": "What are the fields or categories that need to be extracted for each benchmark dataset according to this image?"
+}
+</arguments>
+</use_mcp_tool>
+
+--- Message 4 (user) ---
+{
+  "answer": [
+    "论文名称",
+    "领域（场景）",
+    "query数量",
+    "任务",
+    "输入",
+    "类型",
+    "评价指标",
+    "数据集example",
+    "其他"
+  ],
+  "confidence": 0.8865000000000001,
+  "metadata": {
+    "objects_detected": [
+      "table",
+      "text"
+    ],
+    "colors_dominant": [
+      "white",
+      "gray",
+      "black"
+    ],
+    "text_visible": "论文名称, 领域（场景）, query数量, 任务, 输入, 类型, 评价指标, 数据集example, 其他",
+    "scene_description": "A screenshot of a table containing dataset benchmark fields and an example row filled in with relevant values."
+  },
+  "reasoning": "The image shows a table with column headings and one row of content. Each column represents a field or category to be extracted. The Chinese headers are clearly visible and correspond to dataset attributes.",
+  "follow_up_answers": [
+    {
+      "question": "What specific visual features or details in the image support the answer: '['论文名称', '领域（场景）', 'query数量', '任务', '输入', '类型', '评价指标', '数据集example', '其他']'?",
+      "answer": "The image clearly displays a table with column headers that exactly match the entries: '论文名称', '领域（场景）', 'query数量', '任务', '输入', '类型', '评价指标', '数据集example', and '其他'. These headers are separated into individual cells at the top row, visually confirming they are present in the image. The tabular structure further supports that these words are used as organizational categories for the data below.",
+      "confidence": 1.0
+    },
+    {
+      "question": "Are there any alternative interpretations of what you see in this image? Why did you choose this interpretation?",
+      "answer": "The image is a partial screenshot of a table summarizing a benchmark dataset called 'drbench'. The columns include paper name, domain, query count, task, input, type, evaluation metric, dataset example, and other notes. Each column provides brief data about drbench use cases in office/enterprise contexts. An alternative interpretation is that this could be a product feature table or internal testing report, but the presence of terms like '论文名称' (paper name) and 'query数量' (query count), along with example queries and references to personas, suggests it is most likely a summary of a benchmarking dataset or evaluation protocol for an LLM, not product features.",
+      "confidence": 0.93
+    },
+    {
+      "question": "What objects, text, colors, or other elements can you clearly identify in this image?",
+      "answer": "The image is a screenshot of a table with Chinese and English text. Column headers include categories like '论文名称' (Paper Name), '领域（场景）' (Domain/Scenario), 'query数量' (Query count), '任务' (Task), '输入' (Input), '类型' (Type), '评价指标' (Evaluation criteria), '数据集example' (Dataset example), and '其他' (Other). The first row contains data for 'drbench', with values such as '办公（企业）' (Office/Enterprise), '15个' (15 queries), '没有特定划分' (No specific division), 'query文本+文档（办公环境）' (Query text + document in office setting), 'report生成' (Report generation), and a sample query in English. Additional notes mentio... [truncated]
+
+--- Message 5 (assistant) ---
+Thank you for the image analysis. I can see that we need to extract the following fields for each benchmark dataset mentioned in the paper:
+
+1. 论文名称 (Paper Name)
+2. 领域/场景 (Domain/Scenario)
+3. query数量 (Query Count)
+4. 任务 (Task)
+5. 输入 (Input)
+6. 类型 (Type)
+7. 评价指标 (Evaluation Metrics)
+8. 其他 (Other)
+
+Note: The instructions mentioned to ignore "数据集example" (Dataset Example), so I'll exclude that field.
+
+Now, let's examine the paper to identify the benchmarks mentioned in the related work section:
+
+<use_mcp_tool>
+<server_name>tool-rag</server_name>
+<tool_name>rag_get_context</tool_name>
+<arguments>
+{
+"query": "related work section benchmarks for deep research in the paper",
+"json_path": "/Users/apple/Documents/code/MiroThinker-MM/apps/miroflow-agent/datasets/001/long_context_sampled_32k.json.chunks.db"
+}
+</arguments>
+</use_mcp_tool>
+
+--- Message 6 (user) ---
+=== RAG Context for Query ===
+Query: 'related work section benchmarks for deep research in the paper'
+Source File: /Users/apple/Documents/code/MiroThinker-MM/apps/miroflow-agent/datasets/001/long_context_sampled_32k.json.chunks.db
+Documents Retrieved: 10
+
+--- Retrieved Context with Sources ---
+
+
+==================================================
+Source 1
+Citation: [long_context: "initial_h-博客园", chunk 3]
+Title: initial_h-博客园
+Document Index: 3
+Chunk Index: 3
+Relevance Score: 0.401
+==================================================
+
+ifference Based Metrics for Deep Reinforcement Learning Algorithms 
+ 摘要： **发表时间：**2019（IEEE Access） **文章要点：**这篇文章想说之前那些衡量RL算法的指标（rawreward, avgreward,maximum rawreward等等）不好，只看得出来一个得分，反映不出来RL在训练过程中的问题。然后作者自己设计了几个指标来检测RL在训练中可  阅读全文
+posted @ 2021-09-18 13:48 initial_h  阅读(40) 评论(0) 推荐(0)  编辑 
+2021年9月15日 
+ Few-shot Neural Architecture Search 
+ 摘要： **发表时间：**2021（ICML 2021） **文章要点：**这篇文章就是在网络结构的准确率和训练速度之间trade off。NAS的逻辑就是搜一个网络结构出来，然后就测这个结构在数据集上train出来准确率能到多少，然后基于之前的结构和准确率再接着搜下一个网络。这里面如果每次都要重新trai  阅读全文
+posted @ 2021-09-15 08:27 initial_h  阅读(143) 评论(0) 推荐(0)  编辑 
+2021年9月13日 
+ Sample-Efficient Neural Architecture Search by Learning Actions for Monte Carlo Tree Search 
+ 摘要： **发表时间：**2021（TPAMI 2021） **文章要点：**这篇文章感觉是Learning Search Space Partition for Black-box Optimization using Monte Carlo Tree Search的姊妹篇，方法很类似，只是这一篇用来做N  阅读全文
+posted @ 2021-09-13 11:06 initial_h  阅读(150) 评论(0) 推荐(0)  编辑 
+2021年9月10日 
+ Learning Search Space Partition for Black-box Optimization using Monte Carlo Tree Search 
+ 摘要： **发表时间：**2020（NeurIPS 2020） **文章要点：**我们知道贝叶斯优化做到高维的时候计算量很大，根本算不出来。这篇文章是把MCTS和贝叶斯优化结合起来，做高维的优化问题。主要思路是先用MCTS分割搜索空间，然后在子空间上再用贝叶斯优化去采样。假设我们的优化问题是找一个函数$f(  阅读全文
+posted @ 2021-09-10 13:24 initial_h  阅读(132) 评论(0) 推荐(0)  编辑 
+2021年9月6日 
+ Neural Architecture Search using Deep Neural Networks and Monte Carlo Tree Search 
+ 摘要： **发表时间：**2019（AAAI2020） **文章要点：**一篇做NAS的文章，主要想法就是用MCTS来做NAS，相对random，Q-learning，Hill Climbing这些更能平衡探索与利用。
+
+
+==================================================
+Source 2
+Citation: [long_context: "深度学习中的Baseline：基础框架与性能评估", chunk 1]
+Title: 深度学习中的Baseline：基础框架与性能评估
+Document Index: 2
+Chunk Index: 1
+Relevance Score: 0.381
+==================================================
+
+千帆一体机
+搭载千帆大模型工具链平台，内置文心与精选开源大模型
+大模型
+文心大模型
+百度文心大模型4.5系列正式开源！
+千帆大模型平台支持开源模型API服务！
+ERNIE X1.1
+在事实性、指令遵循、智能体等能力上均有显著提升
+ERNIE X1 Turbo
+具备更长的思维链，更强的深度思考能力
+ERNIE 4.5
+新一代原生多模态基础大模型
+ERNIE Speed Pro 轻量级大模型
+适合作为基座模型精调，更好处理特定场景问题，性能极佳
+端到端语音语言大模型
+基于Cross-Attention跨模态语音大模型，体验超拟人对话
+大模型语音合成
+音色具备更高的自然度、丰富的情感表达等特点
+大模型声音复刻
+录制5秒音频，即可极速复刻音色
+IRAG 图像生成
+自研检索增强文生图技术，效果更优，低成本去AI味
+DeepSeek大模型
+DeepSeek-R1-0528
+复杂推理、长文本处理、代码生成能力全面提升
+DeepSeek-R1-671B
+杭州深度求索自研，基于大型强化学习训练的第一代理解模型
+DeepSeek-V3-671B
+深度求索自研（MoE）语言模型，位列主流开源榜单榜首
+大数据与原生应用
+大数据+AI
+千帆数据智能平台 DataBuilder
+一站式多模态数据管理、加工和分析应用平台
+向量数据库 VectorDB
+纯自研高性能、高性价比、生态丰富且即开即用
+数据可视化Sugar BI
+0代码，分钟级即可完成自助BI分析和可视化数据大屏
+Elasticsearch检索分析服务
+什么是深度学习中的baseline？
+什么是 中的baseline？
+随着人工智能技术的飞速发展，深度学习已经成为了许多领域的标配。然而，在深度学习的实际应用中，我们经常面临各种各样的挑战，如何评估模型的性能、如何选择合适的网络结构、如何... [truncated]
+
+--- Message 7 (assistant) ---
+I need to examine the paper more closely to identify the specific benchmarks mentioned in the related work section. Let me search for that information:
+
+<use_mcp_tool>
+<server_name>tool-rag</server_name>
+<tool_name>rag_search</tool_name>
+<arguments>
+{
+"query": "related work section deep research benchmarks in DRBench paper",
+"json_path": "/Users/apple/Documents/code/MiroThinker-MM/apps/miroflow-agent/datasets/001/long_context_sampled_32k.json.chunks.db",
+"top_k": 10
+}
+</arguments>
+</use_mcp_tool>
+
+--- Message 8 (user) ---
+=== RAG Search Results ===
+Query: 'related work section deep research benchmarks in DRBench paper'
+Source File: /Users/apple/Documents/code/MiroThinker-MM/apps/miroflow-agent/datasets/001/long_context_sampled_32k.json.chunks.db
+Results Found: 10
+
+
+============================================================
+Result 1
+Citation: [long_context: "深度学习中的Baseline：基础框架与性能评估", chunk 0]
+============================================================
+Relevance Score: 0.492
+Document Index: 2
+Chunk Index: 0
+Title: 深度学习中的Baseline：基础框架与性能评估
+
+--- Content ---
+(Cite as: [long_context: "深度学习中的Baseline：基础框架与性能评估", chunk 0])
+深度学习中的Baseline：基础框架与性能评估
+
+
+============================================================
+Result 2
+Citation: [long_context: "llm-benchmark安装详情-CSDN博客", chunk 0]
+============================================================
+Relevance Score: 0.450
+Document Index: 13
+Chunk Index: 0
+Title: llm-benchmark安装详情-CSDN博客
+
+--- Content ---
+(Cite as: [long_context: "llm-benchmark安装详情-CSDN博客", chunk 0])
+llm-benchmark安装详情-CSDN博客
+
+
+============================================================
+Result 3
+Citation: [long_context: "initial_h-博客园", chunk 2]
+============================================================
+Relevance Score: 0.418
+Document Index: 3
+Chunk Index: 2
+Title: initial_h-博客园
+
+--- Content ---
+(Cite as: [long_context: "initial_h-博客园", chunk 2])
+阅读(27) 评论(0) 推荐(0)  编辑 
+2021年9月29日 
+ A Dissection of Overfitting and Generalization in Continuous Reinforcement Learning 
+ 摘要： **发表时间：**2018 **文章要点：**文章想说RL很容易overfitting，然后就提出某个方式来判断是不是overfitting了。最后得出结论，通过多样化的训练可以减少overfitting（as soon as there is enough training data divers  阅读全文
+posted @ 2021-09-29 10:30 initial_h  阅读(40) 评论(0) 推荐(0)  编辑 
+2021年9月26日 
+ Protecting Against Evaluation Overfitting in Empirical Reinforcement Learning 
+ 摘要： **发表时间：**2011（2011 IEEE symposium on adaptive dynamic programming and reinforcement learning (ADPRL)） **文章要点：**文章想说RL算法很容易environment overfitting导致泛化性  阅读全文
+posted @ 2021-09-26 11:20 initial_h  阅读(30) 评论(0) 推荐(0)  编辑 
+2021年9月23日 
+ RE-EVALUATE: Reproducibility in Evaluating Reinforcement Learning Algorithms 
+ 摘要： **发表时间：**2018（2nd Reproducibility in Machine Learning Workshop at ICML 2018） **文章要点：**文章想说，现在这些RL算法不好复现，就是因为大家各搞各的，评估标准不一样，计算方式不一样等等。然后作者就提出了一个evaluat  阅读全文
+posted @ 2021-09-23 01:01 initial_h  阅读(83) 评论(0) 推荐(0)  编辑 
+2021年9月20日 
+ Evaluating the Performance of Reinforcement Learning Algorithms 
+ 摘要： **发表时间：**2020（ICML 2020） **文章要点：**文章指出RL复现难的原因在于评价指标不一致。作者提出评估指标应该满足四点：1. Scientific,主要说你这个指标提供的信息要告诉别人针对某个具体的问题或假设，得出了什么结论，这个结论有没有考虑各种不确定性可能造成的问题。2.  阅读全文
+posted @ 2021-09-20 12:30 initial_h  阅读(91) 评论(0) 推荐(0)  编辑 
+2021年9月18日 
+ Difference Based Metrics for Deep Reinforcement Learning Algorithms 
+ 摘要： **发表时间：**2019（IEEE Access） **文章要点：**这篇文章想说之前那些衡量RL算法的指标（rawreward, avgreward,maximum rawreward等等）不好，只看得出来一个得分，反映不出来RL在训练过程中的问题。
+
+
+============================================================
+Result 4
+Citation: [long_context: "获奖论文|论大数据在类案类判中的应用_澎湃号·政务_澎湃新闻-The Paper", chunk 0]
+========... [truncated]
+
+--- Message 9 (assistant) ---
+I need to look at the paper directly to find the benchmarks mentioned in the related work section. Let me extract this information from the PDF:
+
+<use_mcp_tool>
+<server_name>tool-python</server_name>
+<tool_name>create_sandbox</tool_name>
+<arguments>
+{}
+</arguments>
+</use_mcp_tool>
+
+--- Message 10 (user) ---
+Sandbox created with sandbox_id: i36s8e9p4fjgli2wj0e0c
+
+--- Message 11 (assistant) ---
+Now I'll use the sandbox to examine the paper.pdf file to extract information about the benchmarks mentioned in the related work section:
+
+<use_mcp_tool>
+<server_name>tool-python</server_name>
+<tool_name>run_command</tool_name>
+<arguments>
+{
+"command": "ls -la",
+"sandbox_id": "i36s8e9p4fjgli2wj0e0c"
+}
+</arguments>
+</use_mcp_tool>
+
+--- Message 12 (user) ---
+CommandResult(stderr='', stdout='total 20\ndrwx------ 2 user user 4096 Aug  5 03:37 .\ndrwxr-xr-x 3 root root 4096 Aug  5 03:37 ..\n-rw-r--r-- 1 user user  220 Aug  5 03:37 .bash_logout\n-rw-r--r-- 1 user user 3526 Aug  5 03:37 .bashrc\n-rw-r--r-- 1 user user  807 Aug  5 03:37 .profile\n', exit_code=0, error='')
+
+--- Message 13 (assistant) ---
+I need to download the paper.pdf file to the sandbox:
+
+<use_mcp_tool>
+<server_name>tool-python</server_name>
+<tool_name>upload_file_from_local_to_sandbox</tool_name>
+<arguments>
+{
+"sandbox_id": "i36s8e9p4fjgli2wj0e0c",
+"local_file_path": "/Users/apple/Documents/code/MiroThinker-MM/apps/miroflow-agent/datasets/001/paper.pdf"
+}
+</arguments>
+</use_mcp_tool>
+
+--- Message 14 (user) ---
+File uploaded to /home/user/paper.pdf
+
+[INFO]: For directly reading local files without uploading to sandbox, consider using the `convert_to_markdown` tool which can read various file types (Doc, PPT, PDF, Excel, CSV, ZIP, etc.) directly from local paths or URLs. Note that `convert_to_markdown` doesn't support files already in the sandbox.
+
+--- Message 15 (assistant) ---
+Now I'll use a Python script to extract the related work section from the paper and identify the benchmarks mentioned:
+
+<use_mcp_tool>
+<server_name>tool-python</server_name>
+<tool_name>run_python_code</tool_name>
+<arguments>
+{
+"code_block": "import PyPDF2\n\ndef extract_related_work_section(pdf_path):\n    with open(pdf_path, 'rb') as file:\n        pdf_reader = PyPDF2.PdfReader(file)\n        text = ''\n        for page_num in range(len(pdf_reader.pages)):\n            page = pdf_reader.pages[page_num]\n            page_text = page.extract_text()\n            text += page_text\n            \n        # Find the related work section\n        if 'RELATED WORK' in text:\n            start_idx = text.find('RELATED WORK')\n            # Find the next section after related work\n            next_sections = ['DRBench', 'EXPERIMENTS', 'CONCLUSION']\n            end_indices = [text.find(section, start_idx) for section in next_sections if text.find(section, start_idx) > 0]\n            end_idx = min(end_indices) if end_indices else len(text)\n            related_work_section = text[start_idx:end_idx]\n            return related_work_section\n        else:\n            return \"Related work section not found\"\n\n# Extract the related work section\nrelated_work = extract_related_work_section('/home/user/paper.pdf')\nprint(related_work)",
+"sandbox_id": "i36s8e9p4fjgli2wj0e0c"
+}
+</arguments>
+</use_mcp_tool>
+
+--- Message 16 (user) ---
+Execution(Results: [], Logs: Logs(stdout: ['Related work section not found\n'], stderr: []), Error: None)
+
+--- Message 17 (assistant) ---
+Let me try a different approach to extract the text from the PDF:
+
+<use_mcp_tool>
+<server_name>tool-python</server_name>
+<tool_name>run_python_code</tool_name>
+<arguments>
+{
+"code_block": "import PyPDF2\n\ndef extract_text_from_pdf(pdf_path):\n    with open(pdf_path, 'rb') as file:\n        pdf_reader = PyPDF2.PdfReader(file)\n        text = ''\n        for page_num in range(len(pdf_reader.pages)):\n            page = pdf_reader.pages[page_num]\n            page_text = page.extract_text()\n            text += page_text + '\\n\\n--- PAGE ' + str(page_num+1) + ' ---\\n\\n'\n        return text\n\n# Extract all text from the PDF\npdf_text = extract_text_from_pdf('/home/user/paper.pdf')\n\n# Print the first 5000 characters to see what we're working with\nprint(pdf_text[:5000])",
+"sandbox_id": "i36s8e9p4fjgli2wj0e0c"
+}
+</arguments>
+</use_mcp_tool>
+
+--- Message 18 (user) ---
+Execution(Results: [], Logs: Logs(stdout: ["DRBench: A REALISTIC\nBENCHMARK FORENTERPRISEDEEPRESEARCH\nAmirhossein Abaskohi1,2Tianyi Chen1Miguel Mu ˜noz-M ´armol1Curtis Fox1,2\nAmrutha Varshini Ramesh1,2´Etienne Marcotte1Xing Han L `u3,4Nicolas Chapados1\nSpandana Gella1,3Christopher Pal1,3,5Alexandre Drouin1,3Issam H. Laradji1,2\n1ServiceNow Research2University of British Columbia3Mila – Quebec AI Institute\n4McGill University5Canada CIFAR AI Chair\nABSTRACT\nWe introduceDRBench, a benchmark for evaluating AI agents on complex, open-ended\ndeep research tasks in enterprise settings. Unlike prior benchmarks that focus on simple\nquestions or web-only queries,DRBenchevaluates agents on multi-step queries (for\nexample, “What changes should we make to our product roadmap to ensure compliance\nwith this standard?”) that require identifying supporting facts from both the public web\nand private company knowledge base. Each task is grounded in realistic user personas\nand enterprise context, spanning a heterogeneous search space that includes productivity\nsoftware, cloud file systems, emails, chat conversations, and the open web. Tasks\nare generated through a carefully designed synthesis pipeline with human-in-the-loop\nverification, and agents are evaluated on their ability to recall relevant insights, maintain\nfactual accuracy, and produce coherent, well-structured reports. We release 15 deep\nresearch tasks across 10 domains, such as Sales, Cybersecurity, and Compliance. We\ndemonstrate the effectiveness ofDRBenchby evaluating diverse DR agents across open-\nand closed-source models (such as GPT, Llama, and Qwen) and DR strategies, high-\nlighting their strengths, weaknesses, and the critical path for advancing enterprise deep\nresearch. Code is available at https://github.com/ServiceNow/drbench .\n1 INTRODUCTION\nOrganizations today face a strong need to find useful insights in a world full of overwhelming information.\nV aluable insights are often hidden in noisy data, which can contain many distracting or irrelevant details that\nobscure the insights that really matter. This challenge is present in enterprise settings, where data is spread\nacross many applications and stored in different formats (e.g., PDFs, spreadsheets, emails, and internal tools)\nmaking extracting relevant information difficult. To uncover these hidden, valuable insights, one must con-\nduct what is known asdeep research. This task involves asking high-level strategic questions (e.g, “What\nchanges should we make to our roadmap to remain compliant?”), planning sub-questions, retrieving and\nevaluating relevant materials, and producing a clear, actionable summary grounded in data sources (Zheng\net al., 2025; Xu & Peng, 2025; Du et al., 2025). These tasks are typically performed by domain experts\nusing a mix of search engines, communication platforms, and business applications in iterative, high-effort\nworkflows (Mialon et al., 2024), which unfortunately require a signi... [truncated]
+
+--- Message 19 (assistant) ---
+Let me try to extract more text from the PDF, focusing on finding the related work section:
+
+<use_mcp_tool>
+<server_name>tool-python</server_name>
+<tool_name>run_python_code</tool_name>
+<arguments>
+{
+"code_block": "import PyPDF2\n\ndef extract_text_from_pdf(pdf_path):\n    with open(pdf_path, 'rb') as file:\n        pdf_reader = PyPDF2.PdfReader(file)\n        all_text = ''\n        for page_num in range(len(pdf_reader.pages)):\n            page = pdf_reader.pages[page_num]\n            page_text = page.extract_text()\n            all_text += f\"\\n\\n--- PAGE {page_num+1} ---\\n\\n{page_text}\"\n        return all_text\n\n# Extract all text from the PDF\npdf_text = extract_text_from_pdf('/home/user/paper.pdf')\n\n# Look for the related work section\nif 'RELATED WORK' in pdf_text:\n    start_idx = pdf_text.find('RELATED WORK')\n    # Print a portion of the text starting from the related work section\n    print(pdf_text[start_idx:start_idx+5000])\nelse:\n    # Try alternative section titles\n    alternative_titles = ['Related Work', '2 RELATED WORK', 'II. RELATED WORK', 'II RELATED WORK']\n    for title in alternative_titles:\n        if title in pdf_text:\n            start_idx = pdf_text.find(title)\n            print(pdf_text[start_idx:start_idx+5000])\n            break\n    else:\n        print(\"Could not find related work section. Printing page 2:\")\n        page_marker = \"--- PAGE 2 ---\"\n        if page_marker in pdf_text:\n            start_idx = pdf_text.find(page_marker)\n            print(pdf_text[start_idx:start_idx+5000])\n        else:\n            print(\"Could not find page 2 marker either.\")",
+"sandbox_id": "i36s8e9p4fjgli2wj0e0c"
+}
+</arguments>
+</use_mcp_tool>
+
+--- Message 20 (user) ---
+Execution(Results: [], Logs: Logs(stdout: ["Could not find related work section. Printing page 2:\n--- PAGE 2 ---\n\nLoading to\xa0\nEnvironment2\nLoad Ground\xa0\nTruth Insights\xa0Factuality\n\xa0\nInsight RecallReport Quality\nIs each claim in the report\nproperly cited?\nWere the injected insights\ndiscovered?\xa0Is the report clear to read and\ncomplete in addressing the points?5\nPersona\nCompanyDR Question\nLee's Market: a regional\xa0\nAsian supermarket chain\nJohn Doe: Regulatory\xa0\nAﬀairs ManagerNextCloud\nFileShare\nFile System\nLocal Files\nMattermost\nChat\nRoundCube\nEmail\nEnterprise\xa0\nData\n3\nReport\nGeneration41Context\n5(a) Tracking lot codes helps grocers reduce food waste and keep\xa0\nproducts fresh. [Cite: grocerydive.com]\n(b) Lee's Market tracks 250 high- risk food products as of Q3\xa0\n2024, aﬀecting 30% of inventory. [Cite: food- safety- \ncompliance.pdf]\xa0\n...\n(x) 85% of high- risk food suppliers are FSMA 204 compliant,\xa0\ntotalling 270 vendors. [Cite: RoundCube email]\nEvaluationTask Context\nHow can Lee's Market\xa0\nleverage FSMA 204\xa0\nregulations to enhance\xa0\nfood safety and\xa0\ncustomer trust?3\nPublic DataReport\nAccessing\nWebsites\nChat Conversations\nPresentations:\nPPTX\nTask Data\nTabular Data:\nCSV, XLSX\nDocuments:\n Docx, PDF, Markdown\nE- mails\nI) 8% reduction in food waste during Q2 2024, saving\xa0\n$1.2 million.\n...\nIX) Tracks approximately 250 high- risk food products,\xa0\nrepresenting nearly 30% of its inventory.Injected Insights\nSynthesized Files with Distractor Content and\xa0\nInjected Insights\nLoad Sources5Figure 1:DRBenchpipeline. 1TheTask Contextdefines the deep research question grounded by the\ncompany and persona given to the agent. 2Task Data, including both distractor and injected groundtruth\ninsights in different formats (PDFs, DOCX, PPTX, XLSX, chats, etc.) are loaded into the enterprise\nenvironment’s applications. 3TheDRBenchAgentaccesses both public web sources and local enterprise\ndata to extract relevant insights for the research question. 4It produces a structured research report,\nwhich is 5evaluated forInsight Recall(detecting injected groundtruth insights),Factuality(verifying\nclaims are correctly cited), andReport Quality.\nended, multi-step and long-horizon deep research tasks grounded in realistic enterprise contexts. As Fig. 1 il-\nlustrates,DRBenchincludes a suite of queries grounded in user personas and organizational scenarios, requir-\ning agents to search across real applications such as cloud file storage (Nextcloud), enterprise chat (Matter-\nmost), and user file systems, and to reason over formats like spreadsheets, slide decks, and PDFs. Our evalu-\nation framework introduces three scoring axes using LLM-as-a-judge methods inspired by G-Eval (Liu et al.,\n2023): (1)Insight Recall and Distractor Avoidance, which together evaluate whether the agent surfaces the\nmost salient injected insights while avoiding distractor content; (2)Factualit... [truncated]
+
+--- Message 21 (assistant) ---
+Let me continue extracting the text from the PDF, focusing on page 3 where the related work section seems to be:
+
+<use_mcp_tool>
+<server_name>tool-python</server_name>
+<tool_name>run_python_code</tool_name>
+<arguments>
+{
+"code_block": "import PyPDF2\n\ndef extract_text_from_pdf(pdf_path, page_num):\n    with open(pdf_path, 'rb') as file:\n        pdf_reader = PyPDF2.PdfReader(file)\n        if page_num < len(pdf_reader.pages):\n            page = pdf_reader.pages[page_num]\n            return page.extract_text()\n        else:\n            return f\"Page {page_num} does not exist in the PDF\"\n\n# Extract text from page 3 (index 2)\npage3_text = extract_text_from_pdf('/home/user/paper.pdf', 2)\nprint(\"Page 3 content:\")\nprint(page3_text)\n\n# Extract text from page 4 (index 3) to get more of the related work section\npage4_text = extract_text_from_pdf('/home/user/paper.pdf', 3)\nprint(\"\\n\\nPage 4 content:\")\nprint(page4_text)",
+"sandbox_id": "i36s8e9p4fjgli2wj0e0c"
+}
+</arguments>
+</use_mcp_tool>
+
+--- Message 22 (user) ---
+Execution(Results: [], Logs: Logs(stdout: ['Page 3 content:\nTable 1: Comparison of deep research benchmarks (top) and AI agent benchmarks with a computer environ-\nment (middle). Columns report dataset size, whether both public and local data are required, the provided\nenvironment type, task domains, task description, and evaluation method. Unlike prior work,DRBenchcom-\nbines public web retrieval with local enterprise data in realistic enterprise applications and evaluates both\ninsight recall, distractor avoidance and report quality.Task Description: types of tasks covered by the\nbenchmark:WRfor Web Research,DRfor Deep Research with both public and local data,CUfor\nComputer Use and/or Mobile Use.DRBenchhas 114 total# groundtruthinsights that need to be extracted\nto address the 15 DR Questions. Example groundtruth insights can be found at Table 8 in Appendix A.\nBenchmark # groundtruthPublic &\nLocal DataProvides\nEnvTask\nDomainTask\nDescriptionMain Evaluation Method\nDeep Research Bench (Bosse et al., 2025) 89✗ ✓Generic WR & CU Answer Accuracy\nDeepResearch Bench (Du et al., 2025) 100✗ ✗Generic WR Insight Recall\nDeepResearchGym (Coelho et al., 2025) 1,000✗ ✗Generic WR Document Retrieval\nResearcherBench (Xu et al., 2025b) 65✗ ✗AI WR Insight Recall, Factuality\nLiveDRBench (Java et al., 2025) 100✗ ✗Generic WR & CU Insight Precision, Recall\nBrowseComp-Plus (Chen et al., 2025) 1,005✗ ✗Generic WR Answer Accuracy, URL Recall\nMind2Web 2 (Gou et al., 2025) 130✗ ✗Generic WR Partial Completion\nGAIA (Mialon et al., 2024) 466✗ ✗Generic WR Answer Accuracy\nGAIA2 (Andrews et al., 2025) 963✗ ✓Generic CU Action Accuracy\nTheAgentCompany (Xu et al., 2025a) 175✗ ✓Enterprise CU Task Completion, Efficiency\nOSWorld (Xie et al., 2024) 369✗ ✓Generic CU Task Completion\nDRBench114✓ ✓Enterprise DR Insight Recall\nmeasuring retrieval or synthesis quality in controlled but limited settings. In contrast,DRBenchis the first to\ncombine web retrieval with local enterprise data, grounding tasks in persona- and domain-specific contexts.\nEnterprise Environments.Realistic enterprise environments have become an important testbed for\nevaluating agents in complex multi-application workflows.CRMArena-Pro(Huang et al., 2025a;b) targets\nsales and CPQ pipelines through persona-grounded dialogues, but is limited to conversational sales\nworkflows.OSWorld(Xie et al., 2024) andOSWorld-Gold(Abhyankar et al., 2025) benchmark agents\nin general-purpose desktop environments, using applications such as Microsoft Word and Excel, yet their\nfocus remains on computer task execution rather than enterprise deep research.TheAgentCompany(Xu\net al., 2025a) evaluates collaboration among autonomous agents for programming, browsing, and\ncommunication, though the tasks are computer-use focused and do not assess deep research capabilities.\nWorkArena(Drouin et al., 2024; Boisvert et al., 2024) offers a realistic enterprise environment with\nknowledge work tasks for web agents, though it d... [truncated]
+
+--- Message 23 (assistant) ---
+Now I have the information I need from the related work section of the paper. Let me extract the benchmarks mentioned and their characteristics according to the required fields:
+
+<use_mcp_tool>
+<server_name>tool-python</server_name>
+<tool_name>run_python_code</tool_name>
+<arguments>
+{
+"code_block": "import pandas as pd\n\n# Define the benchmarks mentioned in the related work section\nbenchmarks = [\n    {\n        \"论文名称\": \"Deep Research Bench\",\n        \"领域/场景\": \"Generic\",\n        \"query数量\": \"89\",\n        \"任务\": \"Web Research & Computer Use\",\n        \"输入\": \"Web\",\n        \"类型\": \"Answer Generation\",\n        \"评价指标\": \"Answer Accuracy\",\n        \"其他\": \"Public data only, provides environment\"\n    },\n    {\n        \"论文名称\": \"DeepResearch Bench\",\n        \"领域/场景\": \"Generic\",\n        \"query数量\": \"100\",\n        \"任务\": \"Web Research\",\n        \"输入\": \"Web\",\n        \"类型\": \"Report Generation\",\n        \"评价指标\": \"Insight Recall\",\n        \"其他\": \"Public data only, no environment\"\n    },\n    {\n        \"论文名称\": \"DeepResearchGym\",\n        \"领域/场景\": \"Generic\",\n        \"query数量\": \"1,000\",\n        \"任务\": \"Web Research\",\n        \"输入\": \"Web\",\n        \"类型\": \"Document Retrieval\",\n        \"评价指标\": \"Document Retrieval\",\n        \"其他\": \"Public data only, no environment\"\n    },\n    {\n        \"论文名称\": \"ResearcherBench\",\n        \"领域/场景\": \"AI\",\n        \"query数量\": \"65\",\n        \"任务\": \"Web Research\",\n        \"输入\": \"Web\",\n        \"类型\": \"Report Generation\",\n        \"评价指标\": \"Insight Recall, Factuality\",\n        \"其他\": \"Public data only, no environment\"\n    },\n    {\n        \"论文名称\": \"LiveDRBench\",\n        \"领域/场景\": \"Generic\",\n        \"query数量\": \"100\",\n        \"任务\": \"Web Research & Computer Use\",\n        \"输入\": \"Web\",\n        \"类型\": \"Report Generation\",\n        \"评价指标\": \"Insight Precision, Recall\",\n        \"其他\": \"Public data only, no environment\"\n    },\n    {\n        \"论文名称\": \"BrowseComp-Plus\",\n        \"领域/场景\": \"Generic\",\n        \"query数量\": \"1,005\",\n        \"任务\": \"Web Research\",\n        \"输入\": \"Web\",\n        \"类型\": \"Answer Generation\",\n        \"评价指标\": \"Answer Accuracy, URL Recall\",\n        \"其他\": \"Public data only, no environment\"\n    },\n    {\n        \"论文名称\": \"Mind2Web 2\",\n        \"领域/场景\": \"Generic\",\n        \"query数量\": \"130\",\n        \"任务\": \"Web Research\",\n        \"输入\": \"Web\",\n        \"类型\": \"Task Completion\",\n        \"评价指标\": \"Partial Completion\",\n        \"其他\": \"Public data only, no environment\"\n    },\n    {\n        \"论文名称\": \"GAIA\",\n        \"领域/场景\": \"Generic\",\n        \"query数量\": \"466\",\n        \"任务\": \"Web Research\",\n        \"输入\": \"Web\",\n        \"类型\": \"Answer Generation\",\n        \"评价指标\": \"Answer Accuracy\",\n        \"其他\": \"Public data only, no environment\"\n    },\n    {\n        \"论文名称\": \"G... [truncated]
+
+--- Message 24 (user) ---
+Execution(Results: [], Logs: Logs(stdout: ['               论文名称      领域/场景 query数量                          任务                    输入                 类型                        评价指标                                        其他\nDeep Research Bench    Generic      89 Web Research & Computer Use                   Web  Answer Generation             Answer Accuracy    Public data only, provides environment\n DeepResearch Bench    Generic     100                Web Research                   Web  Report Generation              Insight Recall          Public data only, no environment\n    DeepResearchGym    Generic   1,000                Web Research                   Web Document Retrieval          Document Retrieval          Public data only, no environment\n    ResearcherBench         AI      65                Web Research                   Web  Report Generation  Insight Recall, Factuality          Public data only, no environment\n        LiveDRBench    Generic     100 Web Research & Computer Use                   Web  Report Generation   Insight Precision, Recall          Public data only, no environment\n    BrowseComp-Plus    Generic   1,005                Web Research                   Web  Answer Generation Answer Accuracy, URL Recall          Public data only, no environment\n         Mind2Web 2    Generic     130                Web Research                   Web    Task Completion          Partial Completion          Public data only, no environment\n               GAIA    Generic     466                Web Research                   Web  Answer Generation             Answer Accuracy          Public data only, no environment\n              GAIA2    Generic     963                Computer Use  Computer Environment    Task Completion             Action Accuracy    Public data only, provides environment\n    TheAgentCompany Enterprise     175                Computer Use  Computer Environment    Task Completion Task Completion, Efficiency    Public data only, provides environment\n            OSWorld    Generic     369                Computer Use  Computer Environment    Task Completion             Task Completion    Public data only, provides environment\n            DRBench Enterprise     114               Deep Research Web + Enterprise Data  Report Generation              Insight Recall Public & local data, provides environment\n'], stderr: []), Error: None)
+
+--- Message 25 (assistant) ---
+Now I have all the information I need to create a comprehensive research report on Deep Research benchmarks. Let me organize this information into a well-structured report:
+
+<use_mcp_tool>
+<server_name>tool-python</server_name>
+<tool_name>run_python_code</tool_name>
+<arguments>
+{
+"code_block": "import pandas as pd\nimport matplotlib.pyplot as plt\nimport numpy as np\n\n# Define the benchmarks mentioned in the related work section\nbenchmarks = [\n    {\n        \"论文名称\": \"Deep Research Bench\",\n        \"领域/场景\": \"Generic\",\n        \"query数量\": 89,\n        \"任务\": \"Web Research & Computer Use\",\n        \"输入\": \"Web\",\n        \"类型\": \"Answer Generation\",\n        \"评价指标\": \"Answer Accuracy\",\n        \"其他\": \"Public data only, provides environment\"\n    },\n    {\n        \"论文名称\": \"DeepResearch Bench\",\n        \"领域/场景\": \"Generic\",\n        \"query数量\": 100,\n        \"任务\": \"Web Research\",\n        \"输入\": \"Web\",\n        \"类型\": \"Report Generation\",\n        \"评价指标\": \"Insight Recall\",\n        \"其他\": \"Public data only, no environment\"\n    },\n    {\n        \"论文名称\": \"DeepResearchGym\",\n        \"领域/场景\": \"Generic\",\n        \"query数量\": 1000,\n        \"任务\": \"Web Research\",\n        \"输入\": \"Web\",\n        \"类型\": \"Document Retrieval\",\n        \"评价指标\": \"Document Retrieval\",\n        \"其他\": \"Public data only, no environment\"\n    },\n    {\n        \"论文名称\": \"ResearcherBench\",\n        \"领域/场景\": \"AI\",\n        \"query数量\": 65,\n        \"任务\": \"Web Research\",\n        \"输入\": \"Web\",\n        \"类型\": \"Report Generation\",\n        \"评价指标\": \"Insight Recall, Factuality\",\n        \"其他\": \"Public data only, no environment\"\n    },\n    {\n        \"论文名称\": \"LiveDRBench\",\n        \"领域/场景\": \"Generic\",\n        \"query数量\": 100,\n        \"任务\": \"Web Research & Computer Use\",\n        \"输入\": \"Web\",\n        \"类型\": \"Report Generation\",\n        \"评价指标\": \"Insight Precision, Recall\",\n        \"其他\": \"Public data only, no environment\"\n    },\n    {\n        \"论文名称\": \"BrowseComp-Plus\",\n        \"领域/场景\": \"Generic\",\n        \"query数量\": 1005,\n        \"任务\": \"Web Research\",\n        \"输入\": \"Web\",\n        \"类型\": \"Answer Generation\",\n        \"评价指标\": \"Answer Accuracy, URL Recall\",\n        \"其他\": \"Public data only, no environment\"\n    },\n    {\n        \"论文名称\": \"Mind2Web 2\",\n        \"领域/场景\": \"Generic\",\n        \"query数量\": 130,\n        \"任务\": \"Web Research\",\n        \"输入\": \"Web\",\n        \"类型\": \"Task Completion\",\n        \"评价指标\": \"Partial Completion\",\n        \"其他\": \"Public data only, no environment\"\n    },\n    {\n        \"论文名称\": \"GAIA\",\n        \"领域/场景\": \"Generic\",\n        \"query数量\": 466,\n        \"任务\": \"Web Research\",\n        \"输入\": \"Web\",\n        \"类型\": \"Answer Generation\",\n        \"评价指标\": \"Answer Accuracy\",\n        \"其他\": \"Public data only, no environment\"\n    },\n    {\n       ... [truncated]
+
+--- Message 26 (user) ---
+Execution(Results: [], Logs: Logs(stdout: ['\n--- Statistics ---\nTotal number of benchmarks: 12\nAverage number of queries: 381.3\nMedian number of queries: 152.5\nLargest benchmark by query count: BrowseComp-Plus (1005 queries)\nSmallest benchmark by query count: ResearcherBench (65 queries)\n\nBenchmarks by domain:\n领域/场景\nGeneric       9\nEnterprise    2\nAI            1\nName: count, dtype: int64\n\nBenchmarks by task type:\n任务\nWeb Research                   6\nComputer Use                   3\nWeb Research & Computer Use    2\nDeep Research                  1\nName: count, dtype: int64\n\nBenchmarks by evaluation metric:\nAnswer Accuracy       3\nInsight Recall        3\nTask Completion       2\nDocument Retrieval    1\nFactuality            1\nRecall                1\nInsight Precision     1\nURL Recall            1\nPartial Completion    1\nAction Accuracy       1\nEfficiency            1\nName: count, dtype: int64\n\nBenchmarks that provide environment: 5 out of 12\nBenchmarks that use both public and local data: 1 out of 12\n'], stderr: []), Error: None)
+
+--- Message 27 (assistant) ---
+Now I have all the necessary information to create a comprehensive research report on Deep Research benchmarks. Let me compile everything into a well-structured report:
+
+\boxed{
+# Deep Research相关Benchmark数据集调研报告
+
+## 引言
+
+随着大型语言模型（LLM）技术的快速发展，评估这些模型在复杂、开放式深度研究任务中的能力变得越来越重要。本报告旨在系统性地梳理当前主要的大模型评测基准（Benchmark），特别关注那些用于评估深度研究（Deep Research）能力的数据集。通过对DRBench论文中提及的相关工作进行分析，我们提取并结构化了12个主要的评测基准的特征，以帮助研究团队更好地理解现有评测工具的优缺点，为未来的研究方向提供参考。
+
+## 调研方法
+
+本报告基于ServiceNow Research等机构发表的DRBench论文中的相关工作部分，提取并分析了论文中提到的各个评测基准的关键特征。我们按照以下字段对每个基准进行了结构化整理：
+- 论文名称：基准的官方名称
+- 领域/场景：基准适用的主要领域或场景
+- query数量：基准包含的查询或任务数量
+- 任务：基准评估的主要任务类型
+- 输入：基准使用的输入数据类型
+- 类型：基准评估的输出或生成类型
+- 评价指标：用于评估模型性能的主要指标
+- 其他：额外的重要特性，如是否提供环境、是否使用公共和私有数据等
+
+## 各论文Benchmark信息汇总表
+
+| 论文名称 | 领域/场景 | query数量 | 任务 | 输入 | 类型 | 评价指标 | 其他 |
+|---------|----------|----------|------|-----|------|---------|------|
+| Deep Research Bench | Generic | 89 | Web Research & Computer Use | Web | Answer Generation | Answer Accuracy | Public data only, provides environment |
+| DeepResearch Bench | Generic | 100 | Web Research | Web | Report Generation | Insight Recall | Public data only, no environment |
+| DeepResearchGym | Generic | 1,000 | Web Research | Web | Document Retrieval | Document Retrieval | Public data only, no environment |
+| ResearcherBench | AI | 65 | Web Research | Web | Report Generation | Insight Recall, Factuality | Public data only, no environment |
+| LiveDRBench | Generic | 100 | Web Research & Computer Use | Web | Report Generation | Insight Precision, Recall | Public data only, no environment |
+| BrowseComp-Plus | Generic | 1,005 | Web Research | Web | Answer Generation | Answer Accuracy, URL Recall | Public data only, no environment |
+| Mind2Web 2 | Generic | 130 | Web Research | Web | Task Completion | Partial Completion | Public data only, no environment |
+| GAIA | Generic | 466 | Web Research | Web | Answer Generation | Answer Accuracy | Public data only, no environment |
+| GAIA2 | Generic | 963 | Computer Use | Computer Environment | Task Completion | Action Accuracy | Public data only, provides environment |
+| TheAgentCompany | Enterprise | 175 | Computer Use | Computer Environment | Task Completion | Task Completion, Efficiency | Public data only, provides environment |
+| OSWorld | Generic | 369 | Computer Use | Computer Environment | Task Completion | Task Completion | Public data only, provides environment |
+| DRBench | Enterprise | 114 | Deep Research | Web + Enterprise Data | Report Generation | Insight Recall | Public & local data, provides environment |
+
+## 分析与观察
+
+### 基准数量与规模
+
+当前共有12个主要的深度研究相关基准，其中：
+- 平均查询数量为381.3个
+- 中位数查询数量为152.5个
+- 最大规模的基准是BrowseComp-Plus，包含1,005个查询
+- 最小规模的基准是ResearcherBench，包含65个查询
+
+### 领域分布
+
+- 大多数基准（9个）面向通用（Generic）领域
+- 仅有2个基准（DRBench和TheAgentCompany）专注于企业（Enterprise）场景
+- 只有1个基准（ResearcherBench）专注于AI领域
+
+### 任务类型分布
+
+- Web Research是最常见的任务类型，有6个基准专注于此
+- Computer Use次之，有3个基准
+- 2个基准结合了Web Research和Computer Use
+- 只有DRBench明确定位为Deep Research任务
+
+### 评价指标分析
+
+最常用的评价指标包括：
+- Answer Accuracy... [truncated]
+
+--- Message 28 (user) ---
+Summarize the above conversation, and output the FINAL ANSWER to the original question.
+
+If a clear answer has already been provided earlier in the conversation, do not rethink or recalculate it — simply extract that answer and reformat it to match the required format below.
+If a definitive answer could not be determined, make a well-informed educated guess based on the conversation.
+
+The original question is repeated here for reference:
+
+"# Task
+
+假设你是一名科研工作者，正在为某人工智能研究团队开展大模型评测基准的系统性梳理工作。请根据提供的材料，撰写一份《Deep Research相关Benchmark数据集调研报告》。
+具体而言，依据图片image0中所示的字段要求，提取并结构化提供的pdf论文在相关工作部分提到的每篇论文对应的Benchmark特征，其中请忽略“数据集example”指标。
+报告需整合文献内容与公开可查的权威技术资料（如论文原文、官方GitHub仓库、学术数据库或评测平台），
+确保所有信息真实、准确、可验证，并在文中注明数据来源。
+报告语言应采用正式书面语，结构清晰，包含引言、调研方法、各论文Benchmark信息汇总表、分析与观察、参考资料等部分，
+最终形成一份可用于团队技术决策的标准化调研文档，字数在1500至2000之间。
+
+
+## Folder Contents Summary
+
+Folder: /Users/apple/Documents/code/MiroThinker-MM/apps/miroflow-agent/datasets/001
+Total files: 12
+  - data: 5
+  - document: 1
+  - image: 1
+  - other: 5
+
+
+## Document Contents
+
+
+### paper.pdf
+
+<file path="/Users/apple/Documents/code/MiroThinker-MM/apps/miroflow-agent/datasets/001/paper.pdf">
+5
+2
+0
+2
+
+p
+e
+S
+0
+3
+
+]
+L
+C
+.
+s
+c
+[
+
+1
+v
+2
+7
+1
+0
+0
+.
+0
+1
+5
+2
+:
+v
+i
+X
+r
+a
+
+DRBench: A REALISTIC
+
+BENCHMARK FOR ENTERPRISE DEEP RESEARCH
+
+Amirhossein Abaskohi1,2 Tianyi Chen1 Miguel Mu˜noz-M´armol1 Curtis Fox1,2
+Amrutha Varshini Ramesh1,2 ´Etienne Marcotte1 Xing Han L`u3,4 Nicolas Chapados1
+
+Spandana Gella1,3 Christopher Pal1,3,5 Alexandre Drouin1,3
+
+Issam H. Laradji1,2
+
+1ServiceNow Research
+
+2University of British Columbia
+
+3Mila – Quebec AI Institute
+
+4McGill University
+
+5Canada CIFAR AI Chair
+
+ABSTRACT
+
+We introduce DRBench, a benchmark for evaluating AI agents on complex, open-ended
+deep research tasks in enterprise settings. Unlike prior benchmarks that focus on simple
+questions or web-only queries, DRBench evaluates agents on multi-step queries (for
+example, “What changes should we make to our product roadmap to ensure compliance
+with this standard?”) that require identifying supporting facts from both the public web
+and private company knowledge base. Each task is grounded in realistic user personas
+and enterprise context, spanning a heterogeneous search space that includes productivity
+software, cloud file systems, emails, chat conversations, and the open web. Tasks
+are generated through a carefully designed synthesis pipeline with human-in-the-loop
+verification, and agents are evaluated on their ability to recall relevant insights, maintain
+factual accuracy, and produce coherent, well-structured reports. We release 15 deep
+research tasks across 10 domains, such as Sales, Cybersecurity, and Compliance. We
+demonstrate the effectiveness of DRBench by evaluating diverse DR agents across open-
+and closed-source models (such as GPT, Llama, and Qwen) and DR strategies, high-
+lighting their strengths, weaknesses, and the critical path for advancing enterprise deep
+research. Code is available at https://github.com/ServiceNow/drbench.
+
+1
+... [truncated]
+
+--- Message 29 (assistant) ---
+In this conversation, I was asked to create a comprehensive research report on Deep Research benchmarks based on the provided materials. I first analyzed the image to understand the required fields for the benchmark dataset, which included: paper name, domain/scenario, query count, task, input, type, evaluation metrics, and other information (excluding "dataset example" as instructed).
+
+I then examined the paper to identify benchmarks mentioned in the related work section. From the PDF, I extracted information about 12 different benchmarks: Deep Research Bench, DeepResearch Bench, DeepResearchGym, ResearcherBench, LiveDRBench, BrowseComp-Plus, Mind2Web 2, GAIA, GAIA2, TheAgentCompany, OSWorld, and DRBench itself.
+
+I organized this information into a structured table and analyzed the statistics, finding that most benchmarks focus on generic domains, web research tasks, and use only public data. DRBench stands out as the only benchmark that combines both public and local data in an enterprise context.
+
+The final report includes an introduction, methodology, benchmark information summary table, detailed analysis of the benchmarks' characteristics, key findings, conclusions, and recommendations for future research directions.
+
+\boxed{
+# Deep Research相关Benchmark数据集调研报告
+
+## 引言
+
+随着大型语言模型（LLM）技术的快速发展，评估这些模型在复杂、开放式深度研究任务中的能力变得越来越重要。本报告旨在系统性地梳理当前主要的大模型评测基准（Benchmark），特别关注那些用于评估深度研究（Deep Research）能力的数据集。通过对DRBench论文中提及的相关工作进行分析，我们提取并结构化了12个主要的评测基准的特征，以帮助研究团队更好地理解现有评测工具的优缺点，为未来的研究方向提供参考。
+
+## 调研方法
+
+本报告基于ServiceNow Research等机构发表的DRBench论文中的相关工作部分，提取并分析了论文中提到的各个评测基准的关键特征 [paper.pdf, page 3]。我们按照以下字段对每个基准进行了结构化整理：
+- 论文名称：基准的官方名称
+- 领域/场景：基准适用的主要领域或场景
+- query数量：基准包含的查询或任务数量
+- 任务：基准评估的主要任务类型
+- 输入：基准使用的输入数据类型
+- 类型：基准评估的输出或生成类型
+- 评价指标：用于评估模型性能的主要指标
+- 其他：额外的重要特性，如是否提供环境、是否使用公共和私有数据等
+
+## 各论文Benchmark信息汇总表
+
+| 论文名称 | 领域/场景 | query数量 | 任务 | 输入 | 类型 | 评价指标 | 其他 |
+|---------|----------|----------|------|-----|------|---------|------|
+| Deep Research Bench | Generic | 89 | Web Research & Computer Use | Web | Answer Generation | Answer Accuracy | Public data only, provides environment |
+| DeepResearch Bench | Generic | 100 | Web Research | Web | Report Generation | Insight Recall | Public data only, no environment |
+| DeepResearchGym | Generic | 1,000 | Web Research | Web | Document Retrieval | Document Retrieval | Public data only, no environment |
+| ResearcherBench | AI | 65 | Web Research | Web | Report Generation | Insight Recall, Factuality | Public data only, no environment |
+| LiveDRBench | Generic | 100 | Web Research & Computer Use | Web | Report Generation | Insight Precision, Recall | Public data only, no environment |
+| BrowseComp-Plus | Generic | 1,005 | Web Research | Web | Answer Generation | Answer Accuracy, URL Recall | Public data only, no environment |
+| Mind2Web 2 | Generic | 130 | Web Research | Web | Task Completion | Partial Completion | Public data only, no environment |
+| GAIA | Generic | 466 | Web Research | Web | Answer Generation | Answer Accuracy ... [truncated]
+
+--- Message 30 (user) ---
+Please validate if the following report meets all requirements of the original query.
+
+**IMPORTANT: You MUST use the Python code execution tool to accurately count words!**
+
+**Step 1: Use Python Tool to Count Words**
+
+Please call the Python code execution tool with the following code:
+
+```python
+import re
+
+def count_words(text):
+    chinese_chars = len(re.findall(r'[\u4e00-\u9fff]', text))
+    text_without_chinese = re.sub(r'[\u4e00-\u9fff]', ' ', text)
+    english_words = len([w for w in text_without_chinese.split() if re.search(r'[a-zA-Z0-9]', w)])
+    return chinese_chars + english_words
+
+report = """
+In this conversation, I was asked to create a comprehensive research report on Deep Research benchmarks based on the provided materials. I first analyzed the image to understand the required fields for the benchmark dataset, which included: paper name, domain/scenario, query count, task, input, type, evaluation metrics, and other information (excluding "dataset example" as instructed).
+
+I then examined the paper to identify benchmarks mentioned in the related work section. From the PDF, I extracted information about 12 different benchmarks: Deep Research Bench, DeepResearch Bench, DeepResearchGym, ResearcherBench, LiveDRBench, BrowseComp-Plus, Mind2Web 2, GAIA, GAIA2, TheAgentCompany, OSWorld, and DRBench itself.
+
+I organized this information into a structured table and analyzed the statistics, finding that most benchmarks focus on generic domains, web research tasks, and use only public data. DRBench stands out as the only benchmark that combines both public and local data in an enterprise context.
+
+The final report includes an introduction, methodology, benchmark information summary table, detailed analysis of the benchmarks' characteristics, key findings, conclusions, and recommendations for future research directions.
+
+\boxed{
+# Deep Research相关Benchmark数据集调研报告
+
+## 引言
+
+随着大型语言模型（LLM）技术的快速发展，评估这些模型在复杂、开放式深度研究任务中的能力变得越来越重要。本报告旨在系统性地梳理当前主要的大模型评测基准（Benchmark），特别关注那些用于评估深度研究（Deep Research）能力的数据集。通过对DRBench论文中提及的相关工作进行分析，我们提取并结构化了12个主要的评测基准的特征，以帮助研究团队更好地理解现有评测工具的优缺点，为未来的研究方向提供参考。
+
+## 调研方法
+
+本报告基于ServiceNow Research等机构发表的DRBench论文中的相关工作部分，提取并分析了论文中提到的各个评测基准的关键特征 [paper.pdf, page 3]。我们按照以下字段对每个基准进行了结构化整理：
+- 论文名称：基准的官方名称
+- 领域/场景：基准适用的主要领域或场景
+- query数量：基准包含的查询或任务数量
+- 任务：基准评估的主要任务类型
+- 输入：基准使用的输入数据类型
+- 类型：基准评估的输出或生成类型
+- 评价指标：用于评估模型性能的主要指标
+- 其他：额外的重要特性，如是否提供环境、是否使用公共和私有数据等
+
+## 各论文Benchmark信息汇总表
+
+| 论文名称 | 领域/场景 | query数量 | 任务 | 输入 | 类型 | 评价指标 | 其他 |
+|---------|----------|----------|------|-----|------|---------|------|
+| Deep Research Bench | Generic | 89 | Web Research & Computer Use | Web | Answer Generation | Answer Accuracy | Public data only, provides environment |
+| DeepResearch Bench | Generic | 100 | Web Research | Web | Report Generation | Insight Recall | Public data only, no environment |
+| DeepResearchGym | Generic | 1,000 | Web Research | Web | Document Retrieval | Document Retrieval | Public data only, no environment |
+| ResearcherBench | AI | 6... [truncated]
+
+--- Message 31 (assistant) ---
+<use_mcp_tool>
+<server_name>tool-python</server_name>
+<tool_name>run_python_code</tool_name>
+<arguments>
+{
+"code_block": "import re\n\ndef count_words(text):\n    chinese_chars = len(re.findall(r'[\\u4e00-\\u9fff]', text))\n    text_without_chinese = re.sub(r'[\\u4e00-\\u9fff]', ' ', text)\n    english_words = len([w for w in text_without_chinese.split() if re.search(r'[a-zA-Z0-9]', w)])\n    return chinese_chars + english_words\n\n# Extract just the report content from the boxed section\nreport_text = '''\n# Deep Research相关Benchmark数据集调研报告\n\n## 引言\n\n随着大型语言模型（LLM）技术的快速发展，评估这些模型在复杂、开放式深度研究任务中的能力变得越来越重要。本报告旨在系统性地梳理当前主要的大模型评测基准（Benchmark），特别关注那些用于评估深度研究（Deep Research）能力的数据集。通过对DRBench论文中提及的相关工作进行分析，我们提取并结构化了12个主要的评测基准的特征，以帮助研究团队更好地理解现有评测工具的优缺点，为未来的研究方向提供参考。\n\n## 调研方法\n\n本报告基于ServiceNow Research等机构发表的DRBench论文中的相关工作部分，提取并分析了论文中提到的各个评测基准的关键特征 [paper.pdf, page 3]。我们按照以下字段对每个基准进行了结构化整理：\n- 论文名称：基准的官方名称\n- 领域/场景：基准适用的主要领域或场景\n- query数量：基准包含的查询或任务数量\n- 任务：基准评估的主要任务类型\n- 输入：基准使用的输入数据类型\n- 类型：基准评估的输出或生成类型\n- 评价指标：用于评估模型性能的主要指标\n- 其他：额外的重要特性，如是否提供环境、是否使用公共和私有数据等\n\n## 各论文Benchmark信息汇总表\n\n| 论文名称 | 领域/场景 | query数量 | 任务 | 输入 | 类型 | 评价指标 | 其他 |\n|---------|----------|----------|------|-----|------|---------|------|\n| Deep Research Bench | Generic | 89 | Web Research & Computer Use | Web | Answer Generation | Answer Accuracy | Public data only, provides environment |\n| DeepResearch Bench | Generic | 100 | Web Research | Web | Report Generation | Insight Recall | Public data only, no environment |\n| DeepResearchGym | Generic | 1,000 | Web Research | Web | Document Retrieval | Document Retrieval | Public data only, no environment |\n| ResearcherBench | AI | 65 | Web Research | Web | Report Generation | Insight Recall, Factuality | Public data only, no environment |\n| LiveDRBench | Generic | 100 | Web Research & Computer Use | Web | Report Generation | Insight Precision, Recall | Public data only, no environment |\n| BrowseComp-Plus | Generic | 1,005 | Web Research | Web | Answer Generation | Answer Accuracy, URL Recall | Public data only, no environment |\n| Mind2Web 2 | Generic | 130 | Web Research | Web | Task Completion | Partial Completion | Public data only, no environment |\n| GAIA | Generic | 466 | Web Research | Web | Answer Generation | Answer Accuracy | Public data only, no environment |\n| GAIA2 | Generic | 963 | Computer Use | Computer Environment | Task Completion | Action Accuracy | Public data only, provides environment |\n| TheAgentCompany | Enterprise | 175 | Computer Use | Computer Environment | Task Completion | Task Completion, Efficiency | Public data only, provides environment |\n| OSWorld | Generic | 369 | Computer Use | Computer Environment | Task Completion | Task Completion | Public data only, provides environment |\n| DRBench | Enterprise | 114 | Deep Research | Web + Enterprise Data | Report Generation | Insight Recall | Public & local data, provides environment |\n\n## 分析与观察\n\n### 基准数量与规模\n\n当前共有12个主要的深度研究相关基准 [paper.pdf, page ... [truncated]
+
+================================================================================
+FINAL ANSWER
+================================================================================
+# Deep Research相关Benchmark数据集调研报告
+
+## 引言
+
+随着大型语言模型（LLM）技术的快速发展，评估这些模型在复杂、开放式深度研究任务中的能力变得越来越重要。本报告旨在系统性地梳理当前主要的大模型评测基准（Benchmark），特别关注那些用于评估深度研究（Deep Research）能力的数据集。通过对DRBench论文中提及的相关工作进行分析，我们提取并结构化了12个主要的评测基准的特征，以帮助研究团队更好地理解现有评测工具的优缺点，为未来的研究方向提供参考。
+
+## 调研方法
+
+本报告基于ServiceNow Research等机构发表的DRBench论文中的相关工作部分，提取并分析了论文中提到的各个评测基准的关键特征 [paper.pdf, page 3]。我们按照以下字段对每个基准进行了结构化整理：
+- 论文名称：基准的官方名称
+- 领域/场景：基准适用的主要领域或场景
+- query数量：基准包含的查询或任务数量
+- 任务：基准评估的主要任务类型
+- 输入：基准使用的输入数据类型
+- 类型：基准评估的输出或生成类型
+- 评价指标：用于评估模型性能的主要指标
+- 其他：额外的重要特性，如是否提供环境、是否使用公共和私有数据等
+
+## 各论文Benchmark信息汇总表
+
+| 论文名称 | 领域/场景 | query数量 | 任务 | 输入 | 类型 | 评价指标 | 其他 |
+|---------|----------|----------|------|-----|------|---------|------|
+| Deep Research Bench | Generic | 89 | Web Research & Computer Use | Web | Answer Generation | Answer Accuracy | Public data only, provides environment |
+| DeepResearch Bench | Generic | 100 | Web Research | Web | Report Generation | Insight Recall | Public data only, no environment |
+| DeepResearchGym | Generic | 1,000 | Web Research | Web | Document Retrieval | Document Retrieval | Public data only, no environment |
+| ResearcherBench | AI | 65 | Web Research | Web | Report Generation | Insight Recall, Factuality | Public data only, no environment |
+| LiveDRBench | Generic | 100 | Web Research & Computer Use | Web | Report Generation | Insight Precision, Recall | Public data only, no environment |
+| BrowseComp-Plus | Generic | 1,005 | Web Research | Web | Answer Generation | Answer Accuracy, URL Recall | Public data only, no environment |
+| Mind2Web 2 | Generic | 130 | Web Research | Web | Task Completion | Partial Completion | Public data only, no environment |
+| GAIA | Generic | 466 | Web Research | Web | Answer Generation | Answer Accuracy | Public data only, no environment |
+| GAIA2 | Generic | 963 | Computer Use | Computer Environment | Task Completion | Action Accuracy | Public data only, provides environment |
+| TheAgentCompany | Enterprise | 175 | Computer Use | Computer Environment | Task Completion | Task Completion, Efficiency | Public data only, provides environment |
+| OSWorld | Generic | 369 | Computer Use | Computer Environment | Task Completion | Task Completion | Public data only, provides environment |
+| DRBench | Enterprise | 114 | Deep Research | Web + Enterprise Data | Report Generation | Insight Recall | Public & local data, provides environment |
+
+## 分析与观察
+
+### 基准数量与规模
+
+当前共有12个主要的深度研究相关基准 [paper.pdf, page 3]，其中：
+- 平均查询数量为381.3个
+- 中位数查询数量为152.5个
+- 最大规模的基准是BrowseComp-Plus，包含1,005个查询
+- 最小规模的基准是ResearcherBench，包含65个查询
+
+### 领域分布
+
+- 大多数基准（9个）面向通用（Generic）领域
+- 仅有2个基准（DRBench和TheAgentCompany）专注于企业（Enterprise）场景
+- 只有1个基准（ResearcherBench）专注于AI领域
+
+### 任务类型分布
+
+- Web Research是最常见的任务类型，有6个基准专注于此
+- Computer Use次之，有3个基准
+- 2个基准结合了Web Research和Computer Use
+- 只有DRBench明确定位为Deep Research任务 [paper.pdf, page 3]
+
+### 评价指标分析
+
+最常用的评价指标包括：
+- Answer Accuracy（3个基准）
+- Insight Recall（3个基准）
+- Task Completion（2个基准）
+
+其他指标如Document Retrieval、Factuality、URL Recall等各有1个基准采用。
+
+### 环境与数据特性
+
+- 5个基准（占比41.7%）提供了交互式环境
+- 只有DRBench（占比8.3%）同时使用了公共数据和本地/私有数据 [paper.pdf, page 3]
+- 大多数基准（11个，占比91.7%）仅使用公共数据
+
+## 关键发现
+
+1. **数据来源局限性**：绝大多数基准（91.7%）仅使用公共数据，缺乏对私有/企业数据的评估，这与实际企业应用场景存在差距 [paper.pdf, page 3]。
+
+2. **环境支持不足**：只有41.7%的基准提供交互式环境，限制了对模型在真实环境中交互能力的评估。
+
+3. **企业场景缺乏**：仅有16.7%的基准专注于企业场景，无法全面评估模型在企业环境中的表现。
+
+4. **评价指标多样性**：现有基准使用了11种不同的评价指标，反映了评估标准的多样性，但也增加了跨基准比较的难度。
+
+5. **深度研究定位稀缺**：只有DRBench明确定位为Deep Research任务，表明这一领域的专门评测工具仍然稀缺 [paper.pdf, page 3]。
+
+## 结论与建议
+
+基于本次调研，我们发现当前深度研究评测基准存在明显的局限性，特别是在企业应用场景、私有数据使用和环境交互方面。DRBench作为首个同时使用公共和私有数据、提供企业环境的深度研究基准，填补了这一空白 [paper.pdf, page 3]。
+
+对于未来的研究方向，我们建议：
+
+1. 开发更多专注于企业场景的评测基准，以更好地评估模型在实际业务环境中的表现。
+
+2. 增强对私有/企业数据与公共数据结合使用的评估，以反映真实应用场景。
+
+3. 提供更多交互式环境支持，以评估模型的工具使用和环境适应能力。
+
+4. 统一评价指标体系，以便于跨基准比较和综合评估。
+
+5. 扩展深度研究任务的覆盖范围，包括更多领域和更复杂的查询类型。
+
+## 参考资料
+
+1. Abaskohi, A., Chen, T., Muñoz-Mármol, M., Fox, C., Ramesh, A. V., Marcotte, É., ... & Laradji, I. H. (2025). DRBench: A Realistic Benchmark for Enterprise Deep Research. arXiv:2510.00172v1 [paper.pdf].
+
+2. Bosse, N. I., Evans, J., Gambee, R. G., Hnyk, D., Mühlbacher, P., Phillips, L., ... & Wildman, J. (2025). Deep Research Bench: Evaluating AI Web Research Agents. arXiv:2506.06287 [paper.pdf, page 3].
+
+3. Du, M., Xu, B., Zhu, C., Wang, X., & Mao, Z. (2025). DeepResearch Bench: A comprehensive benchmark for deep research agents. arXiv:2506.11763 [paper.pdf, page 3].
+
+4. Coelho, J., Ning, J., He, J., Mao, K., Paladugu, A., Setlur, P., ... & Martins, B. (2025). DeepResearchGym: A free, transparent, and reproducible evaluation sandbox for deep research. arXiv:2505.19253 [paper.pdf, page 3].
+
+5. Xu, T., Lu, P., Ye, L., Hu, X., & Liu, P. (2025). ResearcherBench: Evaluating deep AI research systems on the frontiers of scientific inquiry. arXiv:2507.16280 [paper.pdf, page 3].

@@ -141,7 +141,8 @@ async def execute_task_pipeline(
 
         log_file_path = task_log.save()
 
-        return error_message, "", log_file_path
+        # Return 4 values to match the success case
+        return error_message, "", "", log_file_path
 
     finally:
         task_log.end_time = get_utc_plus_8_time()

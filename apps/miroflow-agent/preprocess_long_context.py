@@ -69,20 +69,27 @@ logging.basicConfig(
 logger = logging.getLogger(__name__)
 
 
-def find_long_context_files(directory: str) -> List[str]:
+def find_long_context_files(directory: str, pattern: str = "long_context.json") -> List[str]:
     """
-    Recursively find all long_context.json files in a directory.
+    Recursively find all long_context files matching the pattern in a directory.
     
     Args:
         directory: Root directory to search
-        
+        pattern: File pattern to match. Can be:
+            - "long_context.json" (default): Only original files
+            - "long_context_sampled_*.json": Only sampled files
+            - "long_context*.json": All long context files
+            - "long_context_sampled_32k.json": Specific sampled file
+            
     Returns:
-        List of paths to long_context.json files
+        List of paths to matching files
     """
+    import fnmatch
+    
     files = []
     for root, dirs, filenames in os.walk(directory):
         for filename in filenames:
-            if filename == "long_context.json":
+            if fnmatch.fnmatch(filename, pattern):
                 files.append(os.path.join(root, filename))
     return sorted(files)
 
@@ -275,10 +282,11 @@ def preprocess_directory(
     chunk_overlap: int = None,
     force: bool = False,
     sample_size: int = None,
-    seed: int = 42
+    seed: int = 42,
+    pattern: str = "long_context.json"
 ) -> List[dict]:
     """
-    Preprocess all long_context.json files in a directory.
+    Preprocess all long_context files matching the pattern in a directory.
     
     Args:
         directory: Root directory to search
@@ -290,18 +298,19 @@ def preprocess_directory(
         force: Force reprocessing even if cache exists
         sample_size: Number of documents to randomly sample (None = use all)
         seed: Random seed for sampling reproducibility
+        pattern: File pattern to match (e.g., "long_context_sampled_*.json")
         
     Returns:
         List of processing results
     """
-    # Find all long_context.json files
-    files = find_long_context_files(directory)
+    # Find all matching files
+    files = find_long_context_files(directory, pattern)
     
     if not files:
-        logger.warning(f"No long_context.json files found in: {directory}")
+        logger.warning(f"No files matching '{pattern}' found in: {directory}")
         return []
     
-    logger.info(f"Found {len(files)} long_context.json files to process")
+    logger.info(f"Found {len(files)} files matching '{pattern}' to process")
     if sample_size:
         logger.info(f"Will sample {sample_size} documents from each file")
     
@@ -378,6 +387,12 @@ Examples:
     # Force reprocessing
     python preprocess_long_context.py --dir data/bench_case1104 --force
     
+    # Process only sampled files (32k, 64k, 128k)
+    python preprocess_long_context.py --dir datasets --pattern "long_context_sampled_*.json"
+    
+    # Process specific sampled files (e.g., only 32k)
+    python preprocess_long_context.py --dir datasets --pattern "long_context_sampled_32k.json"
+    
     # Use custom embedding model
     python preprocess_long_context.py --dir data --model text-embedding-3-large
         """
@@ -431,6 +446,12 @@ Examples:
         type=int,
         default=42,
         help="Random seed for sampling reproducibility (default: 42)"
+    )
+    parser.add_argument(
+        "--pattern", "-p",
+        type=str,
+        default="long_context.json",
+        help="File pattern to match (default: long_context.json). Examples: 'long_context_sampled_*.json', 'long_context_sampled_32k.json'"
     )
     
     # API options
@@ -510,7 +531,8 @@ Examples:
             chunk_overlap=args.chunk_overlap,
             force=args.force,
             sample_size=args.sample,
-            seed=args.seed
+            seed=args.seed,
+            pattern=args.pattern
         )
     
     # Print summary

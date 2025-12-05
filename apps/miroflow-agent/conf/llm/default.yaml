@@ -9,7 +9,7 @@
 # as it may lead to accidental exposure when pushing code to git.
 
 provider: "openai" # openai, anthropic, qwen
-model_name: "gpt-4.1"
+model_name: "claude37_sonnet"
 async_client: false
 temperature: 0.3
 top_p: 1.0

@@ -129,4 +129,8 @@ class OutputFormatter:
             summary_lines.append("-" * (40 + len(" Token Usage & Cost ")))
             log_string = "Token usage information not available."
 
-        return "\n".join(summary_lines), boxed_result, log_string
+        # Return boxed_result if available, otherwise return the full final_answer_text
+        # This ensures that the report content is preserved even if no \boxed{} is found
+        final_boxed_answer = boxed_result if boxed_result else final_answer_text
+
+        return "\n".join(summary_lines), final_boxed_answer, log_string

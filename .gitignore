@@ -213,7 +213,7 @@ logs/
 
 # Data directory - exclude everything except README
 data/
-
+# datasets/
 
 .idea/
 

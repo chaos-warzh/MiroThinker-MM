@@ -1,0 +1,236 @@
+{
+  "task_id": "folder_task_001",
+  "execution_info": {
+    "status": "success",
+    "start_time": "2025-12-05 19:53:56",
+    "end_time": "2025-12-05 20:11:23",
+    "total_turns": 28
+  },
+  "tool_calls_by_turn": {
+    "1": {
+      "tools_used": [],
+      "rag_queries": []
+    },
+    "2": {
+      "tools_used": [],
+      "rag_queries": []
+    },
+    "3": {
+      "tools_used": [
+        {
+          "tool_name": "python"
+        }
+      ],
+      "rag_queries": []
+    },
+    "4": {
+      "tools_used": [
+        {
+          "tool_name": "python"
+        }
+      ],
+      "rag_queries": []
+    },
+    "5": {
+      "tools_used": [
+        {
+          "tool_name": "python"
+        }
+      ],
+      "rag_queries": []
+    },
+    "6": {
+      "tools_used": [
+        {
+          "tool_name": "python"
+        }
+      ],
+      "rag_queries": []
+    },
+    "7": {
+      "tools_used": [
+        {
+          "tool_name": "python"
+        }
+      ],
+      "rag_queries": []
+    },
+    "8": {
+      "tools_used": [
+        {
+          "tool_name": "python"
+        }
+      ],
+      "rag_queries": []
+    },
+    "9": {
+      "tools_used": [
+        {
+          "tool_name": "python"
+        }
+      ],
+      "rag_queries": []
+    },
+    "10": {
+      "tools_used": [
+        {
+          "tool_name": "python"
+        }
+      ],
+      "rag_queries": []
+    },
+    "11": {
+      "tools_used": [],
+      "rag_queries": []
+    },
+    "12": {
+      "tools_used": [
+        {
+          "tool_name": "python"
+        }
+      ],
+      "rag_queries": []
+    },
+    "13": {
+      "tools_used": [
+        {
+          "tool_name": "python"
+        }
+      ],
+      "rag_queries": []
+    },
+    "14": {
+      "tools_used": [
+        {
+          "tool_name": "python"
+        }
+      ],
+      "rag_queries": []
+    },
+    "15": {
+      "tools_used": [
+        {
+          "tool_name": "python"
+        }
+      ],
+      "rag_queries": []
+    },
+    "16": {
+      "tools_used": [
+        {
+          "tool_name": "python"
+        }
+      ],
+      "rag_queries": []
+    },
+    "17": {
+      "tools_used": [
+        {
+          "tool_name": "python"
+        }
+      ],
+      "rag_queries": []
+    },
+    "18": {
+      "tools_used": [
+        {
+          "tool_name": "python"
+        }
+      ],
+      "rag_queries": []
+    },
+    "19": {
+      "tools_used": [
+        {
+          "tool_name": "python"
+        }
+      ],
+      "rag_queries": []
+    },
+    "20": {
+      "tools_used": [
+        {
+          "tool_name": "python"
+        }
+      ],
+      "rag_queries": []
+    },
+    "21": {
+      "tools_used": [
+        {
+          "tool_name": "python"
+        }
+      ],
+      "rag_queries": []
+    },
+    "22": {
+      "tools_used": [],
+      "rag_queries": []
+    },
+    "23": {
+      "tools_used": [
+        {
+          "tool_name": "rag"
+        }
+      ],
+      "rag_queries": []
+    },
+    "24": {
+      "tools_used": [
+        {
+          "tool_name": "rag"
+        }
+      ],
+      "rag_queries": []
+    },
+    "25": {
+      "tools_used": [
+        {
+          "tool_name": "rag"
+        }
+      ],
+      "rag_queries": []
+    },
+    "26": {
+      "tools_used": [],
+      "rag_queries": []
+    },
+    "27": {
+      "tools_used": [],
+      "rag_queries": []
+    },
+    "28": {
+      "tools_used": [],
+      "rag_queries": []
+    }
+  },
+  "rag_retrieval": {
+    "total_queries": 4,
+    "queries": [
+      {
+        "query": "",
+        "tool": "rag_document_stats",
+        "num_results": 0,
+        "retrieved_documents": []
+      },
+      {
+        "query": "Deep Research benchmarks comparison features evaluation metrics",
+        "tool": "rag_search",
+        "num_results": 0,
+        "retrieved_documents": []
+      },
+      {
+        "query": "DRBench Deep Research Bench DeepResearch Bench DeepResearchGym ResearcherBench",
+        "tool": "rag_search",
+        "num_results": 0,
+        "retrieved_documents": []
+      },
+      {
+        "query": "Deep Research agents evaluation metrics insight recall factuality distractor avoidance report quality",
+        "tool": "rag_search",
+        "num_results": 0,
+        "retrieved_documents": []
+      }
+    ]
+  }
+}

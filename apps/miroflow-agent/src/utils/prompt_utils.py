@@ -1136,133 +1136,150 @@ def extract_word_count_requirement(query: str) -> dict:
 
 
 def generate_report_validation_prompt(task_description, report_text, agent_type="main"):
-    """Generate a prompt to validate if the report meets all query requirements."""
-    use_cn_prompt = os.getenv("USE_CN_PROMPT", "0")
+    """Generate a prompt to validate if the report meets all query requirements.
     
-    # Calculate actual word count using Python
-    word_stats = count_chinese_words(report_text)
-    actual_word_count = word_stats["total_words"]
+    This prompt instructs the agent to use Python code execution tool to verify word count,
+    ensuring accurate and reliable word count validation.
+    """
+    use_cn_prompt = os.getenv("USE_CN_PROMPT", "0")
     
     # Extract word count requirement from query
     word_requirement = extract_word_count_requirement(task_description)
     
-    # Build word count status message
+    # Build word count requirement description
     if word_requirement["min_words"] is not None or word_requirement["max_words"] is not None:
         min_words = word_requirement["min_words"]
         max_words = word_requirement["max_words"]
         
         if min_words and max_words:
-            if min_words <= actual_word_count <= max_words:
-                word_count_status = f"✅ 字数符合要求：当前 {actual_word_count} 字，要求 {min_words}-{max_words} 字"
-                word_count_status_en = f"✅ Word count meets requirement: Current {actual_word_count} words, required {min_words}-{max_words} words"
-            else:
-                word_count_status = f"❌ 字数不符合要求：当前 {actual_word_count} 字，要求 {min_words}-{max_words} 字"
-                word_count_status_en = f"❌ Word count does NOT meet requirement: Current {actual_word_count} words, required {min_words}-{max_words} words"
+            word_req_desc = f"要求 {min_words}-{max_words} 字"
+            word_req_desc_en = f"Required: {min_words}-{max_words} words"
         elif min_words:
-            if actual_word_count >= min_words:
-                word_count_status = f"✅ 字数符合要求：当前 {actual_word_count} 字，要求至少 {min_words} 字"
-                word_count_status_en = f"✅ Word count meets requirement: Current {actual_word_count} words, required at least {min_words} words"
-            else:
-                word_count_status = f"❌ 字数不符合要求：当前 {actual_word_count} 字，要求至少 {min_words} 字"
-                word_count_status_en = f"❌ Word count does NOT meet requirement: Current {actual_word_count} words, required at least {min_words} words"
-        else:  # max_words only
-            if actual_word_count <= max_words:
-                word_count_status = f"✅ 字数符合要求：当前 {actual_word_count} 字，要求最多 {max_words} 字"
-                word_count_status_en = f"✅ Word count meets requirement: Current {actual_word_count} words, required at most {max_words} words"
-            else:
-                word_count_status = f"❌ 字数不符合要求：当前 {actual_word_count} 字，要求最多 {max_words} 字"
-                word_count_status_en = f"❌ Word count does NOT meet requirement: Current {actual_word_count} words, required at most {max_words} words"
+            word_req_desc = f"要求至少 {min_words} 字"
+            word_req_desc_en = f"Required: at least {min_words} words"
+        else:
+            word_req_desc = f"要求最多 {max_words} 字"
+            word_req_desc_en = f"Required: at most {max_words} words"
     else:
-        word_count_status = f"ℹ️ 未检测到字数要求，当前报告 {actual_word_count} 字"
-        word_count_status_en = f"ℹ️ No word count requirement detected, current report has {actual_word_count} words"
+        word_req_desc = "未检测到字数要求"
+        word_req_desc_en = "No word count requirement detected"
+    
+    # Python code for word count verification
+    word_count_code = '''
+import re
+
+def count_words(text):
+    """Count words: Chinese characters + English words"""
+    # Count Chinese characters
+    chinese_chars = len(re.findall(r'[\\u4e00-\\u9fff]', text))
+    # Count English words
+    text_without_chinese = re.sub(r'[\\u4e00-\\u9fff]', ' ', text)
+    english_words = len([w for w in text_without_chinese.split() if re.search(r'[a-zA-Z0-9]', w)])
+    return chinese_chars + english_words
+
+# The report text to count
+report = """[REPORT_TEXT_HERE]"""
+
+word_count = count_words(report)
+print(f"Total word count: {word_count}")
+'''
     
     if use_cn_prompt == "1":
-        # Determine if word count requirement is met
-        word_count_failed = False
-        if word_requirement["min_words"] is not None or word_requirement["max_words"] is not None:
-            min_words = word_requirement["min_words"]
-            max_words = word_requirement["max_words"]
-            if min_words and max_words:
-                if not (min_words <= actual_word_count <= max_words):
-                    word_count_failed = True
-            elif min_words:
-                if actual_word_count < min_words:
-                    word_count_failed = True
-            elif max_words:
-                if actual_word_count > max_words:
-                    word_count_failed = True
-        
-        # Add strong warning if word count fails
-        word_count_warning = ""
-        if word_count_failed:
-            word_count_warning = f"""
-**⚠️ 严重警告：字数不符合要求！**
-当前报告只有 {actual_word_count} 字，但要求是 {word_requirement["min_words"]}-{word_requirement["max_words"]} 字。
-你必须扩展报告内容，增加 {word_requirement["min_words"] - actual_word_count} 字以上才能达到最低要求。
-这是一个硬性要求，不能忽略！
+        validation_prompt = f"""请验证以下报告是否符合原始query的所有要求。
 
-"""
-        
-        validation_prompt = f"""请仔细检查以下报告是否完全符合原始query的所有要求。
+**重要：你必须使用 Python 代码工具来精确统计字数！**
 
-**字数统计结果（由Python代码精确计算，不可更改）**:
-{word_count_status}
-- 中文字符数: {word_stats["chinese_chars"]}
-- 英文单词数: {word_stats["english_words"]}
-- 总字数: {actual_word_count}
-{word_count_warning}
+**第一步：使用 Python 工具统计字数**
+
+请调用 Python 代码执行工具，运行以下代码来统计报告字数：
+
+```python
+import re
+
+def count_words(text):
+    # 统计中文字符
+    chinese_chars = len(re.findall(r'[\\u4e00-\\u9fff]', text))
+    # 统计英文单词
+    text_without_chinese = re.sub(r'[\\u4e00-\\u9fff]', ' ', text)
+    english_words = len([w for w in text_without_chinese.split() if re.search(r'[a-zA-Z0-9]', w)])
+    return chinese_chars + english_words
+
+report = \"\"\"
+{report_text[:10000]}  # 报告内容（如果太长会被截断）
+\"\"\"
+
+word_count = count_words(report)
+print(f"字数统计结果: {{word_count}} 字")
+print(f"字数要求: {word_req_desc}")
+```
+
+**字数要求**: {word_req_desc}
+
 **原始Query**:
 {task_description}
 
 **当前报告**:
 {report_text}
 
-**请逐项检查以下内容**:
+**第二步：根据 Python 统计结果进行验证**
 
-1. **字数要求（最重要）**: 上面的字数统计是由Python代码精确计算的，不可更改。如果显示 ❌ 字数不符合要求，你必须扩展报告内容直到达到要求的字数范围。
-2. **结构完整性**: 检查query要求的所有部分/章节是否都已包含在报告中。
-3. **内容覆盖**: 检查是否充分使用了提供的所有资料（文档、视频、图片等）。
-4. **引用规范**: 检查引用格式是否正确（应使用完整格式如 [long_context: "文档标题", chunk N]，而非简化格式如 [RAG-1]）。
-5. **格式要求**: 检查是否符合query中的其他格式要求。
+在获得 Python 代码的字数统计结果后，请检查：
+
+1. **字数要求**: 根据 Python 代码返回的精确字数，判断是否符合 {word_req_desc}
+2. **结构完整性**: 检查query要求的所有部分/章节是否都已包含
+3. **内容覆盖**: 检查是否充分使用了提供的所有资料
+4. **引用规范**: 检查引用格式是否正确
 
 **输出格式**:
-如果报告完全符合所有要求（包括字数要求），请回复：
+如果报告完全符合所有要求，请回复：
 ```
 ✅ 验证通过
 
-报告已通过全部检查，符合query的所有要求：
-- 字数: {actual_word_count} 字，符合要求
-- 结构: 包含所有必需部分
-- 内容: 充分使用了提供的资料
-- 引用: 格式规范
+Python 代码统计字数: [实际字数] 字
+字数要求: {word_req_desc}
+验证结果: 符合要求
 ```
 
-如果报告存在任何问题（特别是字数不符合要求），请回复：
+如果报告存在问题，请回复：
 ```
 ❌ 需要修改
 
-发现以下问题需要修改：
-1. [问题1描述]
-2. [问题2描述]
-...
+Python 代码统计字数: [实际字数] 字
+字数要求: {word_req_desc}
+问题: [具体问题描述]
 
 **修改后的完整报告**:
-[在此处提供修改后的完整报告内容，确保字数达到要求]
+[在此处提供修改后的完整报告内容]
 ```
-
-**重要提醒**：
-- 如果字数统计显示 ❌，你必须返回 "❌ 需要修改" 并提供扩展后的完整报告
-- 修改后的报告必须达到要求的字数范围
-- 不能仅仅指出问题，必须提供修改后的完整报告
 """
     else:
-        validation_prompt = f"""Please carefully check if the following report fully meets all requirements of the original query.
+        validation_prompt = f"""Please validate if the following report meets all requirements of the original query.
 
-**Word Count Statistics (Precisely calculated by Python code)**:
-{word_count_status_en}
-- Chinese characters: {word_stats["chinese_chars"]}
-- English words: {word_stats["english_words"]}
-- Total words: {actual_word_count}
+**IMPORTANT: You MUST use the Python code execution tool to accurately count words!**
+
+**Step 1: Use Python Tool to Count Words**
+
+Please call the Python code execution tool with the following code:
+
+```python
+import re
+
+def count_words(text):
+    chinese_chars = len(re.findall(r'[\\u4e00-\\u9fff]', text))
+    text_without_chinese = re.sub(r'[\\u4e00-\\u9fff]', ' ', text)
+    english_words = len([w for w in text_without_chinese.split() if re.search(r'[a-zA-Z0-9]', w)])
+    return chinese_chars + english_words
+
+report = \"\"\"
+{report_text[:10000]}
+\"\"\"
+
+word_count = count_words(report)
+print(f"Word count: {{word_count}}")
+print(f"Requirement: {word_req_desc_en}")
+```
+
+**Word Count Requirement**: {word_req_desc_en}
 
 **Original Query**:
 {task_description}
@@ -1270,40 +1287,36 @@ def generate_report_validation_prompt(task_description, report_text, agent_type=
 **Current Report**:
 {report_text}
 
-**Please check the following items**:
+**Step 2: Validate Based on Python Results**
 
-1. **Word Count**: The word count has been precisely calculated above. If the query specifies a word count range, check if the current count meets the requirement.
-2. **Structure Completeness**: Check if all required sections/parts specified in the query are included in the report.
-3. **Content Coverage**: Check if all provided materials (documents, videos, images, etc.) have been adequately used.
-4. **Citation Format**: Check if citation format is correct (should use full format like [long_context: "Document Title", chunk N], not simplified format like [RAG-1]).
-5. **Format Requirements**: Check if other format requirements in the query are met.
+After getting the word count from Python code, check:
+
+1. **Word Count**: Based on the exact count from Python, determine if it meets {word_req_desc_en}
+2. **Structure Completeness**: Check if all required sections are included
+3. **Content Coverage**: Check if all provided materials are adequately used
+4. **Citation Format**: Check if citation format is correct
 
 **Output Format**:
-If the report fully meets all requirements, reply:
+If the report meets all requirements:
 ```
 ✅ Validation Passed
 
-The report has passed all checks and meets all query requirements:
-- Word count: [actual count] words, meets requirement
-- Structure: Contains all required sections
-- Content: Adequately uses provided materials
-- Citations: Format is correct
+Python word count: [actual count] words
+Requirement: {word_req_desc_en}
+Result: Meets requirement
 ```
 
-If the report has issues, reply:
+If the report has issues:
 ```
 ❌ Needs Revision
 
-The following issues need to be addressed:
-1. [Issue 1 description]
-2. [Issue 2 description]
-...
+Python word count: [actual count] words
+Requirement: {word_req_desc_en}
+Issue: [specific issue description]
 
 **Revised Complete Report**:
 [Provide the complete revised report here]
 ```
-
-Note: If revision is needed, you must provide the complete revised report, not just point out the issues.
 """
     
     return validation_prompt
