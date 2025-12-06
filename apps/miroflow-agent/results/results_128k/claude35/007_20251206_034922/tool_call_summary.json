@@ -1,0 +1,52 @@
+{
+  "task_id": "folder_task_007",
+  "execution_info": {
+    "status": "success",
+    "start_time": "2025-12-06 19:49:24",
+    "end_time": "2025-12-06 19:53:08",
+    "total_turns": 4
+  },
+  "tool_calls_by_turn": {
+    "1": {
+      "tools_used": [],
+      "rag_queries": []
+    },
+    "2": {
+      "tools_used": [
+        {
+          "tool_name": "rag"
+        }
+      ],
+      "rag_queries": []
+    },
+    "3": {
+      "tools_used": [
+        {
+          "tool_name": "rag"
+        }
+      ],
+      "rag_queries": []
+    },
+    "4": {
+      "tools_used": [],
+      "rag_queries": []
+    }
+  },
+  "rag_retrieval": {
+    "total_queries": 2,
+    "queries": [
+      {
+        "query": "主要内容和目标 十五五规划",
+        "tool": "rag_search",
+        "num_results": 0,
+        "retrieved_documents": []
+      },
+      {
+        "query": "十五五规划的主要目标和重点任务",
+        "tool": "rag_get_context",
+        "num_results": 0,
+        "retrieved_documents": []
+      }
+    ]
+  }
+}

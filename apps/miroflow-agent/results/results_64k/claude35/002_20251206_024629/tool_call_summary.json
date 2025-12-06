@@ -1,0 +1,30 @@
+{
+  "task_id": "folder_task_002",
+  "execution_info": {
+    "status": "success",
+    "start_time": "2025-12-06 18:46:30",
+    "end_time": "2025-12-06 18:53:05",
+    "total_turns": 1
+  },
+  "tool_calls_by_turn": {
+    "1": {
+      "tools_used": [
+        {
+          "tool_name": "rag"
+        }
+      ],
+      "rag_queries": []
+    }
+  },
+  "rag_retrieval": {
+    "total_queries": 1,
+    "queries": [
+      {
+        "query": "避风港原则 定义 核心机制",
+        "tool": "rag_search",
+        "num_results": 0,
+        "retrieved_documents": []
+      }
+    ]
+  }
+}
