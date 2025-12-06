@@ -198,7 +198,7 @@ class Orchestrator:
             "The structure should follow standard academic or professional report conventions.\n"
             "Guidelines:\n"
             "- **Language**: Detect the language of the task description. The outline (titles and summaries) MUST be in the SAME language (Chinese or English).\n"
-            "- **Word Count Planning**: CAREFULLY CHECK if the task specifies a total word count (e.g., '12000-15000 words'). If so, you MUST plan the word count for EACH section to ensure the total meets the requirement. This is CRITICAL. If the task requires a long report, ensure you create enough detailed sections to justify the length.\n"
+            "- **Word Count Planning**: Check if the task specifies a total word count (e.g., '1500-2000 words'). If so, you MUST plan the word count for EACH section to ensure the total meets the requirement. Even if not specified, aim for a comprehensive length (~1500 words) and allocate accordingly.\n"
             "- **Structure**: Each section object MUST include a 'word_count' field specifying the target length. The value must be in the SAME language as the outline (e.g., '~300字' for Chinese, '~300 words' for English).\n"
             "- The outline must include 'Introduction' (or '引言'), 'Conclusion' (or '结论'), and 'References' (or '参考资料') sections, translated appropriately.\n"
             "- Organize the main body into logical sections and subsections based on the research findings.\n"
