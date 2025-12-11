@@ -9,15 +9,16 @@
 # as it may lead to accidental exposure when pushing code to git.
 
 provider: "openai" # openai, anthropic, qwen
-model_name: "claude35_sonnet" # qwen2.5-72b-instruct
+model_name: "qwen2.5-coder-32b-instruct" # gpt-4.1 claude35_sonnet qwen2.5-7b-instruct
 async_client: false
 temperature: 0.3
 top_p: 1.0
 min_p: 0.0
 top_k: -1
-max_tokens: 4096
+max_tokens: 16384
 max_context_length: 128000
 keep_tool_result: -1
+stream: false
 
 # API credentials - leave empty/null to use environment variables (recommended)
 api_key: null

@@ -1,0 +1,11 @@
+# conf/llm/qwen-3.yaml
+#
+# NOTE: API credentials should be set in .env file:
+#   - OPENAI_API_KEY (Qwen uses OpenAI-compatible API)
+#   - OPENAI_BASE_URL (optional, for custom endpoints)
+
+defaults:
+  - default
+  - _self_
+
+model_name: "qwen2.5-7b-instruct"

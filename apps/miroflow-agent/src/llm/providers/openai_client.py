@@ -121,7 +121,7 @@ class OpenAIClient(BaseClient):
             "temperature": self.temperature,
             "messages": messages_history,
             "tools": [],
-            "stream": False,
+            "stream": self.stream,
             "top_p": self.top_p,
         }
         # Check if the model is GPT-5, and adjust the parameter accordingly
@@ -133,7 +133,15 @@ class OpenAIClient(BaseClient):
             params["max_tokens"] = self.max_tokens
 
         try:
-            if self.async_client:
+            if self.stream:
+                # Handle streaming response
+                if self.async_client:
+                    stream_response = await self.client.chat.completions.create(**params)
+                    response = await self._collect_stream_response(stream_response)
+                else:
+                    stream_response = self.client.chat.completions.create(**params)
+                    response = self._collect_stream_response_sync(stream_response)
+            elif self.async_client:
                 response = await self.client.chat.completions.create(**params)
             else:
                 response = self.client.chat.completions.create(**params)
@@ -385,3 +393,83 @@ class OpenAIClient(BaseClient):
 
     def get_token_usage(self):
         return self.token_usage.copy()
+
+    async def _collect_stream_response(self, stream_response):
+        """Collect streaming response chunks into a complete response object (async version)"""
+        full_content = ""
+        finish_reason = None
+        usage_data = None
+        
+        async for chunk in stream_response:
+            if chunk.choices and len(chunk.choices) > 0:
+                delta = chunk.choices[0].delta
+                if delta and delta.content:
+                    full_content += delta.content
+                if chunk.choices[0].finish_reason:
+                    finish_reason = chunk.choices[0].finish_reason
+            # Some APIs return usage in the last chunk
+            if hasattr(chunk, 'usage') and chunk.usage:
+                usage_data = chunk.usage
+        
+        # Create a mock response object that matches the non-streaming format
+        class MockMessage:
+            def __init__(self, content):
+                self.content = content
+                self.role = "assistant"
+                self.tool_calls = None
+        
+        class MockChoice:
+            def __init__(self, message, finish_reason):
+                self.message = message
+                self.finish_reason = finish_reason or "stop"
+        
+        class MockResponse:
+            def __init__(self, choices, usage):
+                self.choices = choices
+                self.usage = usage
+        
+        mock_message = MockMessage(full_content)
+        mock_choice = MockChoice(mock_message, finish_reason)
+        mock_response = MockResponse([mock_choice], usage_data)
+        
+        return mock_response
+
+    def _collect_stream_response_sync(self, stream_response):
+        """Collect streaming response chunks into a complete response object (sync version)"""
+        full_content = ""
+        finish_reason = None
+        usage_data = None
+        
+        for chunk in stream_response:
+            if chunk.choices and len(chunk.choices) > 0:
+                delta = chunk.choices[0].delta
+                if delta and delta.content:
+                    full_content += delta.content
+                if chunk.choices[0].finish_reason:
+                    finish_reason = chunk.choices[0].finish_reason
+            # Some APIs return usage in the last chunk
+            if hasattr(chunk, 'usage') and chunk.usage:
+                usage_data = chunk.usage
+        
+        # Create a mock response object that matches the non-streaming format
+        class MockMessage:
+            def __init__(self, content):
+                self.content = content
+                self.role = "assistant"
+                self.tool_calls = None
+        
+        class MockChoice:
+            def __init__(self, message, finish_reason):
+                self.message = message
+                self.finish_reason = finish_reason or "stop"
+        
+        class MockResponse:
+            def __init__(self, choices, usage):
+                self.choices = choices
+                self.usage = usage
+        
+        mock_message = MockMessage(full_content)
+        mock_choice = MockChoice(mock_message, finish_reason)
+        mock_response = MockResponse([mock_choice], usage_data)
+        
+        return mock_response

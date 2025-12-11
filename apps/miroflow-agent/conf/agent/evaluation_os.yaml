@@ -14,7 +14,7 @@ main_agent:
     - tool-transcribe-os
     - tool-video-enhanced  # Enhanced video understanding with temporal analysis
     - tool-reasoning-os
-    - tool-reader
+    - tool-reading  # File reading tools: read_pdf_pages, read_excel_rows, search_in_file, get_file_info, convert_to_markdown
   max_turns: 50  # Maximum number of turns for main agent execution
 
 sub_agents:
@@ -25,8 +25,8 @@ sub_agents:
       - tool-vqa-os        # Fallback for simple VQA tasks
       - tool-audio-enhanced  # Enhanced audio understanding with multi-turn verification
       - tool-video-enhanced  # Enhanced video understanding with temporal analysis
-      - tool-reader
+      - tool-reading  # File reading tools
       - tool-python
     max_turns: 50
 
-keep_tool_result: -1 
+keep_tool_result: -1

@@ -73,6 +73,7 @@ class BaseClient(ABC):
         self.max_tokens: int = self.cfg.llm.max_tokens
         self.async_client: bool = self.cfg.llm.async_client
         self.keep_tool_result: int = self.cfg.llm.keep_tool_result
+        self.stream: bool = self.cfg.llm.get("stream", False)
         # Get API key and base URL from environment variables first, then fall back to config
         self.api_key: Optional[str] = self._get_api_key()
         self.base_url: Optional[str] = self._get_base_url()

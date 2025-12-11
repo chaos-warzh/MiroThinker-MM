@@ -26,6 +26,8 @@ Features:
 """
 
 import os
+import sys
+import signal
 import json
 import logging
 from datetime import datetime
@@ -422,4 +424,16 @@ def rag_document_stats(json_path: str) -> str:
 
 
 if __name__ == "__main__":
-    mcp.run()
+    # Handle broken pipe errors gracefully
+    # This prevents ugly stack traces when the client disconnects
+    signal.signal(signal.SIGPIPE, signal.SIG_DFL)
+    
+    try:
+        mcp.run()
+    except BrokenPipeError:
+        # Client disconnected, exit gracefully
+        sys.stderr.close()
+        sys.exit(0)
+    except Exception as e:
+        logger.error(f"MCP server error: {e}")
+        sys.exit(1)

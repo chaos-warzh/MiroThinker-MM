@@ -526,18 +526,9 @@ def create_mcp_server_parameters(cfg: DictConfig, agent_cfg: DictConfig):
             }
         )
 
-    # reader
-    if agent_cfg.get("tools", None) is not None and "tool-reader" in agent_cfg["tools"]:
-        configs.append(
-            {
-                "name": "tool-reader",
-                "params": StdioServerParameters(
-                    command=sys.executable,
-                    args=["-m", "markitdown_mcp"],
-                ),
-            }
-        )
-
+    # File reading tools (tool-reading includes all functionality of tool-reader)
+    # Note: tool-reader has been merged into tool-reading to avoid confusion
+    # tool-reading provides: read_pdf_pages, read_excel_rows, search_in_file, get_file_info, convert_to_markdown
     if (
         agent_cfg.get("tools", None) is not None
         and "tool-reading" in agent_cfg["tools"]
@@ -596,6 +587,27 @@ def expose_sub_agents_as_tools(sub_agents_cfg: DictConfig):
                                 },
                                 "required": ["subtask"],
                                 "title": "search_and_browseArguments",
+                            },
+                        )
+                    ],
+                )
+            )
+        elif "agent-rag-search" in sub_agent:
+            # RAG-based search agent for offline mode (no web browsing)
+            sub_agents_server_params.append(
+                dict(
+                    name="agent-rag-search",
+                    tools=[
+                        dict(
+                            name="rag_search_and_analyze",
+                            description="This tool is an agent that performs the subtask of searching through the provided long context documents using RAG (Retrieval-Augmented Generation) to find specific information and generate the desired answer. The subtask should be clearly defined, include relevant background, and focus on factual gaps. It searches ONLY within the provided documents and does NOT access the web. \nArgs: \n\tsubtask: the subtask to be performed. \nReturns: \n\tthe result of the subtask. ",
+                            schema={
+                                "type": "object",
+                                "properties": {
+                                    "subtask": {"title": "Subtask", "type": "string"}
+                                },
+                                "required": ["subtask"],
+                                "title": "rag_search_and_analyzeArguments",
                             },
                         )
                     ],

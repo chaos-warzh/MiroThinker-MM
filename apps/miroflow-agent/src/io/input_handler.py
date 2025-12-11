@@ -20,6 +20,7 @@ import shutil
 import subprocess
 import tempfile
 import traceback
+from dataclasses import dataclass
 from typing import Any, Dict, List, Union, Optional
 from urllib.parse import parse_qs, quote, unquote, urlparse, urlunparse
 
@@ -28,6 +29,7 @@ import markdownify
 import openpyxl
 import pdfminer
 import pdfminer.high_level
+from pdfminer.pdfpage import PDFPage
 import pptx
 import pydub
 import speech_recognition as sr
@@ -36,6 +38,26 @@ from markitdown import MarkItDown
 from openpyxl.utils import get_column_letter
 from youtube_transcript_api._api import YouTubeTranscriptApi
 from youtube_transcript_api.formatters import SRTFormatter
+
+
+# Configuration constants for file content extraction
+@dataclass
+class FileExtractionConfig:
+    """Configuration for file content extraction limits."""
+    max_content_length: int = 200_000  # Maximum total content length
+    pdf_max_chars: int = 50_000  # Maximum PDF content (~ 12500 tokens)
+    pdf_first_part: int = 40_000  # First part of truncated PDF
+    pdf_last_part: int = 8_000  # Last part of truncated PDF
+    excel_max_rows: int = 500  # Maximum Excel rows before truncation
+    excel_preview_rows: int = 50  # Number of preview rows for large Excel
+    excel_max_cols: int = 20  # Maximum columns to show inline
+    csv_max_rows: int = 500  # Maximum CSV rows before truncation
+    csv_max_cols: int = 20  # Maximum CSV columns to show inline
+    csv_max_chars: int = 50_000  # Maximum CSV content characters
+
+
+# Default configuration
+DEFAULT_EXTRACTION_CONFIG = FileExtractionConfig()
 
 
 def process_input(task_description, task_file_name):
@@ -563,8 +585,8 @@ def YouTubeConverter(local_path: str, url: str):
 
 def XlsxConverter(local_path: str):
     """
-    Converts Excel files to Markdown using openpyxl.
-    Preserves color formatting and other cell styling information.
+    Converts Excel files to plain Markdown tables using openpyxl.
+    Does NOT preserve color/style formatting to keep output concise.
 
     Args:
         local_path: Path to the Excel file
@@ -575,81 +597,6 @@ def XlsxConverter(local_path: str):
     # Load the workbook
     wb = openpyxl.load_workbook(local_path, data_only=True)
     md_content = ""
-
-    # Helper function to convert RGB color to hex
-    def rgb_to_hex(rgb_value):
-        if not rgb_value:
-            return None
-
-        # Convert RGB value to string for processing
-        rgb_string = str(rgb_value)
-
-        # Handle RGB format like 'RGB(255, 255, 255)'
-        if isinstance(rgb_value, str) and rgb_string.startswith("RGB"):
-            rgb_match = re.match(r"RGB\((\d+), (\d+), (\d+)\)", rgb_string)
-            if rgb_match:
-                r, g, b = map(int, rgb_match.groups())
-                return f"#{r:02x}{g:02x}{b:02x}"
-
-        # Special handling for FFFFFFFF (white) and 00000000 (transparent/none)
-        if rgb_string in ["FFFFFFFF", "00000000", "none", "auto"]:
-            return None
-
-        # Handle ARGB format (common in openpyxl)
-        if len(rgb_string) == 8:  # ARGB format like 'FF5733FF'
-            return f"#{rgb_string[2:]}"  # Strip alpha channel
-
-        # Handle direct hex values like 'FF5733'
-        if isinstance(rgb_value, str):
-            return f"#{rgb_string}" if not rgb_string.startswith("#") else rgb_string
-
-        return None  # Return None for unrecognized formats
-
-    # Helper function to detect and format cell styling
-    def get_cell_format_info(cell):
-        info = {}
-
-        # Get background color if it exists
-        if cell.fill and hasattr(cell.fill, "fgColor") and cell.fill.fgColor:
-            # Get the RGB value - in openpyxl this can be stored in different attributes
-            rgb_value = None
-            if hasattr(cell.fill.fgColor, "rgb") and cell.fill.fgColor.rgb:
-                rgb_value = cell.fill.fgColor.rgb
-            elif hasattr(cell.fill.fgColor, "value") and cell.fill.fgColor.value:
-                rgb_value = cell.fill.fgColor.value
-
-            if rgb_value:
-                bg_color = rgb_to_hex(rgb_value)
-                if bg_color:  # Skip transparent or white (handled in rgb_to_hex)
-                    info["bg_color"] = bg_color
-
-        # Get font color if it exists
-        if cell.font and hasattr(cell.font, "color") and cell.font.color:
-            # Get the RGB value - in openpyxl this can be stored in different attributes
-            rgb_value = None
-            if hasattr(cell.font.color, "rgb") and cell.font.color.rgb:
-                rgb_value = cell.font.color.rgb
-            elif hasattr(cell.font.color, "value") and cell.font.color.value:
-                rgb_value = cell.font.color.value
-
-            if rgb_value:
-                font_color = rgb_to_hex(rgb_value)
-                if font_color:  # Skip transparent (handled in rgb_to_hex)
-                    info["font_color"] = font_color
-
-        # Get font weight (bold)
-        if cell.font and cell.font.bold:
-            info["bold"] = True
-
-        # Get font style (italic)
-        if cell.font and cell.font.italic:
-            info["italic"] = True
-
-        # Get font underline
-        if cell.font and cell.font.underline and cell.font.underline != "none":
-            info["underline"] = True
-
-        return info
 
     # Process each sheet in the workbook
     for sheet_name in wb.sheetnames:
@@ -684,124 +631,42 @@ def XlsxConverter(local_path: str):
             continue
 
         try:
-            # First, determine column widths
-            col_widths = {}
-            for col_idx in range(min_col, max_col + 1):
-                max_length = 0
-                # col_letter = get_column_letter(col_idx)
-                _ = get_column_letter(col_idx)
-                for row_idx in range(min_row, max_row + 1):
-                    try:
-                        cell = sheet.cell(row=row_idx, column=col_idx)
-                        cell_value = str(cell.value) if cell.value is not None else ""
-                        max_length = max(max_length, len(cell_value))
-                    except Exception as e:
-                        print(
-                            f"Warning: Error processing cell at row {row_idx}, column {col_idx}: {str(e)}"
-                        )
-                        max_length = max(max_length, 10)  # Use reasonable default
-                col_widths[col_idx] = max(max_length + 2, 5)  # Min width of 5
-
-            # Start building the table
-            # Header row with column separators
+            # Build simple markdown table without styling
+            # Header row (first row of data)
             md_content += "|"
             for col_idx in range(min_col, max_col + 1):
-                md_content += " " + " " * col_widths[col_idx] + " |"
+                cell = sheet.cell(row=min_row, column=col_idx)
+                cell_value = str(cell.value) if cell.value is not None else ""
+                md_content += f" {cell_value} |"
             md_content += "\n"
 
             # Separator row
             md_content += "|"
             for col_idx in range(min_col, max_col + 1):
-                md_content += ":" + "-" * col_widths[col_idx] + ":|"
+                md_content += " --- |"
             md_content += "\n"
 
-            # Data rows
-            for row_idx in range(min_row, max_row + 1):
+            # Data rows (starting from second row)
+            for row_idx in range(min_row + 1, max_row + 1):
                 md_content += "|"
                 for col_idx in range(min_col, max_col + 1):
                     try:
                         cell = sheet.cell(row=row_idx, column=col_idx)
                         cell_value = str(cell.value) if cell.value is not None else ""
-
-                        # Get formatting info
-                        try:
-                            format_info = get_cell_format_info(cell)
-                        except Exception as e:
-                            print(
-                                f"Warning: Error getting formatting for cell at row {row_idx}, column {col_idx}: {str(e)}"
-                            )
-                            format_info = {}
-
-                        formatted_value = cell_value
-
-                        # Add HTML-style formatting if needed
-                        if format_info:
-                            style_parts = []
-
-                            if "bg_color" in format_info:
-                                style_parts.append(
-                                    f"background-color:{format_info['bg_color']}"
-                                )
-
-                            if "font_color" in format_info:
-                                style_parts.append(f"color:{format_info['font_color']}")
-
-                            span_attributes = []
-                            if style_parts:
-                                span_attributes.append(
-                                    f'style="{"; ".join(style_parts)}"'
-                                )
-
-                            # Format with bold/italic/underline if needed
-                            inner_value = cell_value
-                            if "bold" in format_info:
-                                inner_value = f"<strong>{inner_value}</strong>"
-                            if "italic" in format_info:
-                                inner_value = f"<em>{inner_value}</em>"
-                            if "underline" in format_info:
-                                inner_value = f"<u>{inner_value}</u>"
-
-                            # Only add a span if we have style attributes
-                            if span_attributes:
-                                formatted_value = f"<span {' '.join(span_attributes)}>{inner_value}</span>"
-                            else:
-                                formatted_value = inner_value
-
-                        # Pad to column width and add to markdown
-                        padding = col_widths[col_idx] - len(cell_value)
-                        padded_value = " " + formatted_value + " " * (padding + 1)
-                        md_content += padded_value + "|"
+                        md_content += f" {cell_value} |"
                     except Exception as e:
                         print(
                             f"Error processing cell at row {row_idx}, column {col_idx}: {str(e)}"
                         )
-                        # Add a placeholder for the failed cell
-                        padded_value = " [Error] " + " " * (col_widths[col_idx] - 7)
-                        md_content += padded_value + " |"
-
+                        md_content += " [Error] |"
                 md_content += "\n"
+
         except Exception as e:
             error_msg = f"Error generating table for sheet '{sheet_name}': {str(e)}\n{traceback.format_exc()}"
             print(error_msg)
             md_content += f"Error generating table: {str(e)}\n\n"
 
-        # Add formatting legend
-        has_formatting = False
-        for row_idx in range(min_row, max_row + 1):
-            for col_idx in range(min_col, max_col + 1):
-                cell = sheet.cell(row=row_idx, column=col_idx)
-                if get_cell_format_info(cell):
-                    has_formatting = True
-                    break
-            if has_formatting:
-                break
-
-        if has_formatting:
-            md_content += "\n### Formatting Information\n"
-            md_content += "The table above includes HTML formatting to represent colors and styles from the original Excel file.\n"
-            md_content += "This formatting may not display in all Markdown viewers.\n"
-
-        md_content += "\n\n"  # Extra newlines between sheets
+        md_content += "\n"  # Extra newline between sheets
 
     return DocumentConverterResult(
         title=None,
@@ -1063,4 +928,3 @@ def ZipConverter(local_path: str, **kwargs):
     return DocumentConverterResult(
         title="Extracted Files", text_content=md_content.strip()
     )
-

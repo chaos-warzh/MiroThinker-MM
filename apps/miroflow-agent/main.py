@@ -41,7 +41,7 @@ async def amain(cfg: DictConfig) -> None:
     # Define task parameters
     task_id = "task_example"
     task_description = "What is the title of this picture?"
-    task_file_name = "./data/000/image0.png"
+    task_file_name = "MiroThinker-MM/apps/miroflow-agent/datasets/006/花.jpg"
 
     # Execute task using the pipeline
     final_summary, final_boxed_answer, log_file_path = await execute_task_pipeline(

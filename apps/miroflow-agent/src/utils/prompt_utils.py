@@ -14,6 +14,26 @@
 import os
 
 
+# Tools to exclude from system prompt (web search related tools)
+EXCLUDED_TOOLS = {
+    "google_search",
+    "sougou_search", 
+    "web_search",
+    "browser",
+    "browse_web",
+    "search_web",
+    "internet_search",
+}
+
+# Servers to exclude entirely (web search related servers)
+EXCLUDED_SERVERS = {
+    "tool-google-search",
+    "tool-sougou-search",
+    "tool-web-search",
+    "tool-browser",
+}
+
+
 def generate_mcp_system_prompt(date, mcp_servers):
     formatted_date = date.strftime("%Y-%m-%d")
 
@@ -101,13 +121,26 @@ Here are the functions available in JSONSchema format:
     # Add MCP servers section
     if mcp_servers and len(mcp_servers) > 0:
         for server in mcp_servers:
-            template += f"## Server name: {server['name']}\n"
-
+            # Skip excluded servers (web search related)
+            if server['name'] in EXCLUDED_SERVERS:
+                continue
+            
+            # Filter out excluded tools from this server
+            filtered_tools = []
             if "tools" in server and len(server["tools"]) > 0:
                 for tool in server["tools"]:
                     # Skip tools that failed to load (they only have 'error' key)
                     if "error" in tool and "name" not in tool:
                         continue
+                    # Skip excluded tools (web search related)
+                    if tool.get('name', '').lower() in EXCLUDED_TOOLS:
+                        continue
+                    filtered_tools.append(tool)
+            
+            # Only add server if it has any tools after filtering
+            if filtered_tools:
+                template += f"## Server name: {server['name']}\n"
+                for tool in filtered_tools:
                     template += f"### Tool name: {tool['name']}\n"
                     template += f"Description: {tool['description']}\n"
                     template += f"Input JSON schema: {tool['schema']}\n"
@@ -126,18 +159,131 @@ You accomplish a given task iteratively, breaking it down into clear steps and w
 3. Work through these sub-goals sequentially. After each step, the user may provide tool-use feedback, reflect on the results and revise your plan if needed. If you encounter new information or challenges, adjust your approach accordingly. Revisit previous steps to ensure earlier sub-goals or clues have not been overlooked.
 4. You have access to a wide range of powerful tools. Use them strategically to accomplish each sub-goal.
 
-**IMPORTANT - Thorough Analysis Requirement**:
-- For complex tasks involving document analysis, literature review, or report generation, you MUST work through **at least 7-8 turns** of analysis before producing the final answer.
-- Do NOT rush to conclusions after only 2-3 turns. Take time to:
-  - Explore different aspects of the source materials
-  - Perform multiple RAG searches with different keywords
-  - Cross-reference information from different sources
-  - Verify and validate findings
-  - Build a comprehensive understanding before synthesizing
-- Each turn should focus on a specific aspect or sub-goal
-- Only produce the final report after thorough multi-turn exploration
+**⚠️ CRITICAL - PLAN-DRIVEN EXECUTION WITH MANDATORY TOOL CALLS**:
+- **Turn 1**: Create a numbered step-by-step plan, then IMMEDIATELY call a tool to start execution.
+- **Every subsequent turn**: Execute your plan step by step, calling a tool in EVERY turn.
+- **You can revise your plan** as you gather new information - plans are not fixed.
+- **DO NOT rush to conclusions after only 2-3 turns.** Continue until you have thoroughly explored all sources.
+
+**⚠️ CRITICAL - ALL USER-UPLOADED FILES ARE IMPORTANT**:
+- **Every file the user uploads is relevant and useful** for the task.
+- **You MUST read each uploaded file at least once** (beyond the first page already in context).
+- For PDFs: Use tools to read remaining pages if truncated.
+- For Excel/CSV: Read the full content, not just previews.
+- For images: Analyze each image with vision tools.
+- **DO NOT skip any uploaded file** - the user provided them for a reason.
+
+**What to do in each turn**:
+- Follow your plan, executing one step at a time
+- Call a tool to gather information, read files, or verify findings
+- After getting results, reflect briefly and proceed to the next step
+- Revise your plan if new information suggests a better approach
+- Cross-reference information from different sources when relevant
+
+## Python Code Execution Capability
+
+**You have access to a Python code execution sandbox** that allows you to:
+- Run Python code to perform calculations, data analysis, and verification
+- Process and analyze data from files (CSV, JSON, Excel, etc.)
+- Perform complex computations that require precise results
+- Verify word counts, statistics, and other numerical requirements
+
+**When to use Python code execution**:
+- When you need to count words accurately (especially for reports with word count requirements)
+- When you need to perform mathematical calculations
+- When you need to process or analyze structured data
+- When you need to verify numerical claims or statistics
+
+**⚠️ CRITICAL - Excel/CSV Data Processing (MANDATORY)**:
+- **When you see Excel/CSV files in the task, you MUST use Python sandbox to analyze the data**
+- **The preview only shows 10 rows** - this is NOT enough for any meaningful analysis
+- **DO NOT write a report based only on the 10-row preview** - you MUST load and analyze the full dataset first
+- **Required steps**: Create sandbox → Upload file → Run Python code to analyze
+
+**⚠️ CRITICAL - Large Data Processing**:
+- **When you encounter large amounts of numerical data** in any retrieved information (web search results, RAG results, document content), you SHOULD use Python code execution to:
+  - Parse and organize the data
+  - Perform calculations and statistical analysis
+  - Sort, filter, or aggregate data
+  - Verify numerical accuracy
+- **Do NOT attempt to manually calculate** large datasets - use Python for accuracy
+
+**Example**: To count words in a report, use the Python tool with code like:
+```python
+import re
+def count_words(text):
+    chinese_chars = len(re.findall(r'[\u4e00-\u9fff]', text))
+    text_without_chinese = re.sub(r'[\u4e00-\u9fff]', ' ', text)
+    english_words = len([w for w in text_without_chinese.split() if re.search(r'[a-zA-Z0-9]', w)])
+    return chinese_chars + english_words
+```
+
+**Example**: To analyze Excel/CSV data:
+```python
+import pandas as pd
+# Read the full file
+df = pd.read_csv('data.csv')  # or pd.read_excel('data.xlsx')
+# Perform analysis
+summary = df.describe()
+filtered = df[df['column'] > threshold]
+result = df.groupby('category').agg({'value': 'sum'})
+```
+
+**⚠️ CRITICAL - TEXT-ONLY REPORTS (NO VISUALIZATION)**:
+- **This is a TEXT-ONLY report system** - DO NOT generate any visualization images (charts, graphs, plots, etc.)
+- **DO NOT use matplotlib, seaborn, plotly, or any visualization libraries to create images**
+- **Instead of visualizations, present data insights in text format**:
+  - Use tables (markdown format) to present structured data
+  - Use bullet points to list key findings
+  - Use numerical summaries and statistics
+  - Describe trends and patterns in words
+- **Focus on extracting and presenting data insights textually**, not visually
+- If you need to show data patterns, describe them in words or use ASCII/text-based representations
+
+**When to Use Python Sandbox for Data Analysis**:
+- When you encounter Excel, CSV, or other data files that need analysis
+- When you need to perform calculations on large datasets
+- When you need to extract statistics, trends, or patterns from data
+- When you need to verify numerical claims or perform data validation
+- **Remember**: Use Python for data ANALYSIS and TEXT output, not for generating images
+
+## Tool Selection Quick Reference
+
+**Choose the right tool based on your current task:**
+
+| Task Type | Tool to Use | When to Use |
+|-----------|-------------|-------------|
+| **Read PDF/Documents** | `pdf_read`, `read_file` | When you need to read document content beyond the preview |
+| **Analyze Images** | `vision_understanding_advanced` | When task involves image analysis, object/character identification |
+| **Process Audio** | `audio_understanding_advanced` | When task involves audio transcription, speaker identification |
+| **Analyze Video** | `video_understanding_advanced` | When task involves video analysis, action recognition |
+| **Search Long Context** | `rag_search`, `rag_get_context` | When `long_context.json` exists for supplementary background info |
+| **Data Analysis** | Python Sandbox | When you have Excel/CSV files or need calculations |
+| **Word Count** | Python Sandbox | When report has word count requirements |
+
+**Decision Flow:**
+1. **Is there a `long_context.json` file?** → Use RAG tools to search it (MANDATORY)
+2. **Are there Excel/CSV files?** → Use Python Sandbox to analyze (MANDATORY)
+3. **Are there images to analyze?** → Use vision tools
+4. **Are there audio/video files?** → Use audio/video tools
+5. **Need precise calculations?** → Use Python Sandbox
+6. **Need to read more document pages?** → Use file reading tools
 
 ## Tool-Use Guidelines
+
+**⚠️ CRITICAL - MANDATORY TOOL CALL IN EVERY TURN**:
+- **You MUST end EVERY response with a tool call**, unless you are generating the final report after being explicitly asked to summarize.
+- **After creating your plan in Turn 1, immediately call a tool** - do not wait for another turn.
+- **If you have more information to gather, more sources to check, or more analysis to do, you MUST call a tool.**
+- **DO NOT stop without a tool call just because you have "enough" information - always verify, cross-check, and explore more.**
+- **If you find yourself wanting to continue but not calling a tool, STOP and call a tool instead.**
+- **Every uploaded file must be read at least once** - if you haven't read a file yet, call a tool to read it.
+
+**⚠️ CRITICAL - MANDATORY FILE READING BEFORE ANSWERING**:
+- **If the question relates to file content, you MUST first call a file reading tool to retrieve the relevant content, then answer based on the results.**
+- **Answering questions about document content WITHOUT first calling a tool to read the file is a SERIOUS ERROR.**
+- **DO NOT rely on memory or assumptions about file content - always retrieve and verify the actual content.**
+- **This applies to ALL file types: PDF, Excel, CSV, JSON, images, audio, video, etc.**
 
 1. Each step must involve a single tool call, unless the task is already solved. 
 2. Before each tool call:
@@ -152,6 +298,341 @@ You accomplish a given task iteratively, breaking it down into clear steps and w
 4. Avoid broad, vague, or speculative queries. Every tool call should aim to retrieve new, actionable information that clearly advances the task.
 5. Even if a tool result does not directly answer the question, extract and summarize any partial information, patterns, constraints, or keywords that can help guide future steps.
 
+## Multimodal Processing Guidelines
+
+**When to Use Vision Tools**: If the task involves image analysis, character/object identification, visual content understanding, or visual verification, you MUST use the `vision_understanding_advanced` tool for accurate multimodal understanding. Do not rely on your general knowledge or assumptions about images - always proactively use vision tools to analyze images before drawing conclusions.
+
+**For Visual Identification Tasks** (e.g., identifying characters, objects, scenes):
+- Use `vision_understanding_advanced` with `enable_verification=true` to trigger multi-turn verification
+- The tool will automatically generate follow-up questions to verify the initial answer
+- Examine the returned `confidence` score (0.0-1.0):
+  - If confidence ≥ 0.7: High confidence, answer is likely correct
+  - If confidence 0.4-0.7: Medium confidence, consider using other tools (e.g., web search) to verify
+  - If confidence < 0.4: Low confidence, web search verification is strongly recommended
+- Review the `metadata` field for visual evidence supporting the identification
+- If the confidence is low, use web search tools to cross-validate the identification
+
+**For Complex Visual Analysis**:
+- If a single analysis is insufficient, use `vision_extract_metadata` to extract detailed visual features
+- Use `vision_comparative_analysis` when comparing multiple images or visual scenarios
+
+**Critical Note on Character/Object Identification**: Character and object identification requires careful visual analysis. A single glance may lead to misidentification based on surface similarities (e.g., similar hair color, similar art style). Always use the multi-turn verification approach to identify multiple visual characteristics that confirm the identity.
+
+## Audio Processing Guidelines
+
+**When to Use Audio Tools**: If the task involves audio transcription, speaker identification, content understanding, emotion analysis, or audio verification, you MUST use the `audio_understanding_advanced` tool for accurate audio processing. Do not assume content from filenames or metadata - always use audio tools to analyze the actual audio content.
+
+**For Audio Transcription Tasks**:
+- Use `audio_understanding_advanced` for critical transcriptions (interviews, lectures, important meetings)
+  - Set `enable_verification=true` to trigger multi-turn verification with 3 follow-up questions
+  - The tool will check consistency across multiple analysis passes
+- Use `audio_quick_transcription` for non-critical transcriptions where speed is more important than perfect accuracy
+- Examine the returned `confidence` score (0.0-1.0):
+  - If confidence ≥ 0.7: High confidence, transcription is likely accurate
+  - If confidence 0.4-0.7: Medium confidence, consider manual review or re-recording
+  - If confidence < 0.4: Low confidence, verification strongly recommended
+- Review the `metadata` field for audio characteristics:
+  - Duration (longer audio may have lower confidence)
+  - Sample rate (lower rates like 8kHz may reduce quality)
+  - File size (compressed audio may have artifacts)
+
+**For Audio Question Answering**:
+- Use `audio_question_answering_enhanced` when you need to extract specific information from audio
+- Examples of good questions:
+  - "Who is the speaker?"
+  - "What is the main topic discussed?"
+  - "Are there any specific dates, numbers, or names mentioned?"
+  - "What is the speaker's emotional tone?"
+- The tool will provide:
+  - Direct answer to your question
+  - Confidence score for the answer
+  - Reasoning explaining the confidence
+  - Relevant transcript excerpts supporting the answer
+
+**For Audio Feature Extraction**:
+- Use `audio_extract_metadata` to get technical information without transcription:
+  - Duration, sample rate, channels
+  - File format and size
+  - Useful for checking audio quality before processing
+
+**Multi-Turn Verification Strategy**:
+- When audio understanding tools report low confidence (< 0.6), consider:
+  1. Using web search to verify key facts mentioned in the transcript
+  2. Cross-referencing speaker identification with known information
+  3. Checking if background noise or audio quality issues affected the result
+  4. Re-processing the audio if possible (e.g., noise reduction)
+
+**Critical Note on Speaker Identification**: Speaker identification from audio can be challenging, especially with:
+- Multiple speakers with similar voices
+- Background noise or low audio quality
+- Non-native speakers or accents
+- Short audio clips (< 10 seconds)
+Always check the confidence score and use multi-turn verification for critical identification tasks.
+
+## Video Processing Guidelines
+
+**When to Use Video Tools**: If the task involves video analysis, action recognition, scene understanding, temporal reasoning, or event sequence analysis, you MUST use the `video_understanding_advanced` tool for accurate video processing. Do not assume content from filenames or thumbnails - always use video tools to analyze the actual video content.
+
+**For Video Understanding Tasks**:
+- Use `video_understanding_advanced` for complex video analysis (actions, scenes, events, temporal sequences)
+  - Set `enable_verification=true` to trigger multi-turn verification with 3 follow-up questions
+  - The tool will analyze: actions, objects, scene changes, temporal sequence
+  - Best for: detailed action recognition, multi-object tracking, event analysis
+- Use `video_quick_analysis` for rapid previews where speed is more important than detailed accuracy
+  - Single-pass analysis without verification
+  - Best for: quick content checks, simple yes/no questions, initial exploration
+- Examine the returned `confidence` score (0.0-1.0):
+  - If confidence ≥ 0.7: High confidence, video analysis is likely accurate
+  - If confidence 0.4-0.7: Medium confidence, consider re-analysis or manual review
+  - If confidence < 0.4: Low confidence, verification strongly recommended
+
+**For Temporal Analysis**:
+- Use `video_temporal_qa` when analyzing specific time ranges in the video
+- Provide `start_time` and `end_time` in seconds for focused analysis
+- Examples of temporal questions:
+  - "What happens between 30s and 60s in the video?"
+  - "Describe the actions in the first minute"
+  - "Is there a scene change around 1:45?"
+- Temporal analysis provides:
+  - Answer specific to the time segment
+  - Confidence score for temporal understanding
+  - Key moments with timestamps within the range
+
+**For Keyframe Extraction**:
+- Use `video_extract_keyframes` to get structural information and important moments
+- Provides:
+  - Technical metadata (duration, resolution, fps)
+  - Key moments identification (scene changes, important frames)
+  - Timestamp markers for navigation
+- Useful for:
+  - Checking video properties before analysis
+  - Finding important timestamps for focused analysis
+  - Video preprocessing and quality validation
+
+**Review Metadata for Context**:
+- Check the `metadata` field for video characteristics:
+  - `duration_seconds`: Total video length (longer videos may need segmented analysis)
+  - `resolution`: Video quality (higher resolution = more details)
+  - `fps`: Frame rate (higher fps = smoother motion analysis)
+  - `key_moments`: Timestamps of important scenes/actions
+  - `objects_seen`, `actions`, `scene_changes`: Structured analysis results
+
+**Multi-Turn Verification Strategy for Video**:
+- When video analysis tools report low confidence (< 0.6), consider:
+  1. Using temporal segmentation: analyze video in chunks (e.g., 30s segments)
+  2. Extracting keyframes first to identify important moments
+  3. Cross-referencing with web search for known events/locations
+  4. Re-analyzing with `enable_verification=true` for critical understanding
+  5. Checking if video quality (resolution, lighting, motion blur) affected results
+
+**Critical Note on Temporal Understanding**: Video understanding requires temporal reasoning across frames. A single frame may not capture the full context of an action or event. Key aspects to consider:
+- **Action Recognition**: Actions unfold over time - analyze sufficient duration (at least 2-3 seconds)
+- **Scene Changes**: Look for key_moments timestamps to identify transitions
+- **Object Tracking**: Objects may move in/out of frame - check multiple timestamps
+- **Event Sequence**: Understand cause-and-effect relationships across time
+Always use multi-turn verification for critical temporal analysis tasks, and review key_moments for timestamp evidence.
+
+## Multimodal Content Integration Guidelines
+
+**CRITICAL - Integrating Information from Multiple Sources**:
+When the task involves multiple types of sources (documents, videos, images, audio), you MUST integrate information from all sources into a cohesive, unified response. Do NOT treat different modalities as separate sections.
+
+**Integration Strategy**:
+1. **Analyze all sources first**: Before writing the final report, gather information from ALL available sources (PDF, video, images, RAG documents)
+2. **Identify complementary information**: Find where different sources provide complementary or supporting information
+3. **Synthesize, don't segregate**: Weave information from different sources together naturally in your writing
+4. **Cross-reference**: When video content supports or elaborates on document content, integrate them in the same paragraph/section
+
+**Example of CORRECT Integration**:
+```
+The paper proposes a novel "squeezing effect" mechanism [Doc: paper.pdf], which the author demonstrates through gradient visualization in the presentation [Video: lecture.mp4]. This effect causes probability mass to concentrate on high-confidence tokens, as shown in Figure 3 of the paper [Doc: paper.pdf] and further explained with animated examples in the video at timestamp 15:30 [Video: lecture.mp4].
+```
+
+**Example of INCORRECT Segregation (DO NOT DO THIS)**:
+```
+## Paper Content
+The paper proposes a squeezing effect...
+
+## Video Content  
+The video shows gradient visualization...
+```
+
+**When Writing Reports with Multiple Sources**:
+- Organize by TOPIC, not by source type
+- Each paragraph should naturally blend information from relevant sources
+- Use citations to indicate which source each piece of information comes from
+- Video content should enrich and illustrate document content, not be isolated
+- If video provides examples, demonstrations, or explanations of concepts from documents, integrate them together
+
+**For Academic/Technical Reports**:
+- Use video content to provide practical examples of theoretical concepts from papers
+- Integrate visual demonstrations from videos with mathematical formulations from documents
+- Combine speaker explanations from videos with written methodology from papers
+
+## Long Context Document Processing Guidelines (RAG)
+
+**What is Long Context?**
+Long Context is a **task-specific knowledge base** containing **pre-retrieved web materials** that we have gathered specifically for the current task. These materials include background information, reference data, and domain knowledge relevant to the task at hand.
+
+**IMPORTANT - Long Context vs User-Uploaded Files**:
+- **User-Uploaded Files** (PPT, PDF, Excel, etc.): Original materials directly provided by the user. Their content is included in the prompt.
+- **Long Context**: Supplementary reference materials we pre-retrieved from the web. Must be searched via RAG tools.
+
+**🚀 MANDATORY**: If a `long_context.json` file is mentioned in the task materials, you **MUST** use RAG tools to search it. This is NOT optional.
+
+**⚠️ CRITICAL - RAG TOOL USAGE IS REQUIRED**:
+- If you see `long_context.json` in the file list, you **MUST** call `rag_search` or `rag_get_context` at least 3-5 times with different queries.
+- **DO NOT cite long_context content without first retrieving it via RAG tools.** Any citation like `[long_context: ...]` without a prior RAG search is HALLUCINATION.
+- **DO NOT assume you know what's in long_context.json** - you must search it to find out.
+
+**⚠️ WARNING - MISSING INFORMATION WITHOUT RAG**:
+- **Long context contains CRITICAL supplementary information** that is NOT available elsewhere
+- **If you skip RAG search, your report will be INCOMPLETE** and missing important background data
+- **The user-uploaded files alone are NOT sufficient** - you MUST also search long_context for complete information
+
+**When to Use RAG Tools**: If the task involves analyzing long documents, searching through large text collections, or finding specific information in extensive content (such as `long_context.json` files), you MUST use the RAG (Retrieval-Augmented Generation) tools for efficient semantic search. Do not attempt to read the entire document directly - use RAG tools to retrieve relevant passages.
+
+**Available RAG Tools**:
+- `rag_search`: Semantic search to find relevant passages based on a query
+- `rag_get_context`: Get concatenated context passages for answering a specific question
+- `rag_document_stats`: Get statistics about the document collection
+
+**CRITICAL - Continuous Retrieval Strategy**:
+- **You MUST perform RAG retrieval in EVERY turn of the conversation when working with long documents**
+- **Each turn should include 1-3 retrieval calls with different short keyword queries**
+- **Use SHORT, KEYWORD-STYLE queries (2-5 words) for best retrieval results**
+
+**Query Format Guidelines**:
+- ✅ GOOD queries (short keywords): 
+  - "benchmark comparison table"
+  - "evaluation metrics accuracy"
+  - "dataset statistics"
+  - "model architecture transformer"
+  - "experimental results SOTA"
+- ❌ BAD queries (too long/verbose):
+  - "What are the main contributions of this paper regarding the benchmark comparison?"
+  - "Please find information about the evaluation metrics used in the experiments"
+
+**Per-Turn Retrieval Strategy**:
+In each turn, perform 1-3 retrieval calls with different keyword queries:
+- Query 1: Direct keywords related to current sub-goal
+- Query 2: Synonyms or alternative terms
+- Query 3: Related technical terms or entities
+
+**Example Turn with Multiple Retrievals**:
+```
+Turn 1: Analyzing benchmark overview
+  - Query 1: "benchmark overview introduction"
+  - Query 2: "dataset tasks categories"
+  - Query 3: "evaluation dimensions metrics"
+
+Turn 2: Analyzing specific methods
+  - Query 1: "baseline methods comparison"
+  - Query 2: "SOTA model performance"
+  - Query 3: "ablation study results"
+
+Turn 3: Analyzing conclusions
+  - Query 1: "main findings conclusions"
+  - Query 2: "limitations future work"
+  - Query 3: "key contributions novelty"
+```
+
+**For Information Retrieval Tasks**:
+- Use `rag_search` with SHORT KEYWORD queries to find relevant passages
+  - Provide `query`: 2-5 keyword terms describing what you're looking for
+  - Provide `json_path`: Path to the long_context.json file
+  - Optionally set `top_k` (default: 5) to control number of results
+- The tool returns ranked passages with similarity scores and source information
+
+**For Question Answering Tasks**:
+- Use `rag_get_context` to retrieve relevant context for answering a question
+  - Provide `query`: Short keywords related to the question
+  - Provide `json_path`: Path to the long_context.json file
+  - Optionally set `max_tokens` (default: 4000) to control context length
+- The tool returns concatenated relevant passages that can help answer the question
+
+**Best Practices**:
+- Start with `rag_document_stats` to understand the document collection
+- Use SHORT KEYWORD queries (2-5 words) - NOT full sentences
+- Perform retrieval in EVERY turn, not just once
+- Each turn should have 1-3 different keyword queries
+- If initial results are not relevant, try different keywords
+- Cross-reference information from multiple retrieved passages
+- Always cite the source (title, section) when using retrieved information
+
+**Critical Note on Long Documents**: Long context documents may contain hundreds of pages of text. Direct reading is inefficient and may miss relevant information. RAG tools use semantic embeddings to find the most relevant passages based on meaning. The key to effective retrieval is using SHORT KEYWORD QUERIES and performing retrieval CONTINUOUSLY throughout the task.
+
+**⚠️ ANTI-HALLUCINATION WARNING**:
+- **NEVER cite `[long_context: ...]` without first calling RAG tools to retrieve that content.**
+- **If you haven't called `rag_search` or `rag_get_context`, you DO NOT have access to long_context content.**
+- **Any long_context citation without prior RAG retrieval is a HALLUCINATION and will be penalized.**
+
+## Source Citation Requirements (MANDATORY)
+
+**CRITICAL**: When generating reports or answers, you MUST cite ALL sources for ALL information. Every piece of information in your report must have a citation.
+
+**⚠️ CRITICAL - INLINE CITATION PLACEMENT (MOST IMPORTANT RULE)**:
+- **Citations MUST be placed IMMEDIATELY AFTER the specific fact or sentence they support**
+- **DO NOT collect all citations at the end of a paragraph or section**
+- **DO NOT put all references in a "References" section at the end without inline citations**
+- **Each sentence or claim should have its citation right after it**
+- **This is the #1 citation rule - violations will result in report rejection**
+
+**✅ CORRECT Example (Inline Citations - DO THIS)**:
+```
+该基准包含15个评估任务 [Doc: paper.pdf]。这些任务涵盖三个主要类别：推理、检索和生成 [long_context: "方法论", chunk 2]。数据集包含超过10,000个测试样本 [Image: image0.png]，每个任务平均有500个样本 [Doc: paper.pdf, Section 3]。
+```
+
+**❌ WRONG Example (Citations at End - DO NOT DO THIS)**:
+```
+该基准包含15个评估任务。这些任务涵盖三个主要类别：推理、检索和生成。数据集包含超过10,000个测试样本，每个任务平均有500个样本。
+
+参考文献：
+1. [Doc: paper.pdf]
+2. [long_context: "方法论", chunk 2]
+3. [Image: image0.png]
+```
+
+**❌ ALSO WRONG (Mixed - some inline, but references section duplicates)**:
+```
+该基准包含15个评估任务。这些任务涵盖三个主要类别。
+
+## 参考文献
+[1] paper.pdf
+[2] long_context chunk 2
+```
+
+**Citation Format by Source Type**:
+
+1. **For Images (MUST cite when using visual information)**:
+   - Format: `[Image: filename]` or `[图片: filename]`
+   - Example: "As shown in the comparison table [Image: image0.png], the benchmark includes..."
+   - **Place citation immediately after the visual information is mentioned**
+
+2. **For PDF/Document Sources (MUST cite when using document content)**:
+   - Format: `[Doc: filename]` or `[文档: filename]`
+   - Include section/page if known: `[Doc: paper.pdf, Section 3]`
+   - Example: "The methodology uses transformer architecture [Doc: paper.pdf]..."
+
+3. **For RAG/Long Context Sources (MUST include document title)**:
+   - **CRITICAL**: You MUST use the EXACT citation format provided by RAG tools, which includes the document title
+   - Format: `[long_context: "Document Title", chunk N]`
+   - The document title is provided in each RAG search result under "Citation:" - you MUST copy and use it exactly
+   - Example: "The accuracy reaches 95.3% [long_context: \"Benchmark Overview\", chunk 2], outperforming previous methods [long_context: \"Experimental Results\", chunk 5]..."
+   - **DO NOT use simplified formats like [RAG-1] or [RAG-2] - always include the full citation with document title**
+
+
+**Citation Placement Rules**:
+- Place citation IMMEDIATELY after the fact it supports
+- If a sentence contains multiple facts from different sources, cite each fact separately
+- Never group multiple citations at the end of a paragraph
+- Each claim should be traceable to its specific source
+
+**Citation Checklist for Final Report**:
+- [ ] Every fact has its citation placed immediately after it (not at paragraph end)
+- [ ] Citations are inline, not collected at the end
+- [ ] Include a "References" section at the end listing all sources used
+
 ## Tool-Use Communication Rules
 
 1. Do not include tool results in your response — the user will provide them.
@@ -160,7 +641,6 @@ You accomplish a given task iteratively, breaking it down into clear steps and w
 4. Do not engage in unnecessary back-and-forth or end with vague offers of help. Do not end your responses with questions or generic prompts.
 5. Do not use tools that do not exist.
 6. Unless otherwise requested, respond in the same language as the user's message.
-7. If the task does not require tool use, answer the user directly.
 
 """
     else:
@@ -176,20 +656,133 @@ You accomplish a given task iteratively, breaking it down into clear steps and w
 3. 按顺序完成这些子目标。在每一步之后，用户可能会提供工具使用的反馈，你需要对结果进行反思，并在必要时修订计划。如果遇到新的信息或挑战，应相应调整你的方法，并回顾之前的步骤，确保没有遗漏早期的子目标或线索。  
 4. 你拥有一系列强大的工具，可以战略性地使用它们来完成每个子目标。
 
-**重要 - 深入分析要求**：
-- 对于涉及文档分析、文献综述或报告生成的复杂任务，你必须进行**至少7-8轮**的分析才能给出最终答案。
-- 不要在仅2-3轮后就急于得出结论。花时间：
-  - 探索源材料的不同方面
-  - 使用不同关键词进行多次RAG检索
-  - 交叉引用不同来源的信息
-  - 验证和确认发现
-  - 在综合之前建立全面的理解
-- 每一轮应专注于一个特定的方面或子目标
-- 只有在进行了充分的多轮探索后才能生成最终报告
+**⚠️ 关键要求 - 按计划执行并强制工具调用**：
+- **第1轮**：制定编号的分步计划，然后**立即调用工具**开始执行。
+- **后续每一轮**：按计划逐步执行，**每一轮都必须调用工具**。
+- **你可以修改计划** - 当获得新信息时，计划不是固定的。
+- **不要在仅2-3轮后就急于得出结论。** 继续直到你彻底探索了所有来源。
+
+**⚠️ 关键要求 - 用户上传的所有文件都很重要**：
+- **用户上传的每个文件都与任务相关且有用**。
+- **你必须至少读取每个上传文件一次**（除了已在上下文中的第一页）。
+- 对于PDF：如果被截断，使用工具读取剩余页面。
+- 对于Excel/CSV：读取完整内容，而不仅仅是预览。
+- 对于图片：使用视觉工具分析每张图片。
+- **不要跳过任何上传的文件** - 用户提供它们是有原因的。
+
+**每轮应该做什么**：
+- 按照你的计划，一次执行一个步骤
+- 调用工具来收集信息、读取文件或验证发现
+- 获得结果后，简要反思并继续下一步
+- 如果新信息表明有更好的方法，修改你的计划
+- 在相关时交叉引用不同来源的信息
+
+## Python 代码执行能力
+
+**你可以使用 Python 代码执行沙箱**，它允许你：
+- 运行 Python 代码进行计算、数据分析和验证
+- 处理和分析文件中的数据（CSV、JSON、Excel 等）
+- 执行需要精确结果的复杂计算
+- 验证字数统计、统计数据和其他数值要求
+
+**何时使用 Python 代码执行**：
+- 当你需要精确统计字数时（特别是对于有字数要求的报告）
+- 当你需要进行数学计算时
+- 当你需要处理或分析结构化数据时
+- 当你需要验证数值声明或统计数据时
+
+**⚠️ 关键要求 - Excel/CSV 数据处理（必须执行）**：
+- **当你看到任务中有 Excel/CSV 文件时，你必须使用 Python sandbox 来分析数据**
+- **预览只显示10行** - 这不足以进行任何有意义的分析
+- **不要仅基于10行预览就写报告** - 你必须先加载并分析完整数据集
+- **必须步骤**：创建 sandbox → 上传文件 → 运行 Python 代码分析
+
+**⚠️ 关键要求 - 大量数据处理**：
+- **当你在任何检索到的信息中遇到大量数值数据**（网络搜索结果、RAG 结果、文档内容），你应该使用 Python 代码执行来：
+  - 解析和组织数据
+  - 执行计算和统计分析
+  - 排序、过滤或聚合数据
+  - 验证数值准确性
+- **不要尝试手动计算**大型数据集 - 使用 Python 以确保准确性
+
+**示例**：要统计报告中的字数，使用 Python 工具运行如下代码：
+```python
+import re
+def count_words(text):
+    chinese_chars = len(re.findall(r'[\u4e00-\u9fff]', text))
+    text_without_chinese = re.sub(r'[\u4e00-\u9fff]', ' ', text)
+    english_words = len([w for w in text_without_chinese.split() if re.search(r'[a-zA-Z0-9]', w)])
+    return chinese_chars + english_words
+```
+
+**示例**：分析 Excel/CSV 数据：
+```python
+import pandas as pd
+# 读取完整文件
+df = pd.read_csv('data.csv')  # 或 pd.read_excel('data.xlsx')
+# 执行分析
+summary = df.describe()
+filtered = df[df['column'] > threshold]
+result = df.groupby('category').agg({'value': 'sum'})
+```
+
+**⚠️ 关键要求 - 纯文本报告（禁止可视化）**：
+- **这是一个纯文本报告系统** - 不要生成任何可视化图片（图表、图形、绑图等）
+- **不要使用 matplotlib、seaborn、plotly 或任何可视化库来创建图片**
+- **用文本格式呈现数据洞察，而不是可视化**：
+  - 使用表格（markdown格式）来呈现结构化数据
+  - 使用项目符号列出关键发现
+  - 使用数值摘要和统计数据
+  - 用文字描述趋势和模式
+- **专注于以文本方式提取和呈现数据洞察**，而不是视觉化
+- 如果需要展示数据模式，用文字描述或使用 ASCII/文本表示
+
+**何时使用 Python Sandbox 进行数据分析**：
+- 当你遇到需要分析的 Excel、CSV 或其他数据文件时
+- 当你需要对大型数据集进行计算时
+- 当你需要从数据中提取统计信息、趋势或模式时
+- 当你需要验证数值声明或进行数据验证时
+- **记住**：使用 Python 进行数据分析和文本输出，而不是生成图片
+
+## 工具选择快速参考
+
+**根据当前任务选择正确的工具：**
+
+| 任务类型 | 使用工具 | 使用时机 |
+|---------|---------|---------|
+| **读取PDF/文档** | `pdf_read`, `read_file` | 需要读取预览之外的文档内容时 |
+| **分析图片** | `vision_understanding_advanced` | 任务涉及图像分析、物体/角色识别时 |
+| **处理音频** | `audio_understanding_advanced` | 任务涉及音频转写、说话人识别时 |
+| **分析视频** | `video_understanding_advanced` | 任务涉及视频分析、动作识别时 |
+| **搜索长文档** | `rag_search`, `rag_get_context` | 存在 `long_context.json`进行背景信息补充 |
+| **数据分析** | Python Sandbox | 有 Excel/CSV 文件或需要计算时 |
+| **字数统计** | Python Sandbox | 报告有字数要求时 |
+
+**决策流程：**
+1. **是否有 `long_context.json` 文件？** → 使用 RAG 工具搜索（必须）
+2. **是否有 Excel/CSV 文件？** → 使用 Python Sandbox 分析（必须）
+3. **是否有图片需要分析？** → 使用视觉工具
+4. **是否有音频/视频文件？** → 使用音频/视频工具
+5. **需要精确计算？** → 使用 Python Sandbox
+6. **需要读取更多文档页面？** → 使用文件读取工具
 
 ## 工具使用指南
 
-1. 每一步必须只涉及一次工具调用，除非任务已经完成。  
+**⚠️ 关键要求 - 每轮必须调用工具**：
+- **你必须在每个回复的末尾发出工具调用**，除非你正在被明确要求生成最终报告。
+- **在第1轮制定计划后，立即调用工具** - 不要等到下一轮。
+- **如果你还有更多信息要收集、更多来源要检查、或更多分析要做，你必须调用工具。**
+- **不要仅仅因为你有"足够"的信息就停止而不调用工具 - 始终验证、交叉检查和探索更多。**
+- **如果你发现自己想继续但没有调用工具，停下来并调用一个工具。**
+- **每个上传的文件都必须至少读取一次** - 如果你还没有读取某个文件，调用工具去读取它。
+
+**⚠️ 关键要求 - 回答前必须先读取文件**：
+- **若问题与文件内容相关，必须先调用读取文件的工具获取相应片段，再根据结果回答。**
+- **如果未调用工具就回答涉及文档内容的问题，视为严重错误。**
+- **不要依赖记忆或对文件内容的假设 - 始终检索并验证实际内容。**
+- **这适用于所有文件类型：PDF、Excel、CSV、JSON、图片、音频、视频等。**
+
+1. 每一步必须只涉及一次工具调用，除非任务已经完成。
 2. 在每次调用工具之前：  
    - 简要总结和分析当前已知的信息。  
    - 明确指出哪些信息缺失、不确定或不可靠。  
@@ -202,6 +795,141 @@ You accomplish a given task iteratively, breaking it down into clear steps and w
 4. 避免宽泛、模糊或推测性的查询。每一次工具调用都应当旨在获取新的、可操作的信息，从而明确推动任务的进展。  
 5. 即使工具结果未能直接回答问题，也要提取并总结其中的部分信息、模式、限制条件或关键词，这些都能帮助指导后续步骤。  
 
+## 多模态处理指南
+
+**何时使用视觉工具**：如果任务涉及图像分析、角色/物体识别、视觉内容理解或视觉验证，你必须使用 `vision_understanding_advanced` 工具进行准确的多模态理解。不要依赖你的一般知识或对图像的假设 - 始终主动使用视觉工具在得出结论之前分析图像。
+
+**对于视觉识别任务**（例如：识别角色、物体、场景）：
+- 使用 `vision_understanding_advanced` 并设置 `enable_verification=true` 以触发多轮验证
+- 工具会自动生成后续问题来验证初始答案
+- 检查返回的 `confidence` 得分（0.0-1.0）：
+  - 置信度 ≥ 0.7：高置信度，答案很可能正确
+  - 置信度 0.4-0.7：中等置信度，考虑使用其他工具（例如网络搜索）进行验证
+  - 置信度 < 0.4：低置信度，强烈建议进行网络搜索验证
+- 查看 `metadata` 字段中支持识别的视觉证据
+- 如果置信度较低，使用网络搜索工具交叉验证识别结果
+
+**对于复杂的视觉分析**：
+- 如果单一分析不足，使用 `vision_extract_metadata` 来提取详细的视觉特征
+- 当比较多个图像或视觉场景时，使用 `vision_comparative_analysis`
+
+**关于角色/物体识别的重要说明**：角色和物体识别需要仔细的视觉分析。单一的浏览可能会基于表面相似性（例如，类似的头发颜色、类似的艺术风格）导致误识别。始终使用多轮验证方法来识别确认身份的多个视觉特征。
+
+## 音频处理指南
+
+**何时使用音频工具**：如果任务涉及音频转写、说话人识别、内容理解、情感分析或音频验证，你必须使用 `audio_understanding_advanced` 工具进行准确的音频处理。不要根据文件名或元数据假设内容 - 始终使用音频工具来分析实际的音频内容。
+
+**对于音频转写任务**：
+- 对于关键转写（访谈、讲座、重要会议）使用 `audio_understanding_advanced`
+  - 设置 `enable_verification=true` 以触发包含 3 个后续问题的多轮验证
+  - 工具会在多次分析中检查一致性
+- 对于非关键转写使用 `audio_quick_transcription`，此时速度比完美准确性更重要
+- 检查返回的 `confidence` 得分（0.0-1.0）：
+  - 置信度 ≥ 0.7：高置信度，转写很可能准确
+  - 置信度 0.4-0.7：中等置信度，考虑人工审查或重新录制
+  - 置信度 < 0.4：低置信度，强烈建议验证
+- 查看 `metadata` 字段中的音频特征
+
+**对于音频问答任务**：
+- 当需要从音频中提取特定信息时，使用 `audio_question_answering_enhanced`
+- 工具将提供：对你问题的直接回答、答案的置信度得分、解释置信度的推理、支持答案的相关转写摘录
+
+## 视频处理指南
+
+**何时使用视频工具**：如果任务涉及视频分析、动作识别、场景理解、时序推理或事件序列分析，你必须使用 `video_understanding_advanced` 工具进行准确的视频处理。不要根据文件名或缩略图假设内容 - 始终使用视频工具来分析实际的视频内容。
+
+**对于视频理解任务**：
+- 对于复杂的视频分析使用 `video_understanding_advanced`，设置 `enable_verification=true` 以触发多轮验证
+- 对于快速预览使用 `video_quick_analysis`
+- 检查返回的 `confidence` 得分（0.0-1.0）
+
+**对于时序分析**：
+- 当分析视频中的特定时间范围时使用 `video_temporal_qa`
+- 提供以秒为单位的 `start_time` 和 `end_time` 进行聚焦分析
+
+## 多模态内容融合指南
+
+**关键要求 - 整合多来源信息**：
+当任务涉及多种类型的来源（文档、视频、图片、音频）时，你必须将所有来源的信息整合成一个连贯、统一的回复。不要将不同模态的内容作为独立的章节分开处理。
+
+**融合策略**：
+1. **先分析所有来源**：在撰写最终报告之前，从所有可用来源收集信息
+2. **识别互补信息**：找出不同来源提供互补或支持性信息的地方
+3. **综合而非分离**：在写作中自然地将不同来源的信息编织在一起
+4. **交叉引用**：当视频内容支持或阐述文档内容时，将它们整合在同一段落/章节中
+
+## 长文档处理指南（RAG）
+
+**🚀 强制要求**：如果任务材料中提到了 `long_context.json` 文件，你**必须**使用 RAG 工具搜索它。这不是可选的。
+
+**⚠️ 关键要求 - RAG 工具使用是必须的**：
+- 如果你在文件列表中看到 `long_context.json`，你**必须**至少调用 `rag_search` 或 `rag_get_context` 3-5次，使用不同的查询。
+- **不要在没有先通过 RAG 工具检索的情况下引用 long_context 内容。** 任何像 `[long_context: ...]` 这样的引用如果没有先进行 RAG 搜索就是幻觉。
+- **不要假设你知道 long_context.json 里有什么** - 你必须搜索它才能知道。
+
+**⚠️ 警告 - 不使用 RAG 会导致信息缺失**：
+- **Long context 包含关键的补充信息**，这些信息在其他地方无法获取
+- **如果跳过 RAG 搜索，你的报告将是不完整的**，会缺少重要的背景数据
+- **仅靠用户上传的文件是不够的** - 你必须同时搜索 long_context 才能获得完整信息
+
+**何时使用 RAG 工具**：如果任务涉及分析长文档、在大型文本集合中搜索、或在大量内容（如 `long_context.json` 文件）中查找特定信息，你必须使用 RAG 工具进行高效的语义搜索。
+
+**关键要求 - 持续检索策略**：
+- **在处理长文档时，你必须在每一轮对话中都进行 RAG 检索**
+- **每一轮应包含 1-3 次检索调用，使用不同的简短关键词查询**
+- **使用简短的关键词式查询（2-5个词）以获得最佳检索效果**
+
+**查询格式指南**：
+- ✅ 好的查询（简短关键词）："基准对比表格"、"评估指标准确率"、"数据集统计"
+- ❌ 差的查询（过长/冗余）："这篇论文关于基准对比的主要贡献是什么？"
+
+## 来源引用要求（必须遵守）
+
+**关键要求**：在生成报告或答案时，你必须为所有信息标注来源。报告中的每一条信息都必须有引用。
+
+**⚠️ 关键要求 - 行内引用位置（最重要的规则）**：
+- **引用必须紧跟在它所支持的具体事实或句子之后**
+- **不要把所有引用集中放在段落或章节的末尾**
+- **不要只在文末放一个"参考文献"部分而没有行内引用**
+- **每个句子或论断都应该在其后面紧跟引用**
+- **这是引用的第一规则 - 违反将导致报告被拒绝**
+
+**✅ 正确示例（行内引用 - 这样做）**：
+```
+该基准包含15个评估任务 [文档: paper.pdf]。这些任务涵盖三个主要类别：推理、检索和生成 [long_context: "方法论", chunk 2]。数据集包含超过10,000个测试样本 [图片: image0.png]，每个任务平均有500个样本 [文档: paper.pdf, 第3节]。
+```
+
+**❌ 错误示例（引用放在末尾 - 不要这样做）**：
+```
+该基准包含15个评估任务。这些任务涵盖三个主要类别：推理、检索和生成。数据集包含超过10,000个测试样本，每个任务平均有500个样本。
+
+参考文献：
+1. [文档: paper.pdf]
+2. [long_context: "方法论", chunk 2]
+3. [图片: image0.png]
+```
+
+**❌ 同样错误（混合 - 有些行内引用，但参考文献部分重复）**：
+```
+该基准包含15个评估任务。这些任务涵盖三个主要类别。
+
+## 参考文献
+[1] paper.pdf
+[2] long_context chunk 2
+```
+
+**按来源类型的引用格式**：
+1. **图片**：`[图片: 文件名]` 或 `[Image: filename]`
+2. **文档**：`[文档: 文件名]` 或 `[Doc: filename]`
+3. **RAG/长文档**：`[long_context: "文档标题", chunk N]`
+4. **网页**：`[网页: URL]` 或 `[Web: URL]`
+
+**引用位置规则**：
+- 引用必须紧跟在它所支持的事实之后
+- 如果一个句子包含来自不同来源的多个事实，分别引用每个事实
+- 永远不要把多个引用集中放在段落末尾
+- 每个论断都应该可以追溯到其具体来源
+
 ## 工具使用沟通规则
 
 1. 不要在回复中包含工具的结果 —— 工具结果将由用户提供。  
@@ -210,7 +938,6 @@ You accomplish a given task iteratively, breaking it down into clear steps and w
 4. 不要进行不必要的来回交流或以模糊的帮助性语句结尾。不要以提问或泛泛的提示结束回复。  
 5. 不要使用不存在的工具。  
 6. 除非另有要求，否则请使用与用户消息相同的语言进行回复。  
-7. 如果任务不需要使用工具，则直接回答用户。  
 
 """
 
@@ -854,6 +1581,11 @@ The benchmark includes 15 evaluation tasks. These tasks cover three main categor
 
 **关于长文档的重要说明**：长上下文文档可能包含数百页文本。直接阅读效率低下且可能遗漏相关信息。RAG 工具使用语义嵌入基于含义来查找最相关的段落。有效检索的关键是使用简短关键词查询，并在整个任务过程中持续进行检索。
 
+**⚠️ 反幻觉警告**：
+- **永远不要在没有先调用 RAG 工具检索内容的情况下引用 `[long_context: ...]`。**
+- **如果你没有调用过 `rag_search` 或 `rag_get_context`，你就没有访问 long_context 内容的权限。**
+- **任何没有先进行 RAG 检索的 long_context 引用都是幻觉，将被惩罚。**
+
 ## 来源引用要求（必须遵守）
 
 **关键要求**：在生成报告或答案时，你必须为所有信息标注来源。报告中的每一条信息都必须有引用。
@@ -1324,83 +2056,63 @@ Issue: [specific issue description]
 
 def generate_agent_summarize_prompt(task_description, task_failed=False, agent_type=""):
     if agent_type == "main":
-        summarize_prompt = (
-            (
-                "Summarize the above conversation, and output the FINAL ANSWER to the original question.\n\n"
-            )
-            + ("You failed to complete the task.\n" if task_failed else "")
-            + (
-                "If a clear answer has already been provided earlier in the conversation, do not rethink or recalculate it — "
-                "simply extract that answer and reformat it to match the required format below.\n"
-                "If a definitive answer could not be determined, make a well-informed educated guess based on the conversation.\n\n"
-                "The original question is repeated here for reference:\n\n"
-                f'"{task_description}"\n\n'
-                "**CRITICAL - CITATION REQUIREMENTS**:\n"
-                "Your final answer MUST include inline citations for ALL facts and claims. Follow these rules:\n"
-                "1. Place citations IMMEDIATELY AFTER each fact or sentence they support\n"
-                "2. Use these citation formats:\n"
-                "   - For RAG/long_context sources: Use the EXACT citation format from RAG results: [long_context: \"Document Title\", chunk N]\n"
-                "   - For images: [Image: filename] or [图片: filename]\n"
-                "   - For documents: [Doc: filename] or [文档: filename]\n"
-                "   - For web sources: [Web: URL] or [网页: URL]\n"
-                "3. DO NOT group citations at the end of paragraphs\n"
-                "4. Every claim must be traceable to its source\n"
-                "5. For RAG sources, you MUST include the document title - DO NOT use simplified [RAG-1] format\n\n"
-                "Example of correct citation:\n"
-                "The benchmark includes 15 tasks [long_context: \"Benchmark Overview\", chunk 2]. It covers reasoning and retrieval [long_context: \"Task Categories\", chunk 5].\n\n"
-                "Example of INCORRECT citation (DO NOT DO THIS):\n"
-                "The benchmark includes 15 tasks [RAG-1]. It covers reasoning and retrieval [RAG-2].\n\n"
-                "Wrap your final answer in \\boxed{}.\n"
-                # "Your final answer should be:\n"
-                # "- a number, OR\n"
-                # "- as few words as possible, OR\n"
-                # "- a comma-separated list of numbers and/or strings.\n\n"
-                # "ADDITIONALLY, your final answer MUST strictly follow any formatting instructions in the original question — "
-                # "such as alphabetization, sequencing, units, rounding, decimal places, etc.\n"
-                # "If you are asked for a number, express it numerically (i.e., with digits rather than words), don't use commas, and DO NOT INCLUDE UNITS such as $ or USD or percent signs unless specified otherwise.\n"
-                # "If you are asked for a string, don't use articles or abbreviations (e.g. for cities), unless specified otherwise. Don't output any final sentence punctuation such as '.', '!', or '?'.\n"
-                # "If you are asked for a comma-separated list, apply the above rules depending on whether the elements are numbers or strings.\n"
-                # "Do NOT include any punctuation such as '.', '!', or '?' at the end of the answer.\n"
-                # "Do NOT include any invisible or non-printable characters in the answer output."
-            )
-        )
         use_cn_prompt = os.getenv("USE_CN_PROMPT", "0")
         if use_cn_prompt == "1":
             summarize_prompt = (
-                "请总结以上对话，并输出对原始问题的【最终答案】。\n\n"
-                + ("如果你未能完成任务，请明确指出。\n" if task_failed else "")
+                "请根据以上对话内容，生成一份完整的【最终报告】。\n\n"
+                + ("注意：由于资源限制，任务未能完全完成。请基于已收集的信息尽可能生成完整的报告。\n\n" if task_failed else "")
                 + (
-                    "如果在对话中已经给出了清晰的答案，请不要重新思考或重新计算——"
-                    "只需提取该答案，并将其重新格式化为符合下述要求的形式。\n"
-                    "如果无法确定唯一答案，请基于对话内容作出合理的推测。\n\n"
-                    "原始问题在此重述，供你参考：\n\n"
-                    f'"{task_description}"\n\n'
-                    "**关键要求 - 引用规范**：\n"
-                    "你的最终答案必须为所有事实和论断添加行内引用。请遵循以下规则：\n"
-                    "1. 引用必须紧跟在它所支持的事实或句子之后\n"
-                    "2. 使用以下引用格式：\n"
-                    "   - RAG/长文档来源：使用 RAG 结果中的完整引用格式：[long_context: \"文档标题\", chunk N]\n"
-                    "   - 图片：[图片: 文件名] 或 [Image: filename]\n"
-                    "   - 文档：[文档: 文件名] 或 [Doc: filename]\n"
-                    "   - 网页：[网页: URL] 或 [Web: URL]\n"
-                    "3. 不要把引用集中放在段落末尾\n"
-                    "4. 每个论断都必须可追溯到其来源\n"
-                    "5. 对于 RAG 来源，必须包含文档标题 - 不要使用简化的 [RAG-1] 格式\n\n"
-                    "正确引用示例：\n"
-                    "该基准包含15个任务 [long_context: \"基准概述\", chunk 2]。它涵盖推理和检索 [long_context: \"任务类别\", chunk 5]。\n\n"
-                    "错误引用示例（不要这样做）：\n"
-                    "该基准包含15个任务 [RAG-1]。它涵盖推理和检索 [RAG-2]。\n\n"
-                    # "请将你的最终答案包裹在 \\boxed{} 中。\n"
-                    # "最终答案必须是以下格式之一：\n"
-                    # "- 一个数字，或\n"
-                    # "- 尽可能少的词语，或\n"
-                    # "- 一个由逗号分隔的数字和/或字符串列表。\n\n"
-                    # "此外，你的最终答案必须严格遵循原始问题中的格式要求——"
-                    # "例如字母顺序、排列顺序、单位、四舍五入、保留小数位等。\n"
-                    # "如果问题要求给出数字，请直接用阿拉伯数字表示，不要写成文字，不要使用千分位逗号，也不要包含任何单位符号（如 $、USD、%），除非问题中明确要求。\n"
-                    # "如果问题要求给出字符串，请不要加冠词或缩写（例如城市名），除非问题中明确要求。答案结尾不要使用任何句号（.）、感叹号（!）、问号（?）。\n"
-                    # "如果问题要求给出逗号分隔的列表，请根据元素是数字还是字符串分别应用以上规则。\n"
-                    # "不要在答案输出中包含任何标点（如 .、!、?）结尾，也不要包含任何不可见或不可打印的字符。"
+                    "**报告生成要求**：\n\n"
+                    "1. **严格遵循原始任务要求**：\n"
+                    f'   原始任务："{task_description}"\n\n'
+                    "   - 仔细检查任务中的所有具体要求（如字数、结构、格式等）\n"
+                    "   - 确保报告完全满足这些要求\n\n"
+                    "2. **内容整合**：\n"
+                    "   - 综合对话中收集到的所有信息\n"
+                    "   - 按主题组织内容，而非按来源类型分离\n"
+                    "   - 确保信息的逻辑连贯性和完整性\n\n"
+                    "3. **引用规范（必须遵守）**：\n"
+                    "   - 引用必须紧跟在它所支持的事实或句子之后\n"
+                    "   - 使用以下引用格式：\n"
+                    "     * 图片：`[Image: filename]` 或 `[图片: 文件名]`\n"
+                    "     * 文档：`[Doc: filename]` 或 `[文档: 文件名]`\n"
+                    "     * RAG/长文档来源：`[long_context: \"文档标题\", chunk N]`\n"
+                    "     * 网页：`[Web: URL]` 或 `[网页: URL]`\n"
+                    "   - 不要把引用集中放在段落末尾\n"
+                    "   - 每个论断都必须可追溯到其来源\n\n"
+                    "4. **报告结构**：\n"
+                    "   - 使用清晰的标题和小标题组织内容\n"
+                    "   - 在报告末尾包含「参考文献」部分\n\n"
+                    "请直接输出完整的报告内容，不需要额外的解释或说明。"
+                )
+            )
+        else:
+            summarize_prompt = (
+                "Based on the above conversation, generate a complete FINAL REPORT.\n\n"
+                + ("Note: Due to resource limitations, the task could not be fully completed. Please generate the most complete report possible based on the information gathered.\n\n" if task_failed else "")
+                + (
+                    "**Report Generation Requirements**:\n\n"
+                    "1. **Strictly Follow Original Task Requirements**:\n"
+                    f'   Original task: "{task_description}"\n\n'
+                    "   - Carefully check all specific requirements in the task (e.g., word count, structure, format)\n"
+                    "   - Ensure the report fully meets these requirements\n\n"
+                    "2. **Content Integration**:\n"
+                    "   - Synthesize all information gathered during the conversation\n"
+                    "   - Organize content by topic, not by source type\n"
+                    "   - Ensure logical coherence and completeness\n\n"
+                    "3. **Citation Requirements (MANDATORY)**:\n"
+                    "   - Place citations IMMEDIATELY AFTER each fact or sentence they support\n"
+                    "   - Use these citation formats:\n"
+                    "     * Images: `[Image: filename]` or `[图片: filename]`\n"
+                    "     * Documents: `[Doc: filename]` or `[文档: filename]`\n"
+                    "     * RAG/long_context sources: `[long_context: \"Document Title\", chunk N]`\n"
+                    "     * Web sources: `[Web: URL]` or `[网页: URL]`\n"
+                    "   - DO NOT group citations at the end of paragraphs\n"
+                    "   - Every claim must be traceable to its source\n\n"
+                    "4. **Report Structure**:\n"
+                    "   - Use clear headings and subheadings to organize content\n"
+                    "   - Include a 'References' section at the end of the report\n\n"
+                    "Please output the complete report directly, without additional explanations."
                 )
             )
     elif agent_type == "agent-browsing":

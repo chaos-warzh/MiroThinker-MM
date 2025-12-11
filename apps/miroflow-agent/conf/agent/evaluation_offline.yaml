@@ -17,7 +17,7 @@ main_agent:
     - tool-transcribe
     - tool-video-enhanced  # Enhanced video understanding with temporal analysis
     - tool-reasoning
-    - tool-reader
+    - tool-reading  # File reading tools: read_pdf_pages, read_excel_rows, search_in_file, get_file_info, convert_to_markdown
     - tool-rag          # RAG for long context search (replaces web search)
   max_turns: 50  # Maximum number of turns for main agent execution
 
@@ -31,7 +31,7 @@ sub_agents:
       - tool-vqa          # Fallback to commercial Claude vision
       - tool-audio-enhanced  # Enhanced audio understanding
       - tool-video-enhanced  # Enhanced video understanding
-      - tool-reader
+      - tool-reading  # File reading tools
       - tool-python
     max_turns: 30
 

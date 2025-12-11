@@ -1,0 +1,15 @@
+# conf/llm/gpt-4.yaml
+#
+# GPT-4 配置
+# 继承 default.yaml 的所有配置，只覆盖 model_name
+#
+# NOTE: API credentials should be set in .env file:
+#   - OPENAI_API_KEY (使用与 default.yaml 相同的 API)
+#   - OPENAI_BASE_URL (使用与 default.yaml 相同的 base_url)
+
+defaults:
+  - default
+  - _self_
+
+# 只需要覆盖 model_name，其他配置（provider, base_url 等）都继承自 default.yaml
+model_name: "gpt-4.1"
