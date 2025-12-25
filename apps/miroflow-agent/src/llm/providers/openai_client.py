@@ -196,15 +196,17 @@ class OpenAIClient(BaseClient):
             )
             return "", True, message_history  # Exit loop, return message_history
 
+        finish_reason = llm_response.choices[0].finish_reason
+        
         # Extract LLM response text
-        if llm_response.choices[0].finish_reason == "stop":
+        if finish_reason == "stop":
             assistant_response_text = llm_response.choices[0].message.content or ""
 
             message_history.append(
                 {"role": "assistant", "content": assistant_response_text}
             )
 
-        elif llm_response.choices[0].finish_reason == "length":
+        elif finish_reason == "length":
             assistant_response_text = llm_response.choices[0].message.content or ""
             if assistant_response_text == "":
                 assistant_response_text = "LLM response is empty."
@@ -229,9 +231,20 @@ class OpenAIClient(BaseClient):
                 {"role": "assistant", "content": assistant_response_text}
             )
 
+        elif finish_reason in ["error_finish", "error", "content_filter"]:
+            # Handle API error responses - raise a retryable error
+            error_msg = f"LLM API returned error finish reason: {finish_reason}"
+            self.task_log.log_step(
+                "warning",
+                "LLM | API Error Finish",
+                error_msg,
+            )
+            # Raise a specific error that can be caught and retried
+            raise RuntimeError(f"Retryable LLM error: {error_msg}")
+
         else:
             raise ValueError(
-                f"Unsupported finish reason: {llm_response.choices[0].finish_reason}"
+                f"Unsupported finish reason: {finish_reason}"
             )
 
         return assistant_response_text, False, message_history

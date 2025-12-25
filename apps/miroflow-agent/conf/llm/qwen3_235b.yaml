@@ -1,0 +1,16 @@
+# conf/llm/qwen3_235b.yaml
+#
+# Configuration for Qwen3-235B-A22B model
+# NOTE: This model REQUIRES stream=true to work properly
+#
+# API credentials should be set in .env file:
+#   - OPENAI_API_KEY
+#   - OPENAI_BASE_URL
+
+defaults:
+  - default
+  - _self_
+
+model_name: "Qwen3-235B-A22B"
+# This model requires streaming mode
+stream: true

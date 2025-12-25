@@ -676,7 +676,8 @@ def XlsxConverter(local_path: str):
 
 def PptxConverter(local_path) -> Union[None, dict]:
     """
-    Converts PPTX files to Markdown. Supports headings, tables and images with alt text.
+    Converts PPTX files to Markdown. Supports headings, tables, images with alt text,
+    and recursively extracts text from GROUP shapes.
 
     Args:
         local_path: Path to the PPTX file
@@ -701,6 +702,74 @@ def PptxConverter(local_path) -> Union[None, dict]:
             return True
         return False
 
+    def is_group(shape):
+        """Check if a shape is a group"""
+        return shape.shape_type == pptx.enum.shapes.MSO_SHAPE_TYPE.GROUP
+
+    def extract_text_from_shape(shape, is_title=False):
+        """
+        Recursively extract text from a shape, including nested GROUP shapes.
+        
+        Args:
+            shape: The shape to extract text from
+            is_title: Whether this shape is the slide title
+            
+        Returns:
+            String containing extracted text in Markdown format
+        """
+        result = ""
+        
+        # Handle pictures
+        if is_picture(shape):
+            alt_text = ""
+            try:
+                alt_text = shape._element._nvXxPr.cNvPr.attrib.get("descr", "")
+            except Exception:
+                pass
+            filename = re.sub(r"\W", "", shape.name) + ".jpg"
+            result += (
+                "\n!["
+                + (alt_text if alt_text else shape.name)
+                + "]("
+                + filename
+                + ")\n"
+            )
+        
+        # Handle tables
+        elif is_table(shape):
+            html_table = "<html><body><table>"
+            first_row = True
+            for row in shape.table.rows:
+                html_table += "<tr>"
+                for cell in row.cells:
+                    if first_row:
+                        html_table += "<th>" + html.escape(cell.text) + "</th>"
+                    else:
+                        html_table += "<td>" + html.escape(cell.text) + "</td>"
+                html_table += "</tr>"
+                first_row = False
+            html_table += "</table></body></html>"
+            result += "\n" + convert_html_to_md(html_table).text_content.strip() + "\n"
+        
+        # Handle GROUP shapes - recursively extract text from sub-shapes
+        elif is_group(shape):
+            try:
+                for sub_shape in shape.shapes:
+                    result += extract_text_from_shape(sub_shape, is_title=False)
+            except Exception:
+                pass
+        
+        # Handle text frames
+        elif shape.has_text_frame:
+            text = shape.text.strip()
+            if text:
+                if is_title:
+                    result += "# " + text + "\n"
+                else:
+                    result += text + "\n"
+        
+        return result
+
     assert local_path.endswith(".pptx")
 
     md_content = ""
@@ -713,51 +782,8 @@ def PptxConverter(local_path) -> Union[None, dict]:
         title = slide.shapes.title
 
         for shape in slide.shapes:
-            # Pictures
-            if is_picture(shape):
-                # https://github.com/scanny/python-pptx/pull/512#issuecomment-1713100069
-                alt_text = ""
-                try:
-                    alt_text = shape._element._nvXxPr.cNvPr.attrib.get("descr", "")
-                except Exception:
-                    pass
-                # A placeholder name
-                filename = re.sub(r"\W", "", shape.name) + ".jpg"
-                md_content += (
-                    "\n!["
-                    + (alt_text if alt_text else shape.name)
-                    + "]("
-                    + filename
-                    + ")\n"
-                )
-
-            # Tables
-            if is_table(shape):
-                html_table = "<html><body><table>"
-                first_row = True
-                for row in shape.table.rows:
-                    html_table += "<tr>"
-                    for cell in row.cells:
-                        if first_row:
-                            html_table += "<th>" + html.escape(cell.text) + "</th>"
-                        else:
-                            html_table += "<td>" + html.escape(cell.text) + "</td>"
-                    html_table += "</tr>"
-                    first_row = False
-                html_table += "</table></body></html>"
-
-                # Note: This would require a separate HTML to Markdown converter function
-                # In this version, I'm assuming a convert_html_to_md function exists
-                md_content += (
-                    "\n" + convert_html_to_md(html_table).text_content.strip() + "\n"
-                )
-
-            # Text areas
-            elif shape.has_text_frame:
-                if shape == title:
-                    md_content += "# " + shape.text.lstrip() + "\n"
-                else:
-                    md_content += shape.text + "\n"
+            is_title = (shape == title)
+            md_content += extract_text_from_shape(shape, is_title=is_title)
 
         md_content = md_content.strip()
         if slide.has_notes_slide:

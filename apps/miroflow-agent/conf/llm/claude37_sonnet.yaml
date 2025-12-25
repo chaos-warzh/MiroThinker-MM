@@ -1,6 +1,4 @@
-# conf/llm/claude-3-7.yaml
-#
-# Claude 3.5 Sonnet 配置
+# Claude 3.7 Sonnet 配置
 # 继承 default.yaml 的所有配置，只覆盖 model_name
 #
 # NOTE: API credentials should be set in .env file:
@@ -12,4 +10,4 @@ defaults:
   - _self_
 
 # 只需要覆盖 model_name，其他配置（provider, base_url 等）都继承自 default.yaml
-model_name: "claude35_sonnet"
+model_name: "claude37_sonnet"

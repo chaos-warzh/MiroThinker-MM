@@ -39,30 +39,24 @@ Usage:
     uv run python run_batch_folder_tasks.py --data-dir datasets --context-size 32k --model gpt4.1 --run-batch 20251210_150000 --skip-completed
 
 Directory Structure:
-    results/
-    └── results_<context_size>/           # e.g., results_32k, results_64k, results_128k
-        └── <model>/                      # e.g., gpt4.1, claude-3.5-sonnet
-            └── <run_batch>/              # datetime format: YYYYMMDD_HHMMSS (e.g., 20251210_150000)
-                ├── 001_20251210_150537/  # task_number + individual task timestamp
-                │   ├── initial_report.md
-                │   ├── final_report.md
-                │   └── execution_log.json
-                ├── 002_20251210_151023/
-                └── ...
-
+    New format: result-<run_batch>-<dataset>-<context_size>-<model>/<task_number>/
+    
     Example:
-    results/
-    └── results_32k/
-        └── claude-3.5-sonnet/
-            ├── 20251207_185000/          # First batch run
-            │   ├── 001_20251207_185537/
-            │   ├── 002_20251207_185855/
-            │   └── ...
-            ├── 20251209_144000/          # Second batch run (re-run)
-            │   ├── 001_20251209_144852/
-            │   └── ...
-            └── 20251210_100000/          # Third batch run
-                └── ...
+    result-20251222_220000-datasets_batch2-32k-gpt4.1/
+    ├── 001/
+    │   ├── initial_report.md
+    │   ├── final_report.md
+    │   └── execution_log.json
+    ├── 002/
+    │   ├── initial_report.md
+    │   ├── final_report.md
+    │   └── execution_log.json
+    └── ...
+    
+    This flat structure makes it easy to:
+    - Package and share results with others
+    - Identify the batch run, dataset, context size, and model at a glance
+    - Compare results across different configurations
 
 Output Files:
     For each task run, a unique folder is created containing:
@@ -85,6 +79,8 @@ import time
 from datetime import datetime
 from pathlib import Path
 from typing import List, Dict, Optional
+
+import yaml
 
 # Add src to path for imports
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
@@ -155,93 +151,83 @@ def load_tasks_from_jsonl(jsonl_path: str) -> List[Dict]:
     return tasks
 
 
-def get_completed_tasks(results_dir: str, model: str = None, run_batch: str = None) -> set:
+def get_completed_tasks(batch_folder: str = None, context_size: str = None, model: str = None, dataset: str = None, run_batch: str = None) -> set:
     """Get set of task numbers that have already been completed.
     
-    Checks for folders with pattern: <task_number>_<timestamp>/
+    Directory structure: result/<run_batch>/<dataset>/<context_size>/<model>/<task_number>/
     A task is considered completed if the folder contains a final_report.md file.
     
-    Directory structure: results/results_<context_size>/<model>/<run_batch>/<task_number>_<timestamp>/
-    
     Args:
-        results_dir: Base results directory
+        batch_folder: Full batch folder path (if already constructed)
+        context_size: Context size (e.g., "32k")
         model: Model name
-        run_batch: Run batch identifier. If provided, only checks within that batch.
-                   If not provided, checks across all batches for the model.
+        dataset: Dataset name
+        run_batch: Run batch identifier.
     """
     completed = set()
     
-    # Build the model directory path
-    if model:
-        model_dir = os.path.join(results_dir, model)
-    else:
-        model_dir = results_dir
+    # Build the batch folder path if not provided
+    if batch_folder is None and run_batch:
+        parts = ["result", run_batch]
+        if dataset:
+            parts.append(dataset)
+        if context_size:
+            parts.append(context_size)
+        if model:
+            parts.append(model)
+        batch_folder = os.path.join(*parts)
     
-    if not os.path.exists(model_dir):
+    if batch_folder is None or not os.path.exists(batch_folder):
         return completed
     
-    # If run_batch is specified, only check that specific batch
-    if run_batch:
-        batch_dir = os.path.join(model_dir, run_batch)
-        if os.path.exists(batch_dir):
-            for item in os.listdir(batch_dir):
-                item_path = os.path.join(batch_dir, item)
-                if os.path.isdir(item_path):
-                    final_report_path = os.path.join(item_path, "final_report.md")
-                    if os.path.exists(final_report_path):
-                        task_num = item.split('_')[0]
-                        completed.add(task_num)
-    else:
-        # Check all batch directories under the model
-        for batch_item in os.listdir(model_dir):
-            batch_path = os.path.join(model_dir, batch_item)
-            if os.path.isdir(batch_path):
-                # Check if this is a batch directory (format: YYYYMMDD_HHMMSS) or old format
-                for item in os.listdir(batch_path):
-                    item_path = os.path.join(batch_path, item)
-                    if os.path.isdir(item_path):
-                        final_report_path = os.path.join(item_path, "final_report.md")
-                        if os.path.exists(final_report_path):
-                            task_num = item.split('_')[0]
-                            completed.add(task_num)
-                # Also check if batch_path itself contains final_report.md (old format)
-                final_report_path = os.path.join(batch_path, "final_report.md")
-                if os.path.exists(final_report_path):
-                    task_num = batch_item.split('_')[0]
-                    completed.add(task_num)
+    # Check all task folders in the batch folder
+    for item in os.listdir(batch_folder):
+        item_path = os.path.join(batch_folder, item)
+        if os.path.isdir(item_path):
+            final_report_path = os.path.join(item_path, "final_report.md")
+            if os.path.exists(final_report_path):
+                # Task number is the folder name (e.g., "001")
+                completed.add(item)
     
     return completed
 
 
-def create_run_folder(results_dir: str, task_number: str, context_size: str = None, model: str = None, run_batch: str = None) -> str:
-    """Create a unique folder for this task run with timestamp.
+def create_run_folder(results_dir: str, task_number: str, context_size: str = None, model: str = None, dataset: str = None, run_batch: str = None) -> str:
+    """Create a unique folder for this task run.
     
-    Directory structure: results/results_<context_size>/<model>/<run_batch>/<task_number>_<timestamp>/
-    Example: results/results_32k/gpt4.1/20251210_150000/001_20251204_150425/
+    Directory structure: result/<run_batch>/<dataset>/<context_size>/<model>/<task_number>/
+    Example: result/20251222_220000/datasets_batch2/32k/gpt4.1/001/
     
     Args:
-        results_dir: Base results directory
+        results_dir: Base results directory (ignored in new structure, uses current directory)
         task_number: Task number (e.g., "001")
         context_size: Context size (e.g., "32k")
         model: Model name (e.g., "gpt4.1")
+        dataset: Dataset name (e.g., "datasets_batch2")
         run_batch: Run batch identifier in datetime format (e.g., "20251210_150000").
                    This groups all tasks from the same batch run together.
     """
-    timestamp = datetime.now().strftime('%Y%m%d_%H%M%S')
+    # Build folder path: result/<run_batch>/<dataset>/<context_size>/<model>/<task_number>/
+    parts = ["result"]
     
-    # Build folder path with model as subdirectory
-    if model:
-        model_dir = os.path.join(results_dir, model)
-    else:
-        model_dir = results_dir
-    
-    # Add run_batch subdirectory if provided
     if run_batch:
-        model_dir = os.path.join(model_dir, run_batch)
+        parts.append(run_batch)
+    else:
+        parts.append(datetime.now().strftime('%Y%m%d_%H%M%S'))
     
-    # Create folder name with task number and timestamp
-    folder_name = f"{task_number}_{timestamp}"
-    run_folder = os.path.join(model_dir, folder_name)
+    if dataset:
+        parts.append(dataset)
+    
+    if context_size:
+        parts.append(context_size)
+    
+    if model:
+        parts.append(model)
+    
+    parts.append(task_number)
+    
+    # Join with path separator to create the folder path
+    run_folder = os.path.join(*parts)
     os.makedirs(run_folder, exist_ok=True)
     return run_folder
 
@@ -579,6 +565,7 @@ async def run_single_task(
     config_overrides: List[str] = None,
     context_size: str = None,
     model: str = None,
+    dataset: str = None,
     run_batch: str = None
 ) -> bool:
     """Run a single task and save results to a unique run folder.
@@ -590,6 +577,7 @@ async def run_single_task(
         config_overrides: List of config overrides
         context_size: Context size (32k, 64k, 128k)
         model: Model name
+        dataset: Dataset name (e.g., "datasets_batch2")
         run_batch: Run batch identifier (datetime format, e.g., "20251210_150000")
     """
     task_number = task['number']
@@ -620,7 +608,7 @@ async def run_single_task(
         start_time = time.time()
         
         # Create unique run folder for this task execution
-        run_folder = create_run_folder(results_dir, task_number, context_size, model, run_batch)
+        run_folder = create_run_folder(results_dir, task_number, context_size, model, dataset, run_batch)
         print(f"Results will be saved to: {run_folder}")
         
         result = await run_folder_task_simple(
@@ -677,6 +665,7 @@ async def run_batch_tasks(
     config_overrides: List[str] = None,
     context_size: str = None,
     model: str = None,
+    dataset: str = None,
     run_batch: str = None
 ) -> Dict:
     """Run multiple tasks in sequence.
@@ -689,6 +678,7 @@ async def run_batch_tasks(
         config_overrides: List of config overrides
         context_size: Context size (32k, 64k, 128k)
         model: Model name
+        dataset: Dataset name (e.g., "datasets_batch2")
         run_batch: Run batch identifier. If not provided, generates one based on current datetime.
     """
     # Generate run_batch timestamp if not provided
@@ -696,9 +686,20 @@ async def run_batch_tasks(
         run_batch = datetime.now().strftime('%Y%m%d_%H%M%S')
     
     print(f"📦 Run Batch: {run_batch}")
+    if dataset:
+        print(f"📂 Dataset: {dataset}")
     
-    # Check completed tasks within this specific batch if skip_completed is True
-    completed_tasks = get_completed_tasks(results_dir, model, run_batch) if skip_completed else set()
+    # Always check completed tasks within the same run batch (auto skip-completed)
+    # This ensures we don't re-run tasks that were already completed in this batch
+    completed_tasks = get_completed_tasks(
+        context_size=context_size,
+        model=model,
+        dataset=dataset,
+        run_batch=run_batch
+    )
+    
+    if completed_tasks:
+        print(f"🔄 Found {len(completed_tasks)} completed tasks in this batch, will skip them")
     
     stats = {
         'total': len(tasks),
@@ -726,6 +727,7 @@ async def run_batch_tasks(
             config_overrides=config_overrides,
             context_size=context_size,
             model=model,
+            dataset=dataset,
             run_batch=run_batch
         )
         
@@ -770,6 +772,38 @@ def preview_tasks(data_dir: str, tasks: List[Dict], results_dir: str):
     print("\n" + "=" * 60)
 
 
+def get_model_name_from_llm_config(llm_config: str) -> str:
+    """
+    Read model_name from the LLM config file.
+    
+    Args:
+        llm_config: Name of the LLM config (e.g., 'qwen3_235b' for conf/llm/qwen3_235b.yaml)
+    
+    Returns:
+        The model_name from the config file, or the llm_config name if not found.
+    """
+    # Get the directory where this script is located
+    script_dir = os.path.dirname(os.path.abspath(__file__))
+    config_path = os.path.join(script_dir, "conf", "llm", f"{llm_config}.yaml")
+    
+    if not os.path.exists(config_path):
+        print(f"Warning: LLM config file not found: {config_path}")
+        return llm_config
+    
+    try:
+        with open(config_path, 'r', encoding='utf-8') as f:
+            config = yaml.safe_load(f)
+        
+        if config and 'model_name' in config:
+            return config['model_name']
+        else:
+            print(f"Warning: 'model_name' not found in {config_path}, using config name")
+            return llm_config
+    except Exception as e:
+        print(f"Warning: Failed to read LLM config: {e}")
+        return llm_config
+
+
 def main():
     parser = argparse.ArgumentParser(
         description="Run batch folder tasks from a JSONL file",
@@ -787,6 +821,9 @@ Examples:
     
     # Preview without running
     uv run python run_batch_folder_tasks.py --data-dir data/bench_case1104 --preview
+    
+    # Run with specific context size and LLM config (model name auto-detected from config)
+    uv run python run_batch_folder_tasks.py --data-dir datasets --context-size 32k --llm-config qwen3_235b
         """
     )
     
@@ -829,21 +866,23 @@ Examples:
     parser.add_argument(
         "--context-size", "-c",
         type=str,
-        choices=["32k", "64k", "128k"],
+        choices=["32k", "64k", "128k", "256k"],
         default=None,
-        help="Context size to use (32k, 64k, or 128k). Uses the corresponding sampled db file."
+        help="Context size to use (32k, 64k, 128k, or 256k). Uses the corresponding sampled db file."
     )
     parser.add_argument(
         "--model", "-m",
         type=str,
-        default="gpt4.1",
-        help="Model name for result directory naming (default: gpt4.1)"
+        default=None,
+        help="Model name for result directory naming. If not provided and --llm-config is specified, "
+             "the model_name will be read from the LLM config file."
     )
     parser.add_argument(
         "--llm-config", "-l",
         type=str,
         default=None,
-        help="LLM config to use (e.g., 'claude-3-7' to use conf/llm/claude-3-7.yaml)"
+        help="LLM config to use (e.g., 'qwen3_235b' to use conf/llm/qwen3_235b.yaml). "
+             "The model_name from this config will be used for result directory naming."
     )
     parser.add_argument(
         "--run-batch", "-b",
@@ -895,14 +934,27 @@ Examples:
         config_overrides.append("agent=evaluation_offline")
         print("🔒 Running in OFFLINE mode: No web search, using long context (RAG) only")
     
+    # Determine model name: use --model if provided, otherwise read from llm-config
+    model_name = args.model
     if args.llm_config:
         config_overrides.append(f"llm={args.llm_config}")
+        # If model name not explicitly provided, read from config file
+        if model_name is None:
+            model_name = get_model_name_from_llm_config(args.llm_config)
         print(f"🤖 Using LLM config: {args.llm_config}")
+    
+    # Default model name if still not set
+    if model_name is None:
+        model_name = "gpt4.1"
+    
+    # Extract dataset name from data_dir
+    dataset_name = os.path.basename(os.path.abspath(data_dir))
     
     # Print context size info
     if args.context_size:
         print(f"📊 Using context size: {args.context_size}")
-        print(f"🤖 Model: {args.model}")
+        print(f"🤖 Model: {model_name}")
+        print(f"📂 Dataset: {dataset_name}")
     
     # Preview or run
     if args.preview:
@@ -921,7 +973,8 @@ Examples:
                 skip_completed=args.skip_completed,
                 config_overrides=config_overrides if config_overrides else None,
                 context_size=args.context_size,
-                model=args.model,
+                model=model_name,
+                dataset=dataset_name,
                 run_batch=args.run_batch
             )
         )

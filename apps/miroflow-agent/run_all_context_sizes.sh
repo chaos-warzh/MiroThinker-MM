@@ -1,45 +1,35 @@
 #!/bin/bash
-# 自动运行32k、64k、128k三种context size的批量任务
+# Run batch folder tasks for datasets_batch2 with all context sizes and models
+# All results will be saved to: result/<run_batch>/<dataset>/<context_size>/<model>/
 
-echo "=========================================="
-echo "开始运行 qwen3-30b-a3b 模型批量任务"
-echo "=========================================="
+RUN_BATCH="20251222_214548"
 
-# 等待32k任务完成（检查是否有正在运行的进程）
-echo ""
-echo "检查32k任务是否正在运行..."
+# qwen3_235b
+uv run python run_batch_folder_tasks.py --data-dir datasets_batch2 --context-size 32k --llm-config qwen3_235b --run-batch $RUN_BATCH
+uv run python run_batch_folder_tasks.py --data-dir datasets_batch2 --context-size 64k --llm-config qwen3_235b --run-batch $RUN_BATCH
+uv run python run_batch_folder_tasks.py --data-dir datasets_batch2 --context-size 128k --llm-config qwen3_235b --run-batch $RUN_BATCH
+uv run python run_batch_folder_tasks.py --data-dir datasets_batch2 --context-size 256k --llm-config qwen3_235b --run-batch $RUN_BATCH
 
-# 等待当前32k任务完成
-while pgrep -f "run_batch_folder_tasks.py.*32k.*qwen3-30b-a3b" > /dev/null 2>&1; do
-    echo "32k任务正在运行中，等待完成..."
-    sleep 60
-done
+# qwen3_30b
+uv run python run_batch_folder_tasks.py --data-dir datasets_batch2 --context-size 32k --llm-config qwen3_30b --run-batch $RUN_BATCH
+uv run python run_batch_folder_tasks.py --data-dir datasets_batch2 --context-size 64k --llm-config qwen3_30b --run-batch $RUN_BATCH
+uv run python run_batch_folder_tasks.py --data-dir datasets_batch2 --context-size 128k --llm-config qwen3_30b --run-batch $RUN_BATCH
+uv run python run_batch_folder_tasks.py --data-dir datasets_batch2 --context-size 256k --llm-config qwen3_30b --run-batch $RUN_BATCH
 
-echo "32k任务已完成或未运行"
-echo ""
+# claude35_sonnet
+uv run python run_batch_folder_tasks.py --data-dir datasets_batch2 --context-size 32k --llm-config claude35_sonnet --run-batch $RUN_BATCH
+uv run python run_batch_folder_tasks.py --data-dir datasets_batch2 --context-size 64k --llm-config claude35_sonnet --run-batch $RUN_BATCH
+uv run python run_batch_folder_tasks.py --data-dir datasets_batch2 --context-size 128k --llm-config claude35_sonnet --run-batch $RUN_BATCH
+uv run python run_batch_folder_tasks.py --data-dir datasets_batch2 --context-size 256k --llm-config claude35_sonnet --run-batch $RUN_BATCH
 
-# 运行64k任务
-echo "=========================================="
-echo "开始运行 64k 任务"
-echo "=========================================="
-uv run python run_batch_folder_tasks.py --data-dir datasets --context-size 64k --model qwen3-30b-a3b --llm-config qwen3_30b
+# claude37_sonnet
+uv run python run_batch_folder_tasks.py --data-dir datasets_batch2 --context-size 32k --llm-config claude37_sonnet --run-batch $RUN_BATCH
+uv run python run_batch_folder_tasks.py --data-dir datasets_batch2 --context-size 64k --llm-config claude37_sonnet --run-batch $RUN_BATCH
+uv run python run_batch_folder_tasks.py --data-dir datasets_batch2 --context-size 128k --llm-config claude37_sonnet --run-batch $RUN_BATCH
+uv run python run_batch_folder_tasks.py --data-dir datasets_batch2 --context-size 256k --llm-config claude37_sonnet --run-batch $RUN_BATCH
 
-echo ""
-echo "64k任务完成"
-echo ""
-
-# 运行128k任务
-echo "=========================================="
-echo "开始运行 128k 任务"
-echo "=========================================="
-uv run python run_batch_folder_tasks.py --data-dir datasets --context-size 128k --model qwen3-30b-a3b --llm-config qwen3_30b
-
-echo ""
-echo "=========================================="
-echo "所有任务完成！"
-echo "=========================================="
-echo ""
-echo "结果保存位置："
-echo "  - 32k: results/results_32k/qwen3-30b-a3b/"
-echo "  - 64k: results/results_64k/qwen3-30b-a3b/"
-echo "  - 128k: results/results_128k/qwen3-30b-a3b/"
+# gpt-4
+uv run python run_batch_folder_tasks.py --data-dir datasets_batch2 --context-size 32k --llm-config gpt-4 --run-batch $RUN_BATCH
+uv run python run_batch_folder_tasks.py --data-dir datasets_batch2 --context-size 64k --llm-config gpt-4 --run-batch $RUN_BATCH
+uv run python run_batch_folder_tasks.py --data-dir datasets_batch2 --context-size 128k --llm-config gpt-4 --run-batch $RUN_BATCH
+uv run python run_batch_folder_tasks.py --data-dir datasets_batch2 --context-size 256k --llm-config gpt-4 --run-batch $RUN_BATCH

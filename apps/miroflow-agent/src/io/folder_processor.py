@@ -273,17 +273,10 @@ def _extract_file_content(file_info: FileInfo, max_content_length: int = 200_000
             parsing_result = DocumentConverterResult(title=None, text_content=content)
         
         elif ext in [".json", ".jsonld"]:
-            # Long context 文件跳过，在 process_folder_for_task 中统一处理
-            if "long_context" in os.path.basename(file_path).lower():
-                return None  # 跳过，由 process_folder_for_task 统一处理
-            else:
-                # 普通 JSON 文件，用三引号包裹
-                with open(file_path, "r", encoding="utf-8") as f:
-                    json_content = json.dumps(json.load(f), ensure_ascii=False, indent=2)
-                content = f"**[JSON 文件]**\n\n"
-                content += f"文件路径: `{file_path}`\n\n"
-                content += f"'''\n{json_content}\n'''\n"
-                parsing_result = DocumentConverterResult(title=None, text_content=content)
+            # 跳过所有 JSON 文件，不将其内容提取到任务描述中
+            # Long context 文件由 RAG 工具处理
+            # 其他 JSON 文件（如 useful_search.json, noise_search.json）也跳过
+            return None
         
         elif ext in [".xlsx", ".xls"]:
             # Excel 文件：只显示前 10 行，提供 Python 计算指南

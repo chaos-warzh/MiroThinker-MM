@@ -285,79 +285,108 @@ class Orchestrator:
         purpose: str = "",
         keep_tool_result: int = -1,
         agent_type: str = "main",
+        max_retries: int = 3,
     ) -> Tuple[Optional[str], bool, Optional[Any], List[Dict[str, Any]]]:
         """Unified LLM call and logging processing
         Returns:
             Tuple[Optional[str], bool, Optional[Any], List[Dict[str, Any]]]:
                 (response_text, should_break, tool_calls_info, message_history)
         """
+        
+        retry_count = 0
+        last_error = None
+        
+        while retry_count < max_retries:
+            try:
+                response, message_history = await self.llm_client.create_message(
+                    system_prompt=system_prompt,
+                    message_history=message_history,
+                    tool_definitions=tool_definitions,
+                    keep_tool_result=self.cfg.agent.keep_tool_result,
+                    step_id=step_id,
+                    task_log=self.task_log,
+                    agent_type=agent_type,
+                )
+                if ErrorBox.is_error_box(response):
+                    await self._stream_show_error(str(response))
+                    response = None
+                should_break = False
+                if ResponseBox.is_response_box(response):
+                    if response.has_extra_info():
+                        extra_info = response.get_extra_info()
+                        if extra_info.get("should_break", False):
+                            should_break = True
+                        if extra_info.get("warning_msg"):
+                            await self._stream_show_error(
+                                extra_info.get("warning_msg", "Empty warning message")
+                            )
 
-        try:
-            response, message_history = await self.llm_client.create_message(
-                system_prompt=system_prompt,
-                message_history=message_history,
-                tool_definitions=tool_definitions,
-                keep_tool_result=self.cfg.agent.keep_tool_result,
-                step_id=step_id,
-                task_log=self.task_log,
-                agent_type=agent_type,
-            )
-            if ErrorBox.is_error_box(response):
-                await self._stream_show_error(str(response))
-                response = None
-            should_break = False
-            if ResponseBox.is_response_box(response):
-                if response.has_extra_info():
-                    extra_info = response.get_extra_info()
-                    if extra_info.get("should_break", False):
-                        should_break = True
-                    if extra_info.get("warning_msg"):
-                        await self._stream_show_error(
-                            extra_info.get("warning_msg", "Empty warning message")
-                        )
+                    response = response.get_response()
+                # Check if response is None (indicating an error occurred)
+                if response is None:
+                    self.task_log.log_step(
+                        "error",
+                        f"{purpose} | LLM Call Failed",
+                        f"{purpose} failed - no response received",
+                    )
+                    return "", True, None, message_history
 
-                response = response.get_response()
-            # Check if response is None (indicating an error occurred)
-            if response is None:
+                # Use client's response processing method
+                assistant_response_text, should_break, message_history = (
+                    self.llm_client.process_llm_response(
+                        response, message_history, agent_type
+                    )
+                )
+
+                # Use client's tool call information extraction method
+                tool_calls_info = self.llm_client.extract_tool_calls_info(
+                    response, assistant_response_text
+                )
+
+                self.task_log.log_step(
+                    "info",
+                    f"{purpose} | LLM Call",
+                    "completed successfully",
+                )
+                return (
+                    assistant_response_text,
+                    should_break,
+                    tool_calls_info,
+                    message_history,
+                )
+
+            except RuntimeError as e:
+                # Handle retryable errors (e.g., error_finish from API)
+                retry_count += 1
+                last_error = e
+                if retry_count < max_retries:
+                    self.task_log.log_step(
+                        "warning",
+                        f"{purpose} | LLM Call Retry",
+                        f"Retryable error occurred: {str(e)}. Retrying ({retry_count}/{max_retries})...",
+                    )
+                    # Wait before retry (exponential backoff)
+                    import asyncio
+                    await asyncio.sleep(2 ** retry_count)
+                else:
+                    self.task_log.log_step(
+                        "error",
+                        f"{purpose} | LLM Call ERROR",
+                        f"Max retries ({max_retries}) exceeded. Last error: {str(e)}",
+                    )
+                    return "", True, None, message_history
+
+            except Exception as e:
                 self.task_log.log_step(
                     "error",
-                    f"{purpose} | LLM Call Failed",
-                    f"{purpose} failed - no response received",
+                    f"{purpose} | LLM Call ERROR",
+                    f"{purpose} error: {str(e)}",
                 )
+                # Return empty response with should_break=True to indicate error
                 return "", True, None, message_history
-
-            # Use client's response processing method
-            assistant_response_text, should_break, message_history = (
-                self.llm_client.process_llm_response(
-                    response, message_history, agent_type
-                )
-            )
-
-            # Use client's tool call information extraction method
-            tool_calls_info = self.llm_client.extract_tool_calls_info(
-                response, assistant_response_text
-            )
-
-            self.task_log.log_step(
-                "info",
-                f"{purpose} | LLM Call",
-                "completed successfully",
-            )
-            return (
-                assistant_response_text,
-                should_break,
-                tool_calls_info,
-                message_history,
-            )
-
-        except Exception as e:
-            self.task_log.log_step(
-                "error",
-                f"{purpose} | LLM Call ERROR",
-                f"{purpose} error: {str(e)}",
-            )
-            # Return empty response with should_break=True to indicate error
-            return "", True, None, message_history
+        
+        # Should not reach here, but just in case
+        return "", True, None, message_history
 
     async def run_sub_agent(
         self, sub_agent_name, task_description, keep_tool_result: int = -1

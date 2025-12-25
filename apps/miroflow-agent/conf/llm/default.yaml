@@ -15,7 +15,7 @@ temperature: 0.3
 top_p: 1.0
 min_p: 0.0
 top_k: -1
-max_tokens: 16384
+max_tokens: 32769
 max_context_length: 128000
 keep_tool_result: -1
 stream: false
