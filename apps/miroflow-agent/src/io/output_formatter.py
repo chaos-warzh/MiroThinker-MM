@@ -107,16 +107,12 @@ class OutputFormatter:
         summary_lines.append("\n" + "=" * 30 + " Final Answer " + "=" * 30)
         summary_lines.append(final_answer_text)
 
-        # Extract boxed result - find the last match using safer regex patterns
-        boxed_result = self._extract_boxed_content(final_answer_text)
-
+        # No longer extract boxed content - use the full report directly
+        # This avoids issues where models might put word counts or other metadata in \boxed{}
+        
         # Add extracted result section
         summary_lines.append("\n" + "-" * 20 + " Extracted Result " + "-" * 20)
-
-        if boxed_result:
-            summary_lines.append(boxed_result)
-        elif final_answer_text:
-            summary_lines.append(final_answer_text)
+        summary_lines.append(final_answer_text)
 
         # Token usage statistics and cost estimation - use client method
         if client and hasattr(client, "format_token_usage_summary"):
@@ -129,8 +125,8 @@ class OutputFormatter:
             summary_lines.append("-" * (40 + len(" Token Usage & Cost ")))
             log_string = "Token usage information not available."
 
-        # Return boxed_result if available, otherwise return the full final_answer_text
-        # This ensures that the report content is preserved even if no \boxed{} is found
-        final_boxed_answer = boxed_result if boxed_result else final_answer_text
+        # Always use the full final_answer_text as the final answer
+        # This ensures complete reports are saved, not just numbers or metadata
+        final_boxed_answer = final_answer_text
 
         return "\n".join(summary_lines), final_boxed_answer, log_string

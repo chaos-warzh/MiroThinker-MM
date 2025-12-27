@@ -93,6 +93,18 @@ class Orchestrator:
 
         # Record used subtask / q / Query
         self.used_queries = {}
+        
+        # Statistics tracking
+        self.stats = {
+            "main_agent_turns": 0,
+            "sub_agent_turns": defaultdict(int),
+            "tool_calls": defaultdict(int),
+            "total_tool_calls": 0,
+            "validation_turns": 0,
+            "start_time": None,
+            "end_time": None,
+            "total_duration_seconds": 0,
+        }
 
     async def _stream_update(self, event_type: str, data: dict):
         """Send streaming update in new SSE protocol format"""
@@ -395,6 +407,9 @@ class Orchestrator:
         self.task_log.log_step(
             "info", f"{sub_agent_name} | Start Task", f"Starting {sub_agent_name}"
         )
+        
+        # Track sub-agent start
+        sub_agent_start_time = time.time()
         use_cn_prompt = os.getenv("USE_CN_PROMPT", "0")
         if use_cn_prompt == "1":
             task_description += "\n\n请给出该子任务的答案，并提供详细的依据或支持信息。"
@@ -450,6 +465,9 @@ class Orchestrator:
 
         while turn_count < max_turns:
             turn_count += 1
+            # Track sub-agent turns
+            self.stats["sub_agent_turns"][sub_agent_name] += 1
+            
             self.task_log.log_step(
                 "info",
                 f"{sub_agent_name} | Turn: {turn_count}",
@@ -530,6 +548,10 @@ class Orchestrator:
                     f"{sub_agent_name} | Turn: {turn_count} | Tool Call",
                     f"Executing {tool_name} on {server_name}",
                 )
+                
+                # Track tool calls
+                self.stats["tool_calls"][f"{sub_agent_name}:{tool_name}"] += 1
+                self.stats["total_tool_calls"] += 1
 
                 call_start_time = time.time()
                 try:
@@ -749,6 +771,14 @@ class Orchestrator:
         # Stream sub-agent end
         await self._stream_end_llm(display_name)
         await self._stream_end_agent(display_name, sub_agent_id)
+        
+        # Track sub-agent completion time
+        sub_agent_duration = time.time() - sub_agent_start_time
+        self.task_log.log_step(
+            "info",
+            f"{sub_agent_name} | Statistics",
+            f"Completed {turn_count} turns in {sub_agent_duration:.2f} seconds",
+        )
 
         # Return final answer instead of conversation log, so main agent can use it directly
         return final_answer_text
@@ -759,6 +789,9 @@ class Orchestrator:
         """Execute the main end-to-end task"""
         workflow_id = await self._stream_start_workflow(task_description)
         keep_tool_result = int(self.cfg.agent.keep_tool_result)
+        
+        # Track task start time
+        self.stats["start_time"] = time.time()
 
         self.task_log.log_step("info", "Main Agent", f"Start task with id: {task_id}")
         self.task_log.log_step(
@@ -785,7 +818,9 @@ class Orchestrator:
             tool_definitions = (
                 await self.main_agent_tool_manager.get_all_tool_definitions()
             )
-            tool_definitions += expose_sub_agents_as_tools(self.cfg.agent.sub_agents)
+            # Only expose sub-agents if they are defined in the config
+            if hasattr(self.cfg.agent, 'sub_agents') and self.cfg.agent.sub_agents:
+                tool_definitions += expose_sub_agents_as_tools(self.cfg.agent.sub_agents)
         else:
             tool_definitions = self.tool_definitions
         if not tool_definitions:
@@ -815,6 +850,9 @@ class Orchestrator:
         await self._stream_start_llm("main")
         while turn_count < max_turns:
             turn_count += 1
+            # Track main agent turns
+            self.stats["main_agent_turns"] += 1
+            
             self.task_log.log_step(
                 "info",
                 f"Main Agent | Turn: {turn_count}",
@@ -920,6 +958,10 @@ class Orchestrator:
                         )
                         await self._stream_start_llm("main", display_name="Summarizing")
                     else:
+                        # Track main agent tool calls
+                        self.stats["tool_calls"][f"main:{tool_name}"] += 1
+                        self.stats["total_tool_calls"] += 1
+                        
                         tool_call_id = await self._stream_tool_call(
                             tool_name, arguments
                         )
@@ -1169,6 +1211,9 @@ class Orchestrator:
             
             while validation_turn < max_validation_turns:
                 validation_turn += 1
+                # Track validation turns
+                self.stats["validation_turns"] += 1
+                
                 self.task_log.log_step(
                     "info",
                     f"Main Agent | Validation Turn: {validation_turn}",
@@ -1399,6 +1444,37 @@ class Orchestrator:
             "Main Agent | Task Completed",
             f"Main agent task {task_id} completed successfully",
         )
+        
+        # Track task end time and calculate duration
+        self.stats["end_time"] = time.time()
+        self.stats["total_duration_seconds"] = self.stats["end_time"] - self.stats["start_time"]
+        
+        # Log final statistics
+        self._log_final_statistics()
 
         # Return both original and final reports for comparison
         return final_summary, final_boxed_answer, original_boxed_answer
+    
+    def _log_final_statistics(self):
+        """Log final task statistics"""
+        stats_summary = f"""
+Task Statistics Summary:
+Total Duration: {self.stats['total_duration_seconds']:.2f} seconds
+Main Agent Turns: {self.stats['main_agent_turns']}
+Validation Turns: {self.stats['validation_turns']}
+Total Tool Calls: {self.stats['total_tool_calls']}
+
+Sub-Agent Turns:"""
+        
+        for agent_name, turns in self.stats["sub_agent_turns"].items():
+            stats_summary += f"\n  - {agent_name}: {turns} turns"
+        
+        stats_summary += "\n\nTool Call Breakdown:"
+        for tool_key, count in sorted(self.stats["tool_calls"].items()):
+            stats_summary += f"\n  - {tool_key}: {count} calls"
+        
+        self.task_log.log_step(
+            "info",
+            "Main Agent | Statistics",
+            stats_summary
+        )

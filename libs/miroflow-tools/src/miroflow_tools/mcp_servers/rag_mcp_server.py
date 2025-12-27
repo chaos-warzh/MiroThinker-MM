@@ -149,8 +149,8 @@ def _get_rag_instance(json_path: str) -> RAGTool:
 def rag_search(
     query: str,
     json_path: str,
-    top_k: int = 10,
-    diverse: bool = True,
+    top_k: int = 5,
+    diverse: bool = False,
     min_docs: int = 5,
     max_per_doc: int = 2
 ) -> str:
@@ -161,14 +161,14 @@ def rag_search(
     to find the most relevant passages from a large document collection.
     Embeddings are cached in SQLite for fast subsequent queries.
     
-    By default, uses diverse search to ensure results come from multiple different
-    documents, not just the most similar chunks from a few documents.
+    By default, returns the top 5 most relevant chunks regardless of which documents
+    they come from. Set diverse=True to ensure results come from different documents.
     
     Args:
         query: The search query - what information you're looking for
         json_path: Path to the long_context.json file containing the documents
-        top_k: Number of top results to return (default: 10)
-        diverse: If True, ensure results come from different documents (default: True)
+        top_k: Number of top results to return (default: 5)
+        diverse: If True, ensure results come from different documents (default: False)
         min_docs: Minimum number of different documents to include when diverse=True (default: 5)
         max_per_doc: Maximum chunks per document when diverse=True (default: 2)
         
@@ -268,8 +268,8 @@ def rag_get_context(
     query: str,
     json_path: str,
     max_tokens: int = 4000,
-    top_k: int = 10,
-    diverse: bool = True,
+    top_k: int = 5,
+    diverse: bool = False,
     min_docs: int = 5,
     max_per_doc: int = 2
 ) -> str:
@@ -280,15 +280,15 @@ def rag_get_context(
     formatted as context that can be used for further analysis.
     Each passage includes source information for proper citation.
     
-    By default, uses diverse search to ensure context comes from multiple different
-    documents, not just the most similar chunks from a few documents.
+    By default, returns the top 5 most relevant chunks regardless of which documents
+    they come from. Set diverse=True to ensure context comes from different documents.
     
     Args:
         query: The question or topic to find context for
         json_path: Path to the long_context.json file
         max_tokens: Maximum approximate tokens of context to return (default: 4000)
-        top_k: Number of documents to consider (default: 10)
-        diverse: If True, ensure results come from different documents (default: True)
+        top_k: Number of documents to consider (default: 5)
+        diverse: If True, ensure results come from different documents (default: False)
         min_docs: Minimum number of different documents to include when diverse=True (default: 5)
         max_per_doc: Maximum chunks per document when diverse=True (default: 2)
         

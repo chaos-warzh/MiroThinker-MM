@@ -1,0 +1,16 @@
+# conf/agent/rag_only.yaml
+# RAG-only mode: Only use RAG tools for searching long context
+# This configuration restricts the agent to ONLY use RAG tools
+defaults:
+  - default
+  - _self_
+
+main_agent:
+  tools:
+    - tool-rag  # ONLY RAG tool available
+  max_turns: 30
+
+sub_agents:
+  # No sub-agents needed when only using RAG
+  
+keep_tool_result: -1

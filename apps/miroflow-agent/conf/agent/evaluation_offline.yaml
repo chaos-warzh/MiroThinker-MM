@@ -10,29 +10,24 @@ defaults:
 
 main_agent:
   tools:
-    - tool-python
-    - tool-vqa-enhanced  # Enhanced vision understanding with multi-turn verification
-    - tool-vqa          # Fallback to commercial Claude vision
-    - tool-audio-enhanced  # Enhanced audio understanding with multi-turn verification
-    - tool-transcribe
-    - tool-video-enhanced  # Enhanced video understanding with temporal analysis
-    - tool-reasoning
-    - tool-reading  # File reading tools: read_pdf_pages, read_excel_rows, search_in_file, get_file_info, convert_to_markdown
-    - tool-rag          # RAG for long context search (replaces web search)
-  max_turns: 50  # Maximum number of turns for main agent execution
+    - tool-rag          # RAG for long context search
+    - tool-python       # Python sandbox for computation
+    - tool-vqa-enhanced # Enhanced vision understanding
+    - tool-vqa          # Basic vision understanding
+    - tool-audio-enhanced # Audio processing
+    - tool-transcribe   # Audio transcription
+    - tool-video-enhanced # Video understanding
+    - tool-reasoning    # Reasoning capabilities
+    - tool-reading      # PDF/document reading
+  max_turns: 30  # Maximum number of turns for main agent execution
 
-# In offline mode, we don't have a browsing sub-agent
-# The main agent uses RAG tools directly to search the long context
+
 sub_agents:
+  # In offline mode, only agent-rag-search is needed for long context search
+  # agent-browsing is not needed since there's no web search capability
   agent-rag-search:
     tools:
-      - tool-rag          # RAG for long context search
-      - tool-vqa-enhanced  # Enhanced vision understanding with multi-turn verification
-      - tool-vqa          # Fallback to commercial Claude vision
-      - tool-audio-enhanced  # Enhanced audio understanding
-      - tool-video-enhanced  # Enhanced video understanding
-      - tool-reading  # File reading tools
-      - tool-python
-    max_turns: 30
+      - tool-rag          # RAG for long context search (only tool for this sub-agent)
+    max_turns: 10
 
 keep_tool_result: -1

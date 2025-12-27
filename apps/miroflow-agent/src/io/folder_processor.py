@@ -808,9 +808,9 @@ def process_folder_for_task(
     # Add output format requirement
     use_cn_prompt = os.environ.get("USE_CN_PROMPT", "0")
     if use_cn_prompt == "1":
-        task_parts.append("\n请通过任务分解和MCP工具调用来解决给定的问题。**你必须严格遵循请求中的格式要求，并将完整的最终报告/答案（不仅仅是标题）包裹在 \\boxed{} 中。**")
+        task_parts.append("\n请通过任务分解和MCP工具调用来解决给定的问题。**请生成完整的报告内容，不需要使用 \\boxed{} 包裹。**")
     else:
-        task_parts.append("\nYou should follow the format instruction in the request strictly and wrap the COMPLETE final report/answer (not just the title) in \\boxed{}.")
+        task_parts.append("\nYou should follow the format instruction in the request strictly. Generate the complete report content without wrapping it in \\boxed{}.")
     
     task_content = "\n".join(task_parts)
     task_description = task_content
