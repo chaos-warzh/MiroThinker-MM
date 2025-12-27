@@ -225,3 +225,6 @@ apps/collect-trace/scripts/*/*.sh
 
 # Database files (embedding caches)
 *.chunks.db
+
+# Insights folder (contains large data files)
+insights/
