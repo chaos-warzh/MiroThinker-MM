@@ -617,12 +617,8 @@ async def run_single_task(
             config_overrides=config_overrides
         )
         
-        # Handle both old (3-tuple) and new (4-tuple) return formats
-        if len(result) == 4:
-            final_summary, final_boxed_answer, original_boxed_answer, log_file_path = result
-        else:
-            final_summary, final_boxed_answer, log_file_path = result
-            original_boxed_answer = final_boxed_answer
+        # run_folder_task_simple now returns 5 values (including statistics_summary)
+        final_summary, final_boxed_answer, original_boxed_answer, log_file_path, statistics_summary = result
         
         elapsed_time = time.time() - start_time
         
@@ -639,6 +635,21 @@ async def run_single_task(
             log_copy_path = os.path.join(run_folder, "execution_log.json")
             shutil.copy2(log_file_path, log_copy_path)
             print(f"Execution log copied to: {log_copy_path}")
+        
+        # Save statistics summary to txt file
+        if statistics_summary:
+            stats_path = os.path.join(run_folder, "statistics_summary.txt")
+            with open(stats_path, 'w', encoding='utf-8') as f:
+                f.write("=" * 60 + "\n")
+                f.write("TASK EXECUTION STATISTICS\n")
+                f.write("=" * 60 + "\n\n")
+                f.write(f"Task Number: {task_number}\n")
+                f.write(f"Execution Time: {elapsed_time:.2f} seconds\n")
+                f.write(f"Generated at: {datetime.now().strftime('%Y-%m-%d %H:%M:%S')}\n\n")
+                f.write("-" * 60 + "\n")
+                f.write(statistics_summary)
+                f.write("\n" + "=" * 60 + "\n")
+            print(f"Statistics summary saved to: {stats_path}")
         
         print(f"\n✓ Task {task_number} completed in {elapsed_time:.1f}s")
         print(f"  Run folder: {run_folder}")
@@ -866,9 +877,9 @@ Examples:
     parser.add_argument(
         "--context-size", "-c",
         type=str,
-        choices=["32k", "64k", "128k", "256k"],
+        choices=["32k", "64k", "128k", "256k", "512k", "1m"],
         default=None,
-        help="Context size to use (32k, 64k, 128k, or 256k). Uses the corresponding sampled db file."
+        help="Context size to use (32k, 64k, 128k, 256k, 512k, or 1m). Uses the corresponding sampled db file."
     )
     parser.add_argument(
         "--model", "-m",

@@ -613,6 +613,29 @@ def expose_sub_agents_as_tools(sub_agents_cfg: DictConfig):
                     ],
                 )
             )
+        elif "agent-file-reader" in sub_agent:
+            # File reading agent for extracting information from files (PDF, Excel, etc.)
+            # This agent handles file reading in a separate context to avoid context overflow in main agent
+            # It uses tool-reading which provides: read_pdf_pages, read_excel_rows, search_in_file, get_file_info, convert_to_markdown
+            sub_agents_server_params.append(
+                dict(
+                    name="agent-file-reader",
+                    tools=[
+                        dict(
+                            name="read_and_extract",
+                            description="This tool is an agent that reads files (PDF, Excel, CSV, etc.) and extracts specific information based on the given subtask. The agent processes the file content in its own context and returns only the relevant extracted information or answer, keeping the main agent's context clean. Use this for: reading specific pages/sections of PDFs, extracting data from spreadsheets, searching within files, getting file info, etc. The subtask should clearly specify the file path and what information to extract. \nArgs: \n\tsubtask: the subtask describing what information to extract from the file. Should include the file path and specific extraction requirements. \nReturns: \n\tthe extracted information or answer based on the file content. ",
+                            schema={
+                                "type": "object",
+                                "properties": {
+                                    "subtask": {"title": "Subtask", "type": "string"}
+                                },
+                                "required": ["subtask"],
+                                "title": "read_and_extractArguments",
+                            },
+                        )
+                    ],
+                )
+            )
     return sub_agents_server_params
 
 

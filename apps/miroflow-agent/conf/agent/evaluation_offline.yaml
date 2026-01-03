@@ -10,7 +10,7 @@ defaults:
 
 main_agent:
   tools:
-    - tool-rag          # RAG for long context search
+    # - tool-rag          # RAG for long context search
     - tool-python       # Python sandbox for computation
     - tool-vqa-enhanced # Enhanced vision understanding
     - tool-vqa          # Basic vision understanding
@@ -18,8 +18,8 @@ main_agent:
     - tool-transcribe   # Audio transcription
     - tool-video-enhanced # Video understanding
     - tool-reasoning    # Reasoning capabilities
-    - tool-reading      # PDF/document reading
-  max_turns: 30  # Maximum number of turns for main agent execution
+    # tool-reading removed - main agent should delegate to agent-file-reader for PDF reading
+  max_turns: 6
 
 
 sub_agents:
@@ -28,6 +28,12 @@ sub_agents:
   agent-rag-search:
     tools:
       - tool-rag          # RAG for long context search (only tool for this sub-agent)
-    max_turns: 10
+    max_turns: 3
+  
+  # File reader sub-agent for reading long PDF/Word documents
+  agent-file-reader:
+    tools:
+      - tool-reading      # PDF/document reading tools
+    max_turns: 3
 
 keep_tool_result: -1

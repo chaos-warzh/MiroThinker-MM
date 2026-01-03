@@ -215,10 +215,14 @@ logs/
 data/
 datasets/
 datasets*/
-results/
 result/
+result_raw/
 .idea/
 docs/
+evaluation_logs/
+insights/
+logs/
+
 .DS_Store
 
 apps/collect-trace/scripts/*/*.sh

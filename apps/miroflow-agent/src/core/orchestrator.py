@@ -722,16 +722,30 @@ class Orchestrator:
             "Partial Summary", {}, tool_call_id=str(uuid.uuid4())
         )
 
-        # Use unified LLM call processing to generate final summary
+        # Use simplified system prompt for final summary to save context tokens
+        # The full system prompt with tool definitions is not needed for summary generation
+        summary_system_prompt = (
+            "You are a helpful assistant that generates comprehensive summaries based on the conversation history. "
+            "Your task is to synthesize all the information gathered during the research process into a well-structured, "
+            "complete summary that addresses the subtask given to you. Include proper citations where applicable."
+        )
+        
+        self.task_log.log_step(
+            "info",
+            f"{sub_agent_name} | Final Summary",
+            f"Using simplified system prompt for summary generation (original: ~{len(system_prompt)} chars, simplified: ~{len(summary_system_prompt)} chars)",
+        )
+
+        # Use unified LLM call processing to generate final summary with simplified system prompt
         (
             final_answer_text,
             should_break,
             tool_calls_info,
             message_history,
         ) = await self._handle_llm_call(
-            system_prompt,
+            summary_system_prompt,  # Use simplified system prompt instead of full one
             message_history,
-            tool_definitions,
+            [],  # No tool definitions needed for summary generation
             turn_count + 1,
             f"{sub_agent_name} | Final summary",
             keep_tool_result=keep_tool_result,
@@ -1138,16 +1152,30 @@ class Orchestrator:
 
         message_history.append({"role": "user", "content": summary_prompt})
 
-        # Use unified LLM call processing
+        # Use simplified system prompt for final summary to save context tokens
+        # The full system prompt with tool definitions is not needed for summary generation
+        summary_system_prompt = (
+            "You are a helpful assistant that generates comprehensive reports based on the conversation history. "
+            "Your task is to synthesize all the information gathered during the research process into a well-structured, "
+            "complete report that addresses the user's original query. Include proper citations where applicable."
+        )
+        
+        self.task_log.log_step(
+            "info",
+            "Main Agent | Final Summary",
+            f"Using simplified system prompt for summary generation (original: ~{len(system_prompt)} chars, simplified: ~{len(summary_system_prompt)} chars)",
+        )
+
+        # Use unified LLM call processing with simplified system prompt
         (
             final_answer_text,
             should_break,
             tool_calls_info,
             message_history,
         ) = await self._handle_llm_call(
-            system_prompt,
+            summary_system_prompt,  # Use simplified system prompt instead of full one
             message_history,
-            tool_definitions,
+            [],  # No tool definitions needed for summary generation
             turn_count + 1,
             "Main agent | Final Summary",
             keep_tool_result=keep_tool_result,
@@ -1457,8 +1485,17 @@ class Orchestrator:
     
     def _log_final_statistics(self):
         """Log final task statistics"""
-        stats_summary = f"""
-Task Statistics Summary:
+        stats_summary = self.get_statistics_summary()
+        
+        self.task_log.log_step(
+            "info",
+            "Main Agent | Statistics",
+            stats_summary
+        )
+    
+    def get_statistics_summary(self) -> str:
+        """Generate and return the statistics summary string."""
+        stats_summary = f"""Task Statistics Summary:
 Total Duration: {self.stats['total_duration_seconds']:.2f} seconds
 Main Agent Turns: {self.stats['main_agent_turns']}
 Validation Turns: {self.stats['validation_turns']}
@@ -1473,8 +1510,4 @@ Sub-Agent Turns:"""
         for tool_key, count in sorted(self.stats["tool_calls"].items()):
             stats_summary += f"\n  - {tool_key}: {count} calls"
         
-        self.task_log.log_step(
-            "info",
-            "Main Agent | Statistics",
-            stats_summary
-        )
+        return stats_summary

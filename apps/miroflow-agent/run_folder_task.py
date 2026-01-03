@@ -449,14 +449,10 @@ async def run_folder_task(
         log_dir=cfg.debug_dir,
     )
     
-    # Handle both old (3-tuple) and new (4-tuple) return formats
-    if len(result) == 4:
-        final_summary, final_boxed_answer, original_boxed_answer, log_file_path = result
-    else:
-        final_summary, final_boxed_answer, log_file_path = result
-        original_boxed_answer = final_boxed_answer  # No validation was done
+    # Handle the 5-tuple return format from pipeline
+    final_summary, final_boxed_answer, original_boxed_answer, log_file_path, statistics_summary = result
     
-    return final_summary, final_boxed_answer, original_boxed_answer, log_file_path
+    return final_summary, final_boxed_answer, original_boxed_answer, log_file_path, statistics_summary
 
 
 async def run_folder_task_simple(
@@ -597,7 +593,7 @@ def main(cfg: DictConfig) -> None:
         return
     
     # Run task
-    final_summary, final_boxed_answer, original_boxed_answer, log_file_path = asyncio.run(
+    final_summary, final_boxed_answer, original_boxed_answer, log_file_path, statistics_summary = asyncio.run(
         run_folder_task(
             cfg=cfg,
             folder_path=args.folder,
@@ -671,7 +667,7 @@ if __name__ == "__main__":
                 print("🔒 Running in OFFLINE mode: No web search, using long context (RAG) only")
             
             # Run with config
-            final_summary, final_boxed_answer, original_boxed_answer, log_file_path = asyncio.run(
+            final_summary, final_boxed_answer, original_boxed_answer, log_file_path, statistics_summary = asyncio.run(
                 run_folder_task_simple(args.folder, args.query, config_overrides=config_overrides)
             )
             

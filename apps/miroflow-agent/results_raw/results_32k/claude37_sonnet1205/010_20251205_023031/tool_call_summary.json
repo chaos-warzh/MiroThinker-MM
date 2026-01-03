@@ -1,0 +1,44 @@
+{
+  "task_id": "folder_task_010",
+  "execution_info": {
+    "status": "success",
+    "start_time": "2025-12-05 18:30:32",
+    "end_time": "2025-12-05 18:35:34",
+    "total_turns": 3
+  },
+  "tool_calls_by_turn": {
+    "1": {
+      "tools_used": [
+        {
+          "tool_name": "python"
+        },
+        {
+          "tool_name": "python"
+        },
+        {
+          "tool_name": "python"
+        }
+      ],
+      "rag_queries": []
+    },
+    "50": {
+      "tools_used": [],
+      "rag_queries": []
+    },
+    "2": {
+      "tools_used": [],
+      "rag_queries": []
+    }
+  },
+  "rag_retrieval": {
+    "total_queries": 1,
+    "queries": [
+      {
+        "query": "",
+        "tool": "rag_document_stats",
+        "num_results": 0,
+        "retrieved_documents": []
+      }
+    ]
+  }
+}

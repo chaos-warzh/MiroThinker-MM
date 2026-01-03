@@ -80,7 +80,7 @@ AUDIO_EXTENSIONS = {".wav", ".mp3", ".m4a"}
 DOCUMENT_EXTENSIONS = {".pdf", ".docx", ".doc", ".txt", ".html", ".htm"}
 SPREADSHEET_EXTENSIONS = {".xlsx", ".xls", ".csv"}
 PRESENTATION_EXTENSIONS = {".pptx", ".ppt"}
-DATA_EXTENSIONS = {".jsonld", ".json"}
+DATA_EXTENSIONS = {".jsonld", ".json", ".jsonl"}
 ARCHIVE_EXTENSIONS = {".zip"}
 
 
@@ -272,242 +272,44 @@ def _extract_file_content(file_info: FileInfo, max_content_length: int = 200_000
                 content = f.read()
             parsing_result = DocumentConverterResult(title=None, text_content=content)
         
-        elif ext in [".json", ".jsonld"]:
-            # 跳过所有 JSON 文件，不将其内容提取到任务描述中
+        elif ext in [".json", ".jsonld", ".jsonl"]:
+            # 跳过所有 JSON/JSONL 文件，不将其内容提取到任务描述中
             # Long context 文件由 RAG 工具处理
             # 其他 JSON 文件（如 useful_search.json, noise_search.json）也跳过
             return None
         
         elif ext in [".xlsx", ".xls"]:
-            # Excel 文件：只显示前 10 行，提供 Python 计算指南
-            try:
-                import openpyxl
-                wb = openpyxl.load_workbook(file_path, data_only=True)
-                
-                # 获取所有工作表信息
-                sheet_info = []
-                for sheet_name in wb.sheetnames:
-                    sheet = wb[sheet_name]
-                    rows = sheet.max_row
-                    cols = sheet.max_column
-                    sheet_info.append(f"  - {sheet_name}: {rows} 行 x {cols} 列")
-                
-                first_sheet = wb[wb.sheetnames[0]]
-                total_rows = first_sheet.max_row
-                total_cols = first_sheet.max_column
-                
-                content = f"**[Excel 文件预览 - 仅显示前 10 行]**\n\n"
-                content += f"文件路径: `{file_path}`\n"
-                content += f"工作表:\n" + "\n".join(sheet_info) + "\n\n"
-                
-                # 用三个单引号包裹文件内容
-                content += f"'''\n"
-                
-                # 显示前 10 行（所有列）
-                content += f"数据预览 (第 1 个工作表: {wb.sheetnames[0]})\n\n"
-                content += "|"
-                for col_idx in range(1, total_cols + 1):
-                    cell = first_sheet.cell(row=1, column=col_idx)
-                    cell_value = str(cell.value) if cell.value is not None else ""
-                    content += f" {cell_value} |"
-                content += "\n|"
-                for _ in range(total_cols):
-                    content += " --- |"
-                content += "\n"
-                
-                for row_idx in range(2, min(11, total_rows + 1)):  # 前 10 行数据
-                    content += "|"
-                    for col_idx in range(1, total_cols + 1):
-                        cell = first_sheet.cell(row=row_idx, column=col_idx)
-                        cell_value = str(cell.value) if cell.value is not None else ""
-                        content += f" {cell_value} |"
-                    content += "\n"
-                
-                # 明显的截断符号
-                content += f"\n{'='*60}\n"
-                content += f"⚠️⚠️⚠️ 【文件已截断】共 {total_rows} 行，仅显示前 10 行 ⚠️⚠️⚠️\n"
-                content += f"{'='*60}\n"
-                content += f"'''\n\n"
-                
-                content += f"**🚨 重要提示：这是用户上传的文件，内容已被截断！**\n"
-                content += f"- 总行数: {total_rows}\n"
-                content += f"- 总列数: {total_cols}\n"
-                content += f"- 已显示: 前 10 行\n"
-                content += f"- **未显示: 第 11-{total_rows} 行**\n\n"
-                content += f"**⚠️ 您必须使用工具读取完整数据！**\n\n"
-                filename = os.path.basename(file_path)
-                content += f"**方法 1: 使用 Python 代码进行数值计算（推荐）：**\n"
-                content += f"```\n"
-                content += f"# 步骤 1: 先创建 sandbox\n"
-                content += f"create_sandbox()\n"
-                content += f"\n"
-                content += f"# 步骤 2: 上传文件到 sandbox\n"
-                content += f"upload_file_from_local_to_sandbox(sandbox_id=<sandbox_id>, local_file_path='{file_path}')\n"
-                content += f"# 上传后文件路径为: /home/user/{filename}\n"
-                content += f"\n"
-                content += f"# 步骤 3: 在 sandbox 中运行 Python 代码\n"
-                content += f"run_python_code(sandbox_id=<sandbox_id>, code_block='''\n"
-                content += f"import pandas as pd\n"
-                content += f"df = pd.read_excel('/home/user/{filename}')  # 注意：使用 sandbox 中的路径\n"
-                content += f"print(df.head())\n"
-                content += f"# 计算平均值: print(df['列名'].mean())\n"
-                content += f"# 计算总和: print(df['列名'].sum())\n"
-                content += f"# 计算差值: print(df['列A'] - df['列B'])\n"
-                content += f"''')\n"
-                content += f"```\n\n"
-                content += f"**⚠️ 重要：在 sandbox 中运行代码时，文件路径是 `/home/user/{filename}`，不是本地路径！**\n\n"
-                content += f"**方法 2: 使用工具读取指定行：**\n"
-                content += f"- `read_excel_rows(file_path='{file_path}', start_row=N, end_row=M)`\n"
-                content += f"- `search_in_file(file_path='{file_path}', keyword='关键词')`\n"
-                
-                parsing_result = DocumentConverterResult(title=None, text_content=content)
-            except Exception as e:
-                # 回退到完整转换
-                parsing_result = XlsxConverter(local_path=file_path)
+            # 不提取 Excel 内容，只返回文件信息
+            # Agent 需要使用工具读取 Excel 内容
+            return None
         
         elif ext == ".pdf":
-            # Extract PDF content - only first page for long PDFs
-            if HAS_PDFMINER:
-                from pdfminer.pdfpage import PDFPage
-                
-                # Get page count first
-                with open(file_path, 'rb') as f:
-                    pages = list(PDFPage.get_pages(f))
-                    total_pages = len(pages)
-                
-                # 对于单页 PDF，直接提取全部内容（用三引号包裹）
-                if total_pages == 1:
-                    pdf_text = pdfminer.high_level.extract_text(file_path)
-                    content = f"**[PDF 文档 - 共 1 页]**\n\n"
-                    content += f"文件路径: `{file_path}`\n\n"
-                    content += f"'''\n{pdf_text}\n'''\n"
-                    parsing_result = DocumentConverterResult(title=None, text_content=content)
-                else:
-                    # 对于多页 PDF，只提取第一页内容
-                    first_page_content = pdfminer.high_level.extract_text(
-                        file_path, 
-                        page_numbers=[0]  # 只提取第一页（索引从0开始）
-                    )
-                    
-                    content = f"**[PDF 文档预览 - 仅显示第 1 页，共 {total_pages} 页]**\n\n"
-                    content += f"文件路径: `{file_path}`\n\n"
-                    
-                    # 用三引号包裹文件内容
-                    content += f"'''\n"
-                    content += first_page_content
-                    
-                    # 明显的截断符号
-                    content += f"\n\n{'='*60}\n"
-                    content += f"⚠️⚠️⚠️ 【PDF 文件已截断】共 {total_pages} 页，仅显示第 1 页 ⚠️⚠️⚠️\n"
-                    content += f"{'='*60}\n"
-                    content += f"'''\n\n"
-                    
-                    content += f"**🚨 重要提示：这是用户上传的 PDF 文件，内容已被截断！**\n"
-                    content += f"- 总页数: {total_pages} 页\n"
-                    content += f"- 已显示: 第 1 页\n"
-                    content += f"- **未显示: 第 2-{total_pages} 页**\n\n"
-                    content += f"**⚠️ 您必须使用工具读取完整内容！**\n\n"
-                    content += f"**可用工具：**\n"
-                    content += f"1. `read_pdf_pages(file_path='{file_path}', start_page=N, end_page=M)` - 读取指定页\n"
-                    content += f"   - 例如：读取第2-5页: `read_pdf_pages(file_path='{file_path}', start_page=2, end_page=5)`\n"
-                    content += f"2. `search_in_file(file_path='{file_path}', keyword='关键词')` - 搜索关键词\n"
-                    content += f"3. `get_file_info(file_path='{file_path}')` - 获取文档结构\n"
-                    
-                    parsing_result = DocumentConverterResult(title=None, text_content=content)
+            # 不提取 PDF 内容，只返回文件信息
+            # Agent 需要使用工具读取 PDF 内容
+            return None
         
         elif ext in [".docx", ".doc"]:
-            parsing_result = DocxConverter(local_path=file_path)
+            # 不提取 Word 内容，只返回文件信息
+            # Agent 需要使用工具读取 Word 内容
+            return None
         
         elif ext in [".html", ".htm"]:
-            parsing_result = HtmlConverter(local_path=file_path)
+            # 不提取 HTML 内容，只返回文件信息
+            return None
         
         elif ext in [".pptx", ".ppt"]:
-            parsing_result = PptxConverter(local_path=file_path)
+            # 不提取 PPT 内容，只返回文件信息
+            # Agent 需要使用工具读取 PPT 内容
+            return None
         
         elif ext == ".zip":
-            parsing_result = ZipConverter(local_path=file_path)
+            # 不提取 ZIP 内容，只返回文件信息
+            return None
         
         elif ext == ".csv":
-            # CSV 文件：只显示前 10 行，提供 Python 计算指南
-            with open(file_path, "r", encoding="utf-8", errors="ignore") as f:
-                lines = f.readlines()
-            
-            total_rows = len(lines)
-            
-            # 解析表头获取列名
-            header = lines[0].rstrip('\n') if lines else ""
-            columns = header.split(',')
-            col_count = len(columns)
-            
-            content = f"**[CSV 文件预览 - 仅显示前 10 行]**\n\n"
-            content += f"文件路径: `{file_path}`\n"
-            content += f"总行数: {total_rows} 行\n"
-            content += f"总列数: {col_count} 列\n\n"
-            
-            # 用三引号包裹文件内容
-            content += f"'''\n"
-            
-            # 显示前 10 行（所有列）- 使用 Markdown 表格格式
-            content += f"数据预览:\n\n"
-            
-            # 表头
-            content += "|"
-            for col in columns:
-                content += f" {col.strip()} |"
-            content += "\n|"
-            for _ in columns:
-                content += " --- |"
-            content += "\n"
-            
-            # 数据行（前 10 行，不包括表头）
-            for i, line in enumerate(lines[1:11]):  # 跳过表头，取前 10 行数据
-                cols = line.rstrip('\n').split(',')
-                content += "|"
-                for col in cols:
-                    content += f" {col.strip()} |"
-                content += "\n"
-            
-            # 明显的截断符号
-            content += f"\n{'='*60}\n"
-            content += f"⚠️⚠️⚠️ 【CSV 文件已截断】共 {total_rows} 行，仅显示前 10 行 ⚠️⚠️⚠️\n"
-            content += f"{'='*60}\n"
-            content += f"'''\n\n"
-            
-            content += f"**🚨 重要提示：这是用户上传的 CSV 文件，内容已被截断！**\n"
-            content += f"- 总行数: {total_rows}\n"
-            content += f"- 总列数: {col_count}\n"
-            content += f"- 列名: {', '.join(columns[:10])}"
-            if col_count > 10:
-                content += f" ... (共 {col_count} 列)"
-            content += f"\n"
-            content += f"- **未显示: 第 11-{total_rows} 行**\n\n"
-            content += f"**⚠️ 您必须使用工具读取完整数据！**\n\n"
-            filename = os.path.basename(file_path)
-            content += f"**方法 1: 使用 Python 代码进行数值计算（推荐）：**\n"
-            content += f"```\n"
-            content += f"# 步骤 1: 先创建 sandbox\n"
-            content += f"create_sandbox()\n"
-            content += f"\n"
-            content += f"# 步骤 2: 上传文件到 sandbox\n"
-            content += f"upload_file_from_local_to_sandbox(sandbox_id=<sandbox_id>, local_file_path='{file_path}')\n"
-            content += f"# 上传后文件路径为: /home/user/{filename}\n"
-            content += f"\n"
-            content += f"# 步骤 3: 在 sandbox 中运行 Python 代码\n"
-            content += f"run_python_code(sandbox_id=<sandbox_id>, code_block='''\n"
-            content += f"import pandas as pd\n"
-            content += f"df = pd.read_csv('/home/user/{filename}')  # 注意：使用 sandbox 中的路径\n"
-            content += f"print(df.head())\n"
-            content += f"# 计算平均值: print(df['列名'].mean())\n"
-            content += f"# 计算总和: print(df['列名'].sum())\n"
-            content += f"# 分组统计: print(df.groupby('分组列')['数值列'].mean())\n"
-            content += f"''')\n"
-            content += f"```\n\n"
-            content += f"**⚠️ 重要：在 sandbox 中运行代码时，文件路径是 `/home/user/{filename}`，不是本地路径！**\n\n"
-            content += f"**方法 2: 使用工具读取指定行：**\n"
-            content += f"- `read_excel_rows(file_path='{file_path}', start_row=N, end_row=M)`\n"
-            content += f"- `search_in_file(file_path='{file_path}', keyword='关键词')`\n"
-            
-            parsing_result = DocumentConverterResult(title=None, text_content=content)
+            # 不提取 CSV 内容，只返回文件信息
+            # Agent 需要使用工具读取 CSV 内容
+            return None
         
         # Try MarkItDown as fallback for other file types
         if parsing_result is None and HAS_MARKITDOWN:
@@ -651,27 +453,33 @@ def process_folder_for_task(
     # Add folder summary
     task_parts.append(f"\n## Folder Contents Summary\n\n{contents.get_summary()}\n")
     
-    # Process text-extractable files (excluding long_context.json files which use RAG)
+    # Process user-uploaded files (excluding all JSON files)
+    # JSON files include: long_context.json, useful_search.json, noise_search.json, etc.
+    # 排除所有 JSON/JSONL 文件（包括 noise.jsonl, useful_search.jsonl 等）
     local_doc_files = [f for f in contents.text_extractable_files 
-                       if "long_context" not in f.name.lower()]
+                       if f.extension.lower() not in [".json", ".jsonld", ".jsonl"]]
     
-    if include_file_contents and local_doc_files:
-        task_parts.append("\n## Document Contents (LOCAL FILES - DIRECTLY PROVIDED)\n")
-        task_parts.append("\n**⚠️ IMPORTANT: The following document contents are DIRECTLY PROVIDED in this prompt.**")
-        task_parts.append("**You MUST cite these files using their file names when referencing their content.**")
-        task_parts.append("**Citation format: [filename.ext] or [filename.ext, section/page]**\n")
+    # Also include presentations
+    local_doc_files.extend(contents.presentations)
+    
+    if local_doc_files:
+        task_parts.append("\n## 用户上传的文件 (User Uploaded Files)\n")
+        task_parts.append("\n**⚠️ 重要提示：以下是用户上传的文件，您需要使用工具读取这些文件的内容。**")
+        task_parts.append("**这些文件对于完成任务至关重要，请务必使用 `agent-file-reader` 工具读取它们。**\n")
+        
+        task_parts.append("\n| 文件名 | 类型 | 大小 | 路径 |")
+        task_parts.append("| --- | --- | --- | --- |")
         
         for file_info in local_doc_files:
-            content = _extract_file_content(file_info, max_content_length)
-            if content:
-                task_parts.append(f"\n### {file_info.name} ⭐ **LOCAL FILE - CITE AS [{file_info.name}]**\n")
-                task_parts.append(f"<file path=\"{file_info.path}\" citation=\"[{file_info.name}]\">\n{content}\n</file>\n")
+            size_str = f"{file_info.size_bytes / 1024:.1f} KB" if file_info.size_bytes < 1024 * 1024 else f"{file_info.size_bytes / 1024 / 1024:.1f} MB"
+            task_parts.append(f"| {file_info.name} | {file_info.extension} | {size_str} | `{file_info.path}` |")
         
-        task_parts.append("\n---")
-        task_parts.append("**CITATION REMINDER**: When using information from the above files, cite them as:")
-        task_parts.append("- For PPT: [filename.pptx, Slide N] or [filename.pptx]")
-        task_parts.append("- For PDF: [filename.pdf, Page N] or [filename.pdf]")
-        task_parts.append("- For other docs: [filename.ext]\n")
+        task_parts.append("\n\n**📖 如何读取这些文件：**")
+        task_parts.append("使用 `agent-file-reader` 子代理来读取文件内容：")
+        task_parts.append("- `read_pdf_pages(file_path, start_page, end_page)` - 读取 PDF 指定页")
+        task_parts.append("- `read_excel_rows(file_path, start_row, end_row)` - 读取 Excel 指定行")
+        task_parts.append("- `search_in_file(file_path, keyword)` - 在文件中搜索关键词")
+        task_parts.append("- `get_file_info(file_path)` - 获取文件结构信息\n")
     
     # Process multimodal files
     multimodal_files = []

@@ -111,13 +111,16 @@ async def execute_task_pipeline(
             task_id=task_id,
         )
 
+        # Get statistics summary from orchestrator
+        statistics_summary = orchestrator.get_statistics_summary()
+
         llm_client.close()
 
         task_log.final_boxed_answer = final_boxed_answer
         task_log.status = "success"
 
         log_file_path = task_log.save()
-        return final_summary, final_boxed_answer, original_boxed_answer, log_file_path
+        return final_summary, final_boxed_answer, original_boxed_answer, log_file_path, statistics_summary
 
     except Exception as e:
         error_details = traceback.format_exc()
@@ -141,8 +144,8 @@ async def execute_task_pipeline(
 
         log_file_path = task_log.save()
 
-        # Return 4 values to match the success case
-        return error_message, "", "", log_file_path
+        # Return 5 values to match the success case
+        return error_message, "", "", log_file_path, ""
 
     finally:
         task_log.end_time = get_utc_plus_8_time()
